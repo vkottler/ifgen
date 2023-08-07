@@ -2,7 +2,7 @@
     =====================================
     generator=datazen
     version=3.1.3
-    hash=2e28bfa8fed289cb2993ecb2f892eefe
+    hash=afb45c69e34b80110476a43c0726d37d
     =====================================
 -->
 
@@ -29,7 +29,6 @@
 
 This package is tested with the following Python minor versions:
 
-* [`python3.7`](https://docs.python.org/3.7/)
 * [`python3.8`](https://docs.python.org/3.8/)
 * [`python3.9`](https://docs.python.org/3.9/)
 * [`python3.10`](https://docs.python.org/3.10/)
