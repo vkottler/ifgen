@@ -1,0 +1,13 @@
+pylint
+flake8
+black
+ruff
+mypy
+isort
+yamllint
+yambs
+vmklib
+sphinx
+sphinx-book-theme
+setuptools-wrapper
+types-setuptools

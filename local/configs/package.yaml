@@ -1,0 +1,10 @@
+---
+name: ifgen
+version: "{{major}}.{{minor}}.{{patch}}"
+description: An interface generator for distributed computing.
+entry: {{entry}}
+requirements:
+  - vcorelib
+dev_requirements:
+  - setuptools-wrapper
+  - types-setuptools
