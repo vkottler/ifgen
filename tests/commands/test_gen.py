@@ -14,4 +14,4 @@ def test_ifgen_command_basic():
     """Test the 'gen' command."""
 
     path = str(clean_scenario("sample"))
-    assert ifgen_main([PKG_NAME, "-C", path, "gen"]) == 0
+    assert ifgen_main([PKG_NAME, "gen", "-r", path]) == 0

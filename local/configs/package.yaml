@@ -8,6 +8,7 @@ requirements:
   - vcorelib
 
 dev_requirements:
+  - pytest-cov
   - setuptools-wrapper
   - types-setuptools
 
