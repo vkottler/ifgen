@@ -9,5 +9,6 @@ yambs
 vmklib
 sphinx
 sphinx-book-theme
+pytest-cov
 setuptools-wrapper
 types-setuptools
