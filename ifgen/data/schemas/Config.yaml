@@ -10,6 +10,16 @@ properties:
     items:
       type: string
 
+  command:
+    type: string
+    default: "\\"
+
+  namespace:
+    type: array
+    default: [Coral]
+    items:
+      type: string
+
   structs:
     type: object
     additionalProperties: false
