@@ -5,7 +5,7 @@ description: An interface generator for distributed computing.
 entry: {{entry}}
 
 requirements:
-  - vcorelib
+  - vcorelib>=2.4.6
 
 dev_requirements:
   - pytest-cov

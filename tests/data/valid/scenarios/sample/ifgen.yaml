@@ -1,4 +1,6 @@
 ---
+namespace: [A, B]
+
 structs:
   Test1: {}
   Test2: {}

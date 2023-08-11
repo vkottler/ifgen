@@ -37,7 +37,7 @@ def gen_cmd(args: _Namespace) -> int:
         root, normalize(*config.data["output_dir"])
     )
 
-    generate_structs(output, config)
+    generate_structs(root, output, config)
 
     return 0
 
