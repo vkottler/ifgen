@@ -7,6 +7,9 @@ from multiprocessing import Pool
 from pathlib import Path
 from typing import Any, Dict, NamedTuple
 
+# third-party
+from vcorelib.io import IndentedFileWriter
+
 # internal
 from ifgen.config import Config
 
@@ -16,6 +19,7 @@ StructConfig = Dict[str, Any]
 class GenerateStructTask(NamedTuple):
     """Parameters necessary for struct generation."""
 
+    root: Path
     path: Path
     struct: StructConfig
 
@@ -23,18 +27,22 @@ class GenerateStructTask(NamedTuple):
 def create_struct(task: GenerateStructTask) -> None:
     """Create a header file based on a struct definition."""
 
-    print(task)
+    with IndentedFileWriter.from_path(task.path, per_indent=4) as writer:
+        with writer.javadoc():
+            writer.write("Test.")
 
 
-def generate_structs(output: Path, config: Config) -> None:
+def generate_structs(root: Path, output: Path, config: Config) -> None:
     """Generate struct files."""
+
+    output.mkdir(parents=True, exist_ok=True)
 
     pool = Pool()  # pylint: disable=consider-using-with
     try:
         pool.map(
             create_struct,
             (
-                GenerateStructTask(output.joinpath(f"{name}.h"), data)
+                GenerateStructTask(root, output.joinpath(f"{name}.h"), data)
                 for name, data in config.data["structs"].items()
             ),
         )
