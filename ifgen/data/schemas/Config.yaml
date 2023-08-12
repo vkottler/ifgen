@@ -26,3 +26,10 @@ properties:
     patternProperties:
       "^[a-zA-Z0-9-_.]+$":
         $ref: package://ifgen/schemas/Struct.yaml
+
+  enums:
+    type: object
+    additionalProperties: false
+    patternProperties:
+      "^[a-zA-Z0-9-_.]+$":
+        $ref: package://ifgen/schemas/Enum.yaml

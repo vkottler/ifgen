@@ -3,7 +3,14 @@ namespace: [A, B]
 
 structs:
   Test1:
-    description: "A sample struct."
+    description: "Sample struct 1."
 
   Test2:
-    description: "A sample struct."
+    description: "Sample struct 2."
+
+enums:
+  Enum1:
+    description: "Sample enum 1."
+
+  Enum2:
+    description: "Sample enum 2."
