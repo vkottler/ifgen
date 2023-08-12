@@ -2,5 +2,8 @@
 namespace: [A, B]
 
 structs:
-  Test1: {}
-  Test2: {}
+  Test1:
+    description: "A sample struct."
+
+  Test2:
+    description: "A sample struct."

@@ -1,6 +1,8 @@
 ---
 type: object
 additionalProperties: false
-required: []
+required: [description]
 
-properties: {}
+properties:
+  description:
+    type: string
