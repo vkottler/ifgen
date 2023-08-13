@@ -11,6 +11,15 @@ structs:
 enums:
   Enum1:
     description: "Sample enum 1."
+    underlying: uint16_t
+    enum:
+      A:
+      B: {description: A sample value.}
+      C: {value: 1000}
 
   Enum2:
     description: "Sample enum 2."
+    enum:
+      red: {value: 1, description: A sample value.}
+      green:
+      blue: {value: 5}

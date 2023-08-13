@@ -6,7 +6,7 @@ A module defining generator interfaces.
 from contextlib import contextmanager
 from json import dumps
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterator, NamedTuple
+from typing import Any, Callable, Dict, Iterable, Iterator, NamedTuple
 
 # third-party
 from vcorelib.io import IndentedFileWriter
@@ -36,7 +36,9 @@ class GenerateTask(NamedTuple):
         )
 
     @contextmanager
-    def boilerplate(self) -> Iterator[IndentedFileWriter]:
+    def boilerplate(
+        self, includes: Iterable[str] = None
+    ) -> Iterator[IndentedFileWriter]:
         """
         Create standard generation boilerplate and yield the file writer to
         use for writing the remaining content.
@@ -54,7 +56,11 @@ class GenerateTask(NamedTuple):
                 writer.write(dumps(self.instance, indent=2))
 
             writer.write("#pragma once")
-            writer.empty()
+
+            with writer.padding():
+                # Write any includes.
+                for include in sorted(includes if includes else []):
+                    writer.write(f"#include {include}")
 
             # Write namespace.
             namespace = "::".join(self.config["namespace"])
