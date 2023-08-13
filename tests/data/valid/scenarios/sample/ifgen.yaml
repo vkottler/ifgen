@@ -10,7 +10,7 @@ structs:
         description: A field.
         type: uint8_t
       field2:
-        type: uint16_t
+        type: Enum1
       field3:
         type: double
 
@@ -28,6 +28,10 @@ structs:
     fields:
       field1:
         type: int
+      field2:
+        type: C::Test1
+      field3:
+        type: Test2
 
 enums:
   Enum1:

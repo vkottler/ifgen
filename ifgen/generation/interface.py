@@ -4,9 +4,19 @@ A module defining generator interfaces.
 
 # built-in
 from contextlib import contextmanager
+from enum import StrEnum
 from json import dumps
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, Iterator, NamedTuple
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    NamedTuple,
+    Optional,
+)
 
 # third-party
 from vcorelib.io import IndentedFileWriter
@@ -16,16 +26,83 @@ from ifgen import PKG_NAME, VERSION
 
 InstanceConfig = Dict[str, Any]
 IfgenConfig = Dict[str, Any]
+NAMESPACE_DELIM = "::"
+
+
+class Generator(StrEnum):
+    """An enumeration declaring all valid kinds of generators."""
+
+    STRUCTS = "structs"
+    ENUMS = "enums"
+
+
+class TypeLookup(NamedTuple):
+    """A container for type-lookup results."""
+
+    name: str
+    final: str
+    generator: Generator
 
 
 class GenerateTask(NamedTuple):
     """A container for instance-generation tasks."""
 
     name: str
+    generator: Generator
     root: Path
     path: Path
     instance: InstanceConfig
     config: IfgenConfig
+
+    def namespace_parts(self) -> List[str]:
+        """Get all namespace parts for this task."""
+
+        return list(
+            self.config.get("namespace", [])
+            + self.instance.get("namespace", [])
+        )
+
+    def namespace(self) -> str:
+        """Get this task's namespace."""
+
+        namespace = NAMESPACE_DELIM.join(self.namespace_parts())
+        assert namespace, f"No namespace for '{self.name}'!"
+        return namespace
+
+    @staticmethod
+    def make_path(name: str, generator: Generator) -> Path:
+        """Make part of a task's path."""
+        return Path(str(generator), f"{name}.h")
+
+    def check_custom_type(self, name: str) -> Optional[TypeLookup]:
+        """Check if a name refers to a custom type."""
+
+        final = name.split(NAMESPACE_DELIM)[-1]
+
+        result = None
+        for gen in Generator:
+            if final in self.config.get(gen.value, {}):
+                result = TypeLookup(name, final, gen)
+                break
+        return result
+
+    def custom_include(self, name: str) -> Optional[Path]:
+        """Attempt to build a path to a custom include."""
+
+        result = None
+
+        lookup = self.check_custom_type(name)
+        if lookup is not None:
+            result = (
+                Path(
+                    "..",
+                    GenerateTask.make_path(lookup.final, lookup.generator),
+                )
+                if lookup.generator != self.generator
+                else Path(f"{lookup.final}.h")
+            )
+
+        return result
 
     def command(self, command: str, data: str = "", space: str = " ") -> str:
         """Get a doxygen command string."""
@@ -65,12 +142,7 @@ class GenerateTask(NamedTuple):
                         writer.write(f"#include {include}")
 
             # Write namespace.
-            namespace = "::".join(
-                self.config.get("namespace", [])
-                + self.instance.get("namespace", [])
-            )
-            assert namespace, f"No namespace for '{self.name}'!"
-
+            namespace = self.namespace()
             writer.write(f"namespace {namespace}")
             with writer.scope(suffix=f"; // namespace {namespace}", indent=0):
                 # Write struct definition.
@@ -86,4 +158,4 @@ class GenerateTask(NamedTuple):
 
 
 InstanceGenerator = Callable[[GenerateTask], None]
-GeneratorMap = Dict[str, InstanceGenerator]
+GeneratorMap = Dict[Generator, InstanceGenerator]

@@ -6,7 +6,7 @@ A module implementing interfaces for struct-file generation.
 from typing import Dict, Iterable, Union
 
 # internal
-from ifgen.generation.interface import GenerateTask, IfgenConfig
+from ifgen.generation.interface import GenerateTask
 
 FieldConfig = Dict[str, Union[int, str]]
 
@@ -36,14 +36,15 @@ for _item in [
     TYPE_LOOKUP[_item] = "<cstdint>"
 
 
-def header_for_type(name: str, config: IfgenConfig) -> str:
+def header_for_type(name: str, task: GenerateTask) -> str:
     """Determine the header file to import for a given type."""
 
     if name in TYPE_LOOKUP:
         return TYPE_LOOKUP[name]
 
-    # check if the field is a generated type
-    del config
+    candidate = task.custom_include(name)
+    if candidate:
+        return f'"{candidate}"'
 
     return ""
 
@@ -52,7 +53,7 @@ def struct_includes(task: GenerateTask) -> Iterable[str]:
     """Determine headers that need to be included for a given struct."""
 
     return {
-        header_for_type(config["type"], task.config)
+        header_for_type(config["type"], task)
         for config in task.instance.get("fields", {}).values()
     }
 
