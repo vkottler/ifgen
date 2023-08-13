@@ -3,7 +3,7 @@ A module implementing interfaces to facilitate code generation.
 """
 
 # built-in
-from multiprocessing import Pool
+from multiprocessing.pool import ThreadPool
 from pathlib import Path
 
 # internal
@@ -25,7 +25,7 @@ def generate(root: Path, output: Path, config: Config) -> None:
     for subdir in GENERATORS:
         output.joinpath(subdir).mkdir(parents=True, exist_ok=True)
 
-    pool = Pool()  # pylint: disable=consider-using-with
+    pool = ThreadPool()  # pylint: disable=consider-using-with
     for gen_name, generator in GENERATORS.items():
         pool.map(
             generator,
