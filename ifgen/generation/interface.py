@@ -15,6 +15,7 @@ from vcorelib.io import IndentedFileWriter
 from ifgen import PKG_NAME, VERSION
 
 InstanceConfig = Dict[str, Any]
+IfgenConfig = Dict[str, Any]
 
 
 class GenerateTask(NamedTuple):
@@ -24,7 +25,7 @@ class GenerateTask(NamedTuple):
     root: Path
     path: Path
     instance: InstanceConfig
-    config: Dict[str, Any]
+    config: IfgenConfig
 
     def command(self, command: str, data: str = "", space: str = " ") -> str:
         """Get a doxygen command string."""
@@ -60,16 +61,26 @@ class GenerateTask(NamedTuple):
             with writer.padding():
                 # Write any includes.
                 for include in sorted(includes if includes else []):
-                    writer.write(f"#include {include}")
+                    if include:
+                        writer.write(f"#include {include}")
 
             # Write namespace.
-            namespace = "::".join(self.config["namespace"])
+            namespace = "::".join(
+                self.config.get("namespace", [])
+                + self.instance.get("namespace", [])
+            )
+            assert namespace, f"No namespace for '{self.name}'!"
+
             writer.write(f"namespace {namespace}")
             with writer.scope(suffix=f"; // namespace {namespace}", indent=0):
                 # Write struct definition.
                 with writer.padding():
-                    with writer.javadoc():
-                        writer.write(self.instance["description"])
+                    if (
+                        "description" in self.instance
+                        and self.instance["description"]
+                    ):
+                        with writer.javadoc():
+                            writer.write(self.instance["description"])
 
                     yield writer
 

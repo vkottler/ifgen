@@ -1,4 +1,7 @@
 ---
+includes:
+  - has_namespace.yaml
+
 type: object
 additionalProperties: false
 required: []
@@ -13,12 +16,6 @@ properties:
   command:
     type: string
     default: "\\"
-
-  namespace:
-    type: array
-    default: [Coral]
-    items:
-      type: string
 
   structs:
     type: object

@@ -1,0 +1,9 @@
+---
+includes:
+  - has_description.yaml
+
+required: [type]
+
+properties:
+  type:
+    type: string

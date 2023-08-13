@@ -1,7 +1,7 @@
 ---
 type: object
 additionalProperties: false
-required: [description]
+required: []
 
 properties:
   description:
