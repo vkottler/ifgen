@@ -26,21 +26,19 @@ def generate(root: Path, output: Path, config: Config) -> None:
         output.joinpath(subdir).mkdir(parents=True, exist_ok=True)
 
     pool = Pool()  # pylint: disable=consider-using-with
-    try:
-        for gen_name, generator in GENERATORS.items():
-            pool.map(
-                generator,
-                (
-                    GenerateTask(
-                        name,
-                        root,
-                        output.joinpath(gen_name, f"{name}.h"),
-                        data,
-                        config.data,
-                    )
-                    for name, data in config.data.get(gen_name, {}).items()
-                ),
-            )
-    finally:
-        pool.close()
-        pool.join()
+    for gen_name, generator in GENERATORS.items():
+        pool.map(
+            generator,
+            (
+                GenerateTask(
+                    name,
+                    root,
+                    output.joinpath(gen_name, f"{name}.h"),
+                    data,
+                    config.data,
+                )
+                for name, data in config.data.get(gen_name, {}).items()
+            ),
+        )
+    pool.close()
+    pool.join()
