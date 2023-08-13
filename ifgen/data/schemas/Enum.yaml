@@ -1,0 +1,34 @@
+---
+includes:
+  - has_description.yaml
+
+required: [enum]
+
+properties:
+  enum:
+    type: object
+    additionalProperties: false
+    patternProperties:
+      "^[a-zA-Z0-9-_.]+$":
+        type: [object, "null"]
+        additionalProperties: false
+        required: []
+        properties:
+          value:
+            type: [string, number]
+          description:
+            type: string
+
+  underlying:
+    type: string
+    default: uint8_t
+    enum:
+      - int8_t
+      - int16_t
+      - int32_t
+      - int64_t
+
+      - uint8_t
+      - uint16_t
+      - uint32_t
+      - uint64_t

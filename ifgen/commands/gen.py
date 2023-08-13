@@ -14,7 +14,7 @@ from vcorelib.paths import Pathlike, normalize
 # internal
 from ifgen import PKG_NAME
 from ifgen.config import load
-from ifgen.struct import generate_structs
+from ifgen.generation import generate
 
 DEFAULT_CONFIG = f"{PKG_NAME}.yaml"
 
@@ -37,7 +37,7 @@ def gen_cmd(args: _Namespace) -> int:
         root, normalize(*config.data["output_dir"])
     )
 
-    generate_structs(root, output, config)
+    generate(root, output, config)
 
     return 0
 
