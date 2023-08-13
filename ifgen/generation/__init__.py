@@ -9,7 +9,8 @@ from pathlib import Path
 # internal
 from ifgen.config import Config
 from ifgen.enum import create_enum
-from ifgen.generation.interface import GenerateTask, Generator, GeneratorMap
+from ifgen.environment import Generator, IfgenEnvironment
+from ifgen.generation.interface import GenerateTask, GeneratorMap
 from ifgen.struct import create_struct
 
 GENERATORS: GeneratorMap = {
@@ -18,12 +19,10 @@ GENERATORS: GeneratorMap = {
 }
 
 
-def generate(root: Path, output: Path, config: Config) -> None:
+def generate(root: Path, config: Config) -> None:
     """Generate struct files."""
 
-    # Create output directories.
-    for subdir in Generator:
-        output.joinpath(subdir).mkdir(parents=True, exist_ok=True)
+    env = IfgenEnvironment(root, config)
 
     with ThreadPool() as pool:
         for generator, method in GENERATORS.items():
@@ -33,12 +32,9 @@ def generate(root: Path, output: Path, config: Config) -> None:
                     GenerateTask(
                         name,
                         generator,
-                        root,
-                        output.joinpath(
-                            GenerateTask.make_path(name, generator)
-                        ),
+                        env.make_path(name, generator, from_output=True),
                         data,
-                        config.data,
+                        env,
                     )
                     for name, data in config.data.get(
                         generator.value, {}

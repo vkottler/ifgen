@@ -4,7 +4,6 @@ A module defining generator interfaces.
 
 # built-in
 from contextlib import contextmanager
-from enum import StrEnum
 from json import dumps
 from pathlib import Path
 from typing import (
@@ -23,17 +22,11 @@ from vcorelib.io import IndentedFileWriter
 
 # internal
 from ifgen import PKG_NAME, VERSION
+from ifgen.environment import Generator, IfgenEnvironment
 
 InstanceConfig = Dict[str, Any]
 IfgenConfig = Dict[str, Any]
 NAMESPACE_DELIM = "::"
-
-
-class Generator(StrEnum):
-    """An enumeration declaring all valid kinds of generators."""
-
-    STRUCTS = "structs"
-    ENUMS = "enums"
 
 
 class TypeLookup(NamedTuple):
@@ -49,10 +42,14 @@ class GenerateTask(NamedTuple):
 
     name: str
     generator: Generator
-    root: Path
     path: Path
     instance: InstanceConfig
-    config: IfgenConfig
+    env: IfgenEnvironment
+
+    @property
+    def config(self) -> IfgenConfig:
+        """Get the environment's configuration data."""
+        return self.env.config.data
 
     def namespace_parts(self) -> List[str]:
         """Get all namespace parts for this task."""
@@ -68,11 +65,6 @@ class GenerateTask(NamedTuple):
         namespace = NAMESPACE_DELIM.join(self.namespace_parts())
         assert namespace, f"No namespace for '{self.name}'!"
         return namespace
-
-    @staticmethod
-    def make_path(name: str, generator: Generator) -> Path:
-        """Make part of a task's path."""
-        return Path(str(generator), f"{name}.h")
 
     def check_custom_type(self, name: str) -> Optional[TypeLookup]:
         """Check if a name refers to a custom type."""
@@ -96,7 +88,7 @@ class GenerateTask(NamedTuple):
             result = (
                 Path(
                     "..",
-                    GenerateTask.make_path(lookup.final, lookup.generator),
+                    self.env.make_path(lookup.final, lookup.generator),
                 )
                 if lookup.generator != self.generator
                 else Path(f"{lookup.final}.h")
