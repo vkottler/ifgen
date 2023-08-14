@@ -12,13 +12,13 @@ from typing import (
     Dict,
     Iterable,
     Iterator,
-    List,
     NamedTuple,
     Optional,
 )
 
 # third-party
 from vcorelib.io import IndentedFileWriter
+from vcorelib.namespace import CPP_DELIM
 
 # internal
 from ifgen import PKG_NAME, VERSION
@@ -26,7 +26,6 @@ from ifgen.environment import Generator, IfgenEnvironment
 
 InstanceConfig = Dict[str, Any]
 IfgenConfig = Dict[str, Any]
-NAMESPACE_DELIM = "::"
 
 
 class TypeLookup(NamedTuple):
@@ -51,25 +50,20 @@ class GenerateTask(NamedTuple):
         """Get the environment's configuration data."""
         return self.env.config.data
 
-    def namespace_parts(self) -> List[str]:
-        """Get all namespace parts for this task."""
-
-        return list(
-            self.config.get("namespace", [])
-            + self.instance.get("namespace", [])
-        )
-
     def namespace(self) -> str:
         """Get this task's namespace."""
 
-        namespace = NAMESPACE_DELIM.join(self.namespace_parts())
-        assert namespace, f"No namespace for '{self.name}'!"
-        return namespace
+        nspace = self.env.root_namespace
+        with nspace.pushed(*self.instance.get("namespace", [])):
+            result = nspace.namespace(track=False)
+
+        assert result, f"No namespace for '{self.name}'!"
+        return result
 
     def check_custom_type(self, name: str) -> Optional[TypeLookup]:
         """Check if a name refers to a custom type."""
 
-        final = name.split(NAMESPACE_DELIM)[-1]
+        final = name.split(CPP_DELIM)[-1]
 
         result = None
         for gen in Generator:

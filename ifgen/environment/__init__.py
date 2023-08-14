@@ -8,6 +8,7 @@ from pathlib import Path
 
 # third-party
 from vcorelib.logging import LoggerMixin
+from vcorelib.namespace import CPP_DELIM, Namespace
 from vcorelib.paths import normalize
 
 # internal
@@ -29,16 +30,20 @@ class IfgenEnvironment(LoggerMixin):
         """Initialize this instance."""
 
         super().__init__()
-        self.root = root
+        self.root_path = root
         self.config = config
 
         self.output = combine_if_not_absolute(
-            self.root, normalize(*self.config.data["output_dir"])
+            self.root_path, normalize(*self.config.data["output_dir"])
         )
 
         # Create output directories.
         for subdir in Generator:
             self.output.joinpath(subdir).mkdir(parents=True, exist_ok=True)
+
+        self.root_namespace = Namespace(
+            *self.config.data["namespace"], delim=CPP_DELIM
+        )
 
     def make_path(
         self, name: str, generator: Generator, from_output: bool = False
