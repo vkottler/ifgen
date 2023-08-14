@@ -41,9 +41,15 @@ class IfgenEnvironment(LoggerMixin):
         for subdir in Generator:
             self.output.joinpath(subdir).mkdir(parents=True, exist_ok=True)
 
-        self.root_namespace = Namespace(
-            *self.config.data["namespace"], delim=CPP_DELIM
+        global_namespace = Namespace(delim=CPP_DELIM)
+
+        # Register global names.
+
+        self.root_namespace = global_namespace.child(
+            *self.config.data["namespace"]
         )
+
+        # Register custom names for each generator.
 
     def make_path(
         self, name: str, generator: Generator, from_output: bool = False
