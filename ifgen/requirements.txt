@@ -1,1 +1,1 @@
-vcorelib>=2.4.10
+vcorelib>=2.5.2

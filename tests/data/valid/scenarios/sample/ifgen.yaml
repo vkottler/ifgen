@@ -6,31 +6,37 @@ structs:
     namespace: [C]
     description: "Sample struct 1."
     fields:
-      field1:
+      - name: field1
         description: A field.
         type: uint8_t
-      field2:
+
+      - name: field2
         type: Enum1
-      field3:
+
+      - name: field3
         type: double
 
   Test2:
     fields:
-      field1:
+      - name: field1
         type: int8_t
-      field2:
+
+      - name: field2
         description: A field.
         type: int16_t
-      field3:
+
+      - name: field3
         type: float
 
   Test3:
     fields:
-      field1:
+      - name: field1
         type: int
-      field2:
+
+      - name: field2
         type: C::Test1
-      field3:
+
+      - name: field3
         type: Test2
 
 enums:

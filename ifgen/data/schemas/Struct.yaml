@@ -7,8 +7,6 @@ required: [fields]
 
 properties:
   fields:
-    type: object
-    additionalProperties: false
-    patternProperties:
-      "^[a-zA-Z0-9-_.]+$":
-        $ref: package://ifgen/schemas/StructField.yaml
+    type: array
+    items:
+      $ref: package://ifgen/schemas/StructField.yaml

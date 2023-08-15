@@ -54,7 +54,7 @@ def struct_includes(task: GenerateTask) -> Iterable[str]:
 
     return {
         header_for_type(config["type"], task)
-        for config in task.instance.get("fields", {}).values()
+        for config in task.instance["fields"]
     }
 
 
@@ -64,5 +64,5 @@ def create_struct(task: GenerateTask) -> None:
     with task.boilerplate(includes=struct_includes(task)) as writer:
         writer.write(f"struct {task.name}")
         with writer.scope(suffix=";"):
-            for name, data in task.instance.get("fields", {}).items():
-                writer.write(struct_line(name, data))
+            for field in task.instance["fields"]:
+                writer.write(struct_line(field.pop("name"), field))
