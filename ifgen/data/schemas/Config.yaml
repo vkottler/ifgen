@@ -13,6 +13,12 @@ properties:
     items:
       type: string
 
+  test_dir:
+    type: array
+    default: [src, apps]
+    items:
+      type: string
+
   command:
     type: string
     default: "\\"

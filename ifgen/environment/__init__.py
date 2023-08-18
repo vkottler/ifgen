@@ -36,10 +36,14 @@ class IfgenEnvironment(LoggerMixin):
         self.output = combine_if_not_absolute(
             self.root_path, normalize(*self.config.data["output_dir"])
         )
+        self.test_dir = combine_if_not_absolute(
+            self.root_path, normalize(*self.config.data["test_dir"])
+        )
 
         # Create output directories.
         for subdir in Generator:
-            self.output.joinpath(subdir).mkdir(parents=True, exist_ok=True)
+            for path in [self.output, self.test_dir]:
+                path.joinpath(subdir).mkdir(parents=True, exist_ok=True)
 
         global_namespace = Namespace(delim=CPP_DELIM)
 
@@ -62,3 +66,8 @@ class IfgenEnvironment(LoggerMixin):
             result = self.output.joinpath(result)
 
         return result
+
+    def make_test_path(self, name: str, generator: Generator) -> Path:
+        """Make a path to an interface's unit-test suite."""
+
+        return self.test_dir.joinpath(str(generator), f"test_{name}.cc")

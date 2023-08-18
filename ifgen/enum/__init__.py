@@ -66,3 +66,10 @@ def create_enum(task: GenerateTask) -> None:
 
         writer.empty()
         enum_to_string_function(task, writer)
+
+
+def create_enum_test(task: GenerateTask) -> None:
+    """Create a unit test for the enum string-conversion methods."""
+
+    with task.boilerplate(includes=[], is_test=True) as writer:
+        writer.cpp_comment("Unit test.")
