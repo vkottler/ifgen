@@ -9,9 +9,12 @@ from typing import Dict, Optional, Union
 from vcorelib.io import IndentedFileWriter
 
 # internal
+from ifgen.enum.test import create_enum_test
 from ifgen.generation.interface import GenerateTask
 
 EnumConfig = Optional[Dict[str, Union[int, str]]]
+
+__all__ = ["create_enum", "create_enum_test"]
 
 
 def enum_line(name: str, value: EnumConfig) -> str:
@@ -54,7 +57,7 @@ def enum_to_string_function(
 def create_enum(task: GenerateTask) -> None:
     """Create a header file based on an enum definition."""
 
-    with task.boilerplate(includes=["<cstdint>"]) as writer:
+    with task.boilerplate(includes=["<cstdint>"], json=True) as writer:
         writer.write(f"enum class {task.name} : {task.instance['underlying']}")
         with writer.scope(suffix=";"):
             writer.join(
@@ -66,10 +69,3 @@ def create_enum(task: GenerateTask) -> None:
 
         writer.empty()
         enum_to_string_function(task, writer)
-
-
-def create_enum_test(task: GenerateTask) -> None:
-    """Create a unit test for the enum string-conversion methods."""
-
-    with task.boilerplate(includes=[], is_test=True) as writer:
-        writer.cpp_comment("Unit test.")

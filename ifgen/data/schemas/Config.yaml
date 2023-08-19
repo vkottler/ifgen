@@ -7,15 +7,21 @@ additionalProperties: false
 required: []
 
 properties:
+  source_dir:
+    type: array
+    default: [src]
+    items:
+      type: string
+
   output_dir:
     type: array
-    default: [src, generated]
+    default: [generated]
     items:
       type: string
 
   test_dir:
     type: array
-    default: [src, apps]
+    default: [apps]
     items:
       type: string
 

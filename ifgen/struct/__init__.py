@@ -61,7 +61,7 @@ def struct_includes(task: GenerateTask) -> Iterable[str]:
 def create_struct(task: GenerateTask) -> None:
     """Create a header file based on a struct definition."""
 
-    with task.boilerplate(includes=struct_includes(task)) as writer:
+    with task.boilerplate(includes=struct_includes(task), json=True) as writer:
         writer.write(f"struct {task.name}")
         with writer.scope(suffix=";"):
             for field in task.instance["fields"]:

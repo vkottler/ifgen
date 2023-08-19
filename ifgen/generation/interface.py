@@ -3,7 +3,7 @@ A module defining generator interfaces.
 """
 
 # built-in
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from json import dumps
 from pathlib import Path
 from typing import (
@@ -104,16 +104,25 @@ class GenerateTask(NamedTuple):
 
     @contextmanager
     def boilerplate(
-        self, includes: Iterable[str] = None, is_test: bool = False
+        self,
+        includes: Iterable[str] = None,
+        is_test: bool = False,
+        use_namespace: bool = True,
+        description: str = None,
+        json: bool = False,
     ) -> Iterator[IndentedFileWriter]:
         """
         Create standard generation boilerplate and yield the file writer to
         use for writing the remaining content.
         """
 
-        with IndentedFileWriter.from_path(
-            self.path if not is_test else self.test_path, per_indent=4
-        ) as writer:
+        with ExitStack() as stack:
+            writer = stack.enter_context(
+                IndentedFileWriter.from_path(
+                    self.path if not is_test else self.test_path, per_indent=4
+                )
+            )
+
             # Write file header.
             with writer.javadoc():
                 writer.write(self.command("file"))
@@ -123,7 +132,8 @@ class GenerateTask(NamedTuple):
                     )
                 )
 
-                writer.write(dumps(self.instance, indent=2))
+                if json:
+                    writer.write(dumps(self.instance, indent=2))
 
             if not is_test:
                 writer.write("#pragma once")
@@ -134,20 +144,32 @@ class GenerateTask(NamedTuple):
                     if include:
                         writer.write(f"#include {include}")
 
-            # Write namespace.
-            namespace = self.namespace()
-            writer.write(f"namespace {namespace}")
-            with writer.scope(suffix=f"; // namespace {namespace}", indent=0):
-                # Write struct definition.
-                with writer.padding():
-                    if (
-                        "description" in self.instance
-                        and self.instance["description"]
-                    ):
-                        with writer.javadoc():
-                            writer.write(self.instance["description"])
+            if use_namespace:
+                # Write namespace.
+                namespace = self.namespace()
+                writer.write(f"namespace {namespace}")
 
-                    yield writer
+                stack.enter_context(
+                    writer.scope(
+                        suffix=f"; // namespace {namespace}", indent=0
+                    )
+                )
+
+                stack.enter_context(writer.padding())
+
+            if description is None:
+                if (
+                    "description" in self.instance
+                    and self.instance["description"]
+                ):
+                    description = self.instance["description"]
+
+            # Write struct definition.
+            if description is not None:
+                with writer.javadoc():
+                    writer.write(description)
+
+            yield writer
 
 
 InstanceGenerator = Callable[[GenerateTask], None]

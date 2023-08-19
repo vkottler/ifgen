@@ -9,7 +9,7 @@ from pathlib import Path
 # third-party
 from vcorelib.logging import LoggerMixin
 from vcorelib.namespace import CPP_DELIM, Namespace
-from vcorelib.paths import normalize
+from vcorelib.paths import normalize, rel
 
 # internal
 from ifgen.config import Config
@@ -33,11 +33,14 @@ class IfgenEnvironment(LoggerMixin):
         self.root_path = root
         self.config = config
 
+        self.source = combine_if_not_absolute(
+            self.root_path, normalize(*self.config.data["source_dir"])
+        )
         self.output = combine_if_not_absolute(
-            self.root_path, normalize(*self.config.data["output_dir"])
+            self.source, normalize(*self.config.data["output_dir"])
         )
         self.test_dir = combine_if_not_absolute(
-            self.root_path, normalize(*self.config.data["test_dir"])
+            self.source, normalize(*self.config.data["test_dir"])
         )
 
         # Create output directories.
@@ -66,6 +69,13 @@ class IfgenEnvironment(LoggerMixin):
             result = self.output.joinpath(result)
 
         return result
+
+    def rel_include(self, name: str, generator: Generator) -> Path:
+        """Get an include path to a generated output."""
+
+        return rel(self.output, base=self.source).joinpath(
+            self.make_path(name, generator)
+        )
 
     def make_test_path(self, name: str, generator: Generator) -> Path:
         """Make a path to an interface's unit-test suite."""
