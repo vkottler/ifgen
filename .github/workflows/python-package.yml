@@ -38,6 +38,14 @@ jobs:
 
       - run: pip${{matrix.python-version}} install vmklib>=1.8.0
 
+      # Begin project-specific setup.
+      - uses: seanmiddleditch/gha-setup-ninja@master
+        with: {version: 1.11.1}
+        if: matrix.system == 'ubuntu-latest'
+      - run: sudo apt-get install clang-format-15
+        if: matrix.system == 'ubuntu-latest'
+      # End project-specific setup.
+
       - run: mk python-sa-types
 
       - name: lint and build

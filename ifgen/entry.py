@@ -1,7 +1,7 @@
 # =====================================
 # generator=datazen
 # version=3.1.3
-# hash=f0c9a12aaa15048d721b3013306b2423
+# hash=6018c3513f5723ef6420ac8718d5f8ad
 # =====================================
 
 """
@@ -15,6 +15,9 @@ import os
 from pathlib import Path
 import sys
 from typing import List
+
+# third-party
+from vcorelib.logging import log_time as _log_time
 
 # internal
 from ifgen import DESCRIPTION, VERSION
@@ -73,7 +76,8 @@ def main(argv: List[str] = None) -> int:
         os.chdir(args.dir)
 
         # run the application
-        result = entry(args)
+        with _log_time(logging.getLogger(__name__), "Command"):
+            result = entry(args)
     except SystemExit as exc:
         result = 1
         if exc.code is not None and isinstance(exc.code, int):

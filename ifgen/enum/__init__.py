@@ -43,7 +43,7 @@ def enum_to_string_function(
     with writer.scope():
         writer.write("switch (instance)")
 
-        with writer.scope():
+        with writer.scope(indent=0):
             for enum in task.instance.get("enum", {}):
                 writer.write(f"case {task.name}::{enum}:")
                 with writer.indented():

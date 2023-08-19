@@ -40,7 +40,8 @@ test = [
   "sphinx-book-theme",
   "pytest-cov",
   "setuptools-wrapper",
-  "types-setuptools"
+  "types-setuptools",
+  "yambs"
 ]
 
 [project.scripts]

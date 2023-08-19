@@ -1,0 +1,6 @@
+src
+ninja
+third-party
+compile_commands.json
+.ninja*
+build.ninja

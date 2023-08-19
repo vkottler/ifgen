@@ -3,6 +3,14 @@ name: ifgen
 version: "{{major}}.{{minor}}.{{patch}}"
 description: An interface generator for distributed computing.
 entry: {{entry}}
+time_command: true
+
+ci_local:
+  - "- uses: seanmiddleditch/gha-setup-ninja@master"
+  - "  with: {version: 1.11.1}"
+  - "  if: matrix.system == 'ubuntu-latest'"
+  - "- run: sudo apt-get install clang-format-15"
+  - "  if: matrix.system == 'ubuntu-latest'"
 
 requirements:
   - vcorelib>=2.5.2
@@ -11,6 +19,7 @@ dev_requirements:
   - pytest-cov
   - setuptools-wrapper
   - types-setuptools
+  - yambs
 
 commands:
   - name: gen
