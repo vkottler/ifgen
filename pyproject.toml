@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta:__legacy__"
 
 [project]
 name = "ifgen"
-version = "0.2.0"
+version = "1.0.0"
 description = "An interface generator for distributed computing."
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 authors = [
   {name = "Vaughn Kottler", email = "vaughnkottler@gmail.com"}
 ]
@@ -15,9 +15,6 @@ maintainers = [
   {name = "Vaughn Kottler", email = "vaughnkottler@gmail.com"}
 ]
 classifiers = [
-  "Programming Language :: Python :: 3.8",
-  "Programming Language :: Python :: 3.9",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Operating System :: Microsoft :: Windows",
   "Operating System :: MacOS",
@@ -43,7 +40,8 @@ test = [
   "sphinx-book-theme",
   "pytest-cov",
   "setuptools-wrapper",
-  "types-setuptools"
+  "types-setuptools",
+  "yambs"
 ]
 
 [project.scripts]

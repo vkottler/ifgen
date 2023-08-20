@@ -1,6 +1,7 @@
 ---
 includes:
   - has_description.yaml
+  - has_namespace.yaml
 
 required: [enum]
 

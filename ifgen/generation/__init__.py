@@ -5,40 +5,42 @@ A module implementing interfaces to facilitate code generation.
 # built-in
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
+from typing import Dict, List
 
 # internal
 from ifgen.config import Config
-from ifgen.enum import create_enum
-from ifgen.generation.interface import GenerateTask, GeneratorMap
+from ifgen.enum import create_enum, create_enum_test
+from ifgen.environment import Generator, IfgenEnvironment
+from ifgen.generation.interface import GenerateTask, InstanceGenerator
 from ifgen.struct import create_struct
 
-GENERATORS: GeneratorMap = {
-    "structs": create_struct,
-    "enums": create_enum,
+GENERATORS: Dict[Generator, List[InstanceGenerator]] = {
+    Generator.STRUCTS: [create_struct],
+    Generator.ENUMS: [create_enum, create_enum_test],
 }
 
 
-def generate(root: Path, output: Path, config: Config) -> None:
+def generate(root: Path, config: Config) -> None:
     """Generate struct files."""
 
-    # Create output directories.
-    for subdir in GENERATORS:
-        output.joinpath(subdir).mkdir(parents=True, exist_ok=True)
+    env = IfgenEnvironment(root, config)
 
-    pool = ThreadPool()  # pylint: disable=consider-using-with
-    for gen_name, generator in GENERATORS.items():
-        pool.map(
-            generator,
-            (
-                GenerateTask(
-                    name,
-                    root,
-                    output.joinpath(gen_name, f"{name}.h"),
-                    data,
-                    config.data,
+    with ThreadPool() as pool:
+        for generator, methods in GENERATORS.items():
+            for method in methods:
+                pool.map(
+                    method,
+                    (
+                        GenerateTask(
+                            name,
+                            generator,
+                            env.make_path(name, generator, from_output=True),
+                            env.make_test_path(name, generator),
+                            data,
+                            env,
+                        )
+                        for name, data in config.data.get(
+                            generator.value, {}
+                        ).items()
+                    ),
                 )
-                for name, data in config.data.get(gen_name, {}).items()
-            ),
-        )
-    pool.close()
-    pool.join()

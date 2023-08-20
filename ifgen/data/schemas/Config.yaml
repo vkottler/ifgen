@@ -1,24 +1,33 @@
 ---
+includes:
+  - has_namespace.yaml
+
 type: object
 additionalProperties: false
 required: []
 
 properties:
+  source_dir:
+    type: array
+    default: [src]
+    items:
+      type: string
+
   output_dir:
     type: array
-    default: [src, generated]
+    default: [generated]
+    items:
+      type: string
+
+  test_dir:
+    type: array
+    default: [apps]
     items:
       type: string
 
   command:
     type: string
     default: "\\"
-
-  namespace:
-    type: array
-    default: [Coral]
-    items:
-      type: string
 
   structs:
     type: object

@@ -1,0 +1,10 @@
+---
+variants:
+  debug:
+    targets: [apps]
+
+  clang:
+    suffix: &clang_version "-15"
+
+  clang-opt:
+    suffix: *clang_version

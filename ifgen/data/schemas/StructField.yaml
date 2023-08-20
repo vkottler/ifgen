@@ -1,0 +1,12 @@
+---
+includes:
+  - has_description.yaml
+
+required: [name, type]
+
+properties:
+  name: &pattern_string
+    type: string
+    pattern: &pattern "^[a-zA-Z0-9-_.:]+$"
+
+  type: *pattern_string
