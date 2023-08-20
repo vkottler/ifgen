@@ -41,17 +41,19 @@ def enum_to_string_function(
 
     writer.write(f"inline const char *to_string({task.name} instance)")
     with writer.scope():
-        writer.write("switch (instance)")
+        writer.write(f'const char *result = "UNKNOWN {task.name}";')
 
-        with writer.scope(indent=0):
-            for enum in task.instance.get("enum", {}):
-                writer.write(f"case {task.name}::{enum}:")
-                with writer.indented():
-                    writer.write(f'return "{enum}";')
+        with writer.padding():
+            writer.write("switch (instance)")
 
-            writer.write("default:")
-            with writer.indented():
-                writer.write(f'return "UNKNOWN {task.name}";')
+            with writer.scope(indent=0):
+                for enum in task.instance.get("enum", {}):
+                    writer.write(f"case {task.name}::{enum}:")
+                    with writer.indented():
+                        writer.write(f'result = "{enum}";')
+                        writer.write("break;")
+
+        writer.write("return result;")
 
 
 def create_enum(task: GenerateTask) -> None:
