@@ -56,7 +56,7 @@ class GenerateTask(NamedTuple):
     def namespace(self) -> str:
         """Get this task's namespace."""
 
-        nspace = self.env.root_namespace
+        nspace = self.env.types.root_namespace
         with nspace.pushed(*self.instance.get("namespace", [])):
             result = nspace.namespace(track=False)
 
