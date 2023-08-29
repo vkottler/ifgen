@@ -13,7 +13,7 @@ ci_local:
   - "  if: matrix.system == 'ubuntu-latest'"
 
 requirements:
-  - vcorelib>=2.5.2
+  - runtimepy>=2.1.1
 
 dev_requirements:
   - pytest-cov

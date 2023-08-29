@@ -12,10 +12,10 @@ from ifgen.config import Config
 from ifgen.enum import create_enum, create_enum_test
 from ifgen.environment import Generator, IfgenEnvironment
 from ifgen.generation.interface import GenerateTask, InstanceGenerator
-from ifgen.struct import create_struct
+from ifgen.struct import create_struct, create_struct_test
 
 GENERATORS: Dict[Generator, List[InstanceGenerator]] = {
-    Generator.STRUCTS: [create_struct],
+    Generator.STRUCTS: [create_struct, create_struct_test],
     Generator.ENUMS: [create_enum, create_enum_test],
 }
 

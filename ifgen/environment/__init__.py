@@ -5,10 +5,11 @@ A module implementing a generation-environment interface.
 # built-in
 from enum import StrEnum
 from pathlib import Path
+from typing import Any
 
 # third-party
+from runtimepy.codec.system import TypeSystem
 from vcorelib.logging import LoggerMixin
-from vcorelib.namespace import CPP_DELIM, Namespace
 from vcorelib.paths import normalize, rel
 
 # internal
@@ -21,6 +22,31 @@ class Generator(StrEnum):
 
     STRUCTS = "structs"
     ENUMS = "enums"
+
+
+def runtime_enum_data(data: dict[str, Any]) -> dict[str, int]:
+    """Get runtime enumeration data."""
+
+    result = {}
+
+    curr_value = 0
+
+    for key, value in data.items():
+        if value is None or "value" not in value:
+            result[key] = curr_value
+            curr_value += 1
+        else:
+            result[key] = value["value"]
+            if value["value"] >= curr_value:
+                curr_value = value["value"] + 1
+
+    return result
+
+
+def type_string(data: str) -> str:
+    """Handle some type name conversions."""
+
+    return data.replace("_t", "")
 
 
 class IfgenEnvironment(LoggerMixin):
@@ -48,15 +74,43 @@ class IfgenEnvironment(LoggerMixin):
             for path in [self.output, self.test_dir]:
                 path.joinpath(subdir).mkdir(parents=True, exist_ok=True)
 
-        global_namespace = Namespace(delim=CPP_DELIM)
+        self.types = TypeSystem(*self.config.data["namespace"])
+        self._register_enums()
+        self._register_structs()
 
-        # Register global names.
+    def _register_enums(self) -> None:
+        """Register configuration enums."""
 
-        self.root_namespace = global_namespace.child(
-            *self.config.data["namespace"]
-        )
+        for name, enum in self.config.data.get("enums", {}).items():
+            self.types.enum(
+                name,
+                runtime_enum_data(enum["enum"]),
+                *enum["namespace"],
+                primitive=type_string(enum["underlying"]),
+            )
 
-        # Register custom names for each generator.
+            self.logger.info(
+                "Registered enum '%s'.",
+                self.types.root_namespace.delim.join(
+                    enum["namespace"] + [name]
+                ),
+            )
+
+    def _register_structs(self) -> None:
+        """Register configuration structs."""
+
+        for name, struct in self.config.data.get("structs", {}).items():
+            self.types.register(name, *struct["namespace"])
+            for field in struct["fields"]:
+                self.types.add(name, field["name"], type_string(field["type"]))
+
+            self.logger.info(
+                "Registered struct '%s' (%d bytes).",
+                self.types.root_namespace.delim.join(
+                    struct["namespace"] + [name]
+                ),
+                self.types.size(name, *struct["namespace"]),
+            )
 
     def make_path(
         self, name: str, generator: Generator, from_output: bool = False

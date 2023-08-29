@@ -7,14 +7,11 @@ from vcorelib.io import IndentedFileWriter
 
 # internal
 from ifgen.generation.interface import GenerateTask
+from ifgen.generation.test import unit_test_boilerplate
 
 
 def unit_test_body(task: GenerateTask, writer: IndentedFileWriter) -> None:
     """Implement a simple unit test for the enumeration."""
-
-    writer.write(f"using namespace {task.namespace()};")
-
-    writer.empty()
 
     for enum in task.instance.get("enum", {}):
         to_string = f"to_string({task.name}::{enum})"
@@ -26,15 +23,5 @@ def unit_test_body(task: GenerateTask, writer: IndentedFileWriter) -> None:
 def create_enum_test(task: GenerateTask) -> None:
     """Create a unit test for the enum string-conversion methods."""
 
-    include = task.env.rel_include(task.name, task.generator)
-
-    with task.boilerplate(
-        includes=["<cassert>", "<cstring>", "<iostream>", f'"{include}"'],
-        is_test=True,
-        use_namespace=False,
-        description=f"A unit test for {task.generator} {task.name}.",
-    ) as writer:
-        writer.write("int main(void)")
-        with writer.scope():
-            unit_test_body(task, writer)
-            writer.write("return 0;")
+    with unit_test_boilerplate(task) as writer:
+        unit_test_body(task, writer)
