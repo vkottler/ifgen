@@ -7,7 +7,9 @@ from typing import Dict, Iterable, Union
 
 # internal
 from ifgen.generation.interface import GenerateTask
+from ifgen.struct.test import create_struct_test
 
+__all__ = ["create_struct", "create_struct_test"]
 FieldConfig = Dict[str, Union[int, str]]
 
 
@@ -62,7 +64,18 @@ def create_struct(task: GenerateTask) -> None:
     """Create a header file based on a struct definition."""
 
     with task.boilerplate(includes=struct_includes(task), json=True) as writer:
-        writer.write(f"struct {task.name}")
+        attributes = ["gnu::packed"]
+        writer.write(f"struct [[{', '.join(attributes)}]] {task.name}")
         with writer.scope(suffix=";"):
             for field in task.instance["fields"]:
                 writer.write(struct_line(field.pop("name"), field))
+
+        writer.empty()
+
+        # Add size assertion.
+        writer.write(
+            (
+                f"static_assert(sizeof({task.name}) "
+                f"== {task.env.types.size(task.name)});"
+            )
+        )
