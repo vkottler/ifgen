@@ -58,16 +58,12 @@ class GenerateTask(NamedTuple):
     def enum(self) -> RuntimeEnum:
         """Look up a runtime enumeration for this task."""
 
-        return self.env.types.get_enum(
-            self.name, *self.instance.get("namespace", [])
-        )
+        return self.env.get_enum(self.name)
 
     def protocol(self) -> Protocol:
         """Loop up a protocol for this task."""
 
-        return self.env.types.get_protocol(
-            self.name, *self.instance.get("namespace", [])
-        )
+        return self.env.get_protocol(self.name)
 
     def namespace(self) -> str:
         """Get this task's namespace."""

@@ -6,6 +6,7 @@ A module implementing interfaces for struct-file generation.
 from typing import Dict, Iterable, Union
 
 # internal
+from ifgen import PKG_NAME
 from ifgen.generation.interface import GenerateTask
 from ifgen.struct.methods import struct_methods
 from ifgen.struct.test import create_struct_test
@@ -60,8 +61,8 @@ def struct_includes(task: GenerateTask) -> Iterable[str]:
         for config in task.instance["fields"]
     }
 
+    result.add(f'"../{PKG_NAME}/common.h"')
     result.add("<array>")
-    result.add("<bit>")
 
     return result
 

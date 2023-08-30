@@ -19,6 +19,10 @@ def unit_test_body(task: GenerateTask, writer: IndentedFileWriter) -> None:
         writer.write(f'assert(!strcmp({to_string}, "{enum}"));')
         writer.empty()
 
+    writer.c_comment("Attempt to decode this?")
+    writer.write(f"std::cout << {task.name}_json();")
+    writer.empty()
+
 
 def create_enum_test(task: GenerateTask) -> None:
     """Create a unit test for the enum string-conversion methods."""

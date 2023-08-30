@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Dict, List
 
 # internal
+from ifgen.common import create_common, create_common_test
 from ifgen.config import Config
 from ifgen.enum import create_enum, create_enum_test
 from ifgen.environment import Generator, IfgenEnvironment
@@ -17,6 +18,7 @@ from ifgen.struct import create_struct, create_struct_test
 GENERATORS: Dict[Generator, List[InstanceGenerator]] = {
     Generator.STRUCTS: [create_struct, create_struct_test],
     Generator.ENUMS: [create_enum, create_enum_test],
+    Generator.IFGEN: [create_common, create_common_test],
 }
 
 
