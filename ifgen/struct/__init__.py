@@ -7,6 +7,7 @@ from typing import Dict, Iterable, Union
 
 # internal
 from ifgen.generation.interface import GenerateTask
+from ifgen.struct.methods import struct_methods
 from ifgen.struct.test import create_struct_test
 
 __all__ = ["create_struct", "create_struct_test"]
@@ -54,10 +55,15 @@ def header_for_type(name: str, task: GenerateTask) -> str:
 def struct_includes(task: GenerateTask) -> Iterable[str]:
     """Determine headers that need to be included for a given struct."""
 
-    return {
+    result = {
         header_for_type(config["type"], task)
         for config in task.instance["fields"]
     }
+
+    result.add("<array>")
+    result.add("<bit>")
+
+    return result
 
 
 def create_struct(task: GenerateTask) -> None:
@@ -67,15 +73,26 @@ def create_struct(task: GenerateTask) -> None:
         attributes = ["gnu::packed"]
         writer.write(f"struct [[{', '.join(attributes)}]] {task.name}")
         with writer.scope(suffix=";"):
+            writer.write(
+                (
+                    f"static constexpr std::size_t size = "
+                    f"{task.env.types.size(task.name)};"
+                )
+            )
+            writer.empty()
+
+            # Fields.
             for field in task.instance["fields"]:
                 writer.write(struct_line(field.pop("name"), field))
+
+            writer.empty()
+
+            # Methods.
+            struct_methods(task, writer)
 
         writer.empty()
 
         # Add size assertion.
         writer.write(
-            (
-                f"static_assert(sizeof({task.name}) "
-                f"== {task.env.types.size(task.name)});"
-            )
+            f"static_assert(sizeof({task.name}) == {task.name}::size);"
         )

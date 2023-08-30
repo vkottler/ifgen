@@ -75,7 +75,7 @@ jobs:
 
       - run: |
           mk python-release owner=vkottler \
-                            repo=ifgen version=1.1.0
+                            repo=ifgen version=1.2.0
         if: |
           matrix.python-version == '3.11'
           && matrix.system == 'ubuntu-latest'
