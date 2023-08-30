@@ -2,6 +2,9 @@
 A module implementing interfaces for generating struct method code.
 """
 
+# built-in
+from typing import Any
+
 # third-party
 from vcorelib.io import IndentedFileWriter
 
@@ -56,6 +59,16 @@ def struct_decode(task: GenerateTask, writer: IndentedFileWriter) -> None:
         writer.cpp_comment("Need to get individual field sizes.")
 
 
+def protocol_json(task: GenerateTask) -> dict[str, Any]:
+    """Get JSON data for this struct task."""
+
+    protocol = task.env.types.get_protocol(
+        task.name, *task.instance.get("namespace", [])
+    )
+
+    return protocol.export_json()
+
+
 def struct_methods(task: GenerateTask, writer: IndentedFileWriter) -> None:
     """Write generated-struct methods."""
 
@@ -72,8 +85,11 @@ def struct_methods(task: GenerateTask, writer: IndentedFileWriter) -> None:
     with writer.padding():
         struct_decode(task, writer)
 
-    # This output isn't super useful.
-    # task.env.types.get_protocol(
-    #     task.name, *task.instance.get("namespace", [])
-    # ).export_json(),
-    to_json_method(task, writer, {}, task_name=False, static=True)
+    to_json_method(
+        task,
+        writer,
+        protocol_json(task),
+        dumps_indent=task.instance["json_indent"],
+        task_name=False,
+        static=True,
+    )

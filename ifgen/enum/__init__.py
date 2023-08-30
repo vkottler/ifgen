@@ -85,6 +85,7 @@ def create_enum(task: GenerateTask) -> None:
             task,
             writer,
             runtime.asdict(),
+            dumps_indent=task.instance["json_indent"],
         )
 
         writer.empty()

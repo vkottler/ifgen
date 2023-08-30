@@ -5,6 +5,7 @@ structs:
   Test1:
     namespace: [C]
     description: "Sample struct 1."
+    json_indent: 4
     fields:
       - name: field1
         description: A field.
@@ -50,6 +51,7 @@ enums:
   Enum2:
     namespace: [C]
     description: "Sample enum 2."
+    json_indent: 4
     enum:
       red: {value: 1, description: A sample value.}
       green:

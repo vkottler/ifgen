@@ -21,6 +21,7 @@ def to_json_method(
     data: dict[str, Any],
     task_name: bool = True,
     static: bool = False,
+    dumps_indent: int = None,
 ) -> None:
     """Create a _json() method for a given task."""
 
@@ -40,8 +41,25 @@ def to_json_method(
         return_line = "return "
         indent = 0
 
-        for line in wrap(dumps(data, separators=(",", ":")), 40):
+        raw = dumps(
+            data,
+            separators=(",", ":"),
+            indent=dumps_indent,
+            sort_keys=True,
+        )
+
+        if dumps_indent is None:
+            lines = wrap(raw, 40)
+        else:
+            lines = raw.split(linesep)
+
+        for line in lines:
             line = line.replace('"', '\\"')
+
+            # Add a newline inside of the output string.
+            if dumps_indent is not None:
+                line += "\\n"
+
             return_line += f'{" " * indent}"{line}"{linesep}'
 
             if indent == 0:
