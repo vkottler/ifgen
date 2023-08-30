@@ -17,6 +17,8 @@ from typing import (
 )
 
 # third-party
+from runtimepy.codec.protocol import Protocol
+from runtimepy.enum import RuntimeEnum
 from vcorelib.io import IndentedFileWriter
 from vcorelib.namespace import CPP_DELIM
 
@@ -52,6 +54,20 @@ class GenerateTask(NamedTuple):
     def config(self) -> IfgenConfig:
         """Get the environment's configuration data."""
         return self.env.config.data
+
+    def enum(self) -> RuntimeEnum:
+        """Look up a runtime enumeration for this task."""
+
+        return self.env.types.get_enum(
+            self.name, *self.instance.get("namespace", [])
+        )
+
+    def protocol(self) -> Protocol:
+        """Loop up a protocol for this task."""
+
+        return self.env.types.get_protocol(
+            self.name, *self.instance.get("namespace", [])
+        )
 
     def namespace(self) -> str:
         """Get this task's namespace."""

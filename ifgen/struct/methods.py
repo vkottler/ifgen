@@ -7,6 +7,7 @@ from vcorelib.io import IndentedFileWriter
 
 # internal
 from ifgen.generation.interface import GenerateTask
+from ifgen.generation.json import to_json_method
 
 
 def struct_encode(task: GenerateTask, writer: IndentedFileWriter) -> None:
@@ -59,8 +60,20 @@ def struct_methods(task: GenerateTask, writer: IndentedFileWriter) -> None:
     """Write generated-struct methods."""
 
     writer.write("using Buffer = std::array<uint8_t, size>;")
-    writer.empty()
+
+    with writer.padding():
+        writer.cpp_comment(
+            "Add a function for type ID, get it from the TypeSystem?"
+        )
+        writer.cpp_comment("Underlying type for Type ID?")
 
     struct_encode(task, writer)
-    writer.empty()
-    struct_decode(task, writer)
+
+    with writer.padding():
+        struct_decode(task, writer)
+
+    # This output isn't super useful.
+    # task.env.types.get_protocol(
+    #     task.name, *task.instance.get("namespace", [])
+    # ).export_json(),
+    to_json_method(task, writer, {}, task_name=False, static=True)

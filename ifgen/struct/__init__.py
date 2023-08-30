@@ -75,6 +75,13 @@ def create_struct(task: GenerateTask) -> None:
         with writer.scope(suffix=";"):
             writer.write(
                 (
+                    "static constexpr "
+                    f"{task.env.config.data['struct_id_underlying']} "
+                    f"id = {task.protocol().id};"
+                )
+            )
+            writer.write(
+                (
                     f"static constexpr std::size_t size = "
                     f"{task.env.types.size(task.name)};"
                 )

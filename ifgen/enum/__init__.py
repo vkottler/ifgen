@@ -11,6 +11,7 @@ from vcorelib.io import IndentedFileWriter
 # internal
 from ifgen.enum.test import create_enum_test
 from ifgen.generation.interface import GenerateTask
+from ifgen.generation.json import to_json_method
 
 EnumConfig = Optional[Dict[str, Union[int, str]]]
 
@@ -69,5 +70,23 @@ def create_enum(task: GenerateTask) -> None:
                 )
             )
 
+        runtime = task.enum()
+
+        with writer.padding():
+            writer.write(
+                (
+                    "static constexpr "
+                    f"{task.env.config.data['enum_id_underlying']} "
+                    f"{task.name}_id = {runtime.id};"
+                )
+            )
+
+        to_json_method(
+            task,
+            writer,
+            runtime.asdict(),
+        )
+
         writer.empty()
+
         enum_to_string_function(task, writer)
