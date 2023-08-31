@@ -166,3 +166,12 @@ class IfgenEnvironment(LoggerMixin):
         return self.types.get_enum(
             name, *self.config.data["enums"].get("namespace", [])
         )
+
+    def is_enum(self, name: str) -> bool:
+        """Determine if a field is an enumeration or not."""
+
+        try:
+            self.get_enum(type_string(name))
+            return True
+        except KeyError:
+            return False

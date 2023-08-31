@@ -42,6 +42,9 @@ structs:
       - name: field3
         type: Test2
 
+      - name: field4
+        type: C::Enum2
+
 enums:
   Enum1:
     underlying: uint16_t
@@ -55,6 +58,7 @@ enums:
     description: "Sample enum 2."
     json_indent: 4
     enum:
+      unknown:
       red: {value: 1, description: A sample value.}
       green:
       blue: {value: 5}

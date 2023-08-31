@@ -26,11 +26,19 @@ def swap_fields(
         writer.empty()
         writer.c_comment(f"{kind} {name}")
 
-        if task.env.is_struct(kind):
+        is_enum = task.env.is_enum(kind)
+
+        if task.env.size(kind) == 1:
+            line = f"{name} = "
+            arg = "buffer[offset]"
+            if is_enum:
+                arg = f"{kind}({arg})"
+            writer.write(line + arg + ";")
+
+        elif task.env.is_struct(kind):
             writer.write(
                 f"{name}.{'decode' if is_decode else 'encode'}_swapped("
             )
-
             pointer = f"{kind}::Buffer *"
             if is_decode:
                 pointer = "const " + pointer
@@ -38,6 +46,9 @@ def swap_fields(
             arg = f"*reinterpret_cast<{pointer}>"
             arg += "(&buffer[offset])"
             writer.write(f"    {arg});")
+
+        elif is_enum:
+            writer.cpp_comment("IS ENUM")
 
         writer.write(f"offset += {size};")
 
