@@ -147,6 +147,15 @@ class IfgenEnvironment(LoggerMixin):
             name, self.config.data["structs"].get("namespace", [])
         )
 
+    def is_struct(self, name: str) -> bool:
+        """Determine if a field is a struct or not."""
+
+        try:
+            self.get_protocol(type_string(name))
+            return True
+        except KeyError:
+            return False
+
     def size(self, type_name: str) -> int:
         """Get the size of a given type."""
         return self.types.size(type_string(type_name))
