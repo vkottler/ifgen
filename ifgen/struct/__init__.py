@@ -3,52 +3,17 @@ A module implementing interfaces for struct-file generation.
 """
 
 # built-in
-from contextlib import contextmanager
-from typing import Dict, Iterable, Iterator, Optional, Union
-
-# third-party
-from vcorelib.io import IndentedFileWriter
+from typing import Dict, Iterable, Union
 
 # internal
 from ifgen import PKG_NAME
+from ifgen.generation.comments import LineWithComment, trailing_comment_lines
 from ifgen.generation.interface import GenerateTask
 from ifgen.struct.methods import struct_methods
 from ifgen.struct.test import create_struct_test
 
 __all__ = ["create_struct", "create_struct_test"]
 FieldConfig = Dict[str, Union[int, str]]
-
-
-def trailing_comment(data: str) -> str:
-    """Wrap some string data in a doxygen comment."""
-    return f" /*!< {data} */"
-
-
-LineWithComment = tuple[str, Optional[str]]
-LinesWithComments = list[LineWithComment]
-
-
-@contextmanager
-def trailing_comment_lines(
-    writer: IndentedFileWriter,
-) -> Iterator[LinesWithComments]:
-    """Align indentations for trailing comments."""
-
-    # Collect lines and comments.
-    lines_comments: LinesWithComments = []
-    yield lines_comments
-
-    longest = 0
-    for line, _ in lines_comments:
-        length = len(line)
-        if len(line) > longest:
-            longest = length
-
-    for line, comment in lines_comments:
-        padding = " " * (longest - len(line))
-        if comment:
-            line += padding + trailing_comment(comment)
-        writer.write(line)
 
 
 def struct_line(name: str, value: FieldConfig) -> LineWithComment:
@@ -126,7 +91,7 @@ def create_struct(task: GenerateTask) -> None:
             with writer.padding():
                 with trailing_comment_lines(writer) as lines:
                     for field in task.instance["fields"]:
-                        lines.append(struct_line(field.pop("name"), field))
+                        lines.append(struct_line(field["name"], field))
 
             # Methods.
             struct_methods(task, writer)

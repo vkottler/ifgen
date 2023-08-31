@@ -8,6 +8,7 @@ from vcorelib.io import IndentedFileWriter
 # internal
 from ifgen.generation.interface import GenerateTask
 from ifgen.struct.methods.common import wrapper_method
+from ifgen.struct.methods.swap import encode_swapped_method
 
 
 def encode_native_method(
@@ -23,24 +24,6 @@ def encode_native_method(
     writer.write("inline void encode_native(Buffer &buffer)")
     with writer.scope():
         writer.write("buffer = *raw();")
-
-    del task
-
-
-def encode_swapped_method(
-    task: GenerateTask, writer: IndentedFileWriter
-) -> None:
-    """Generate a struct-encode method that uses swapped byte order."""
-
-    with writer.javadoc():
-        writer.write("Encode using byte-order swapped from native.")
-        writer.empty()
-        writer.write("\\param[out] buffer Buffer to write.")
-
-    writer.write("inline void encode_swapped(Buffer &buffer)")
-    with writer.scope():
-        writer.write("(void)buffer;")
-        writer.cpp_comment("Need to get individual field sizes.")
 
     del task
 

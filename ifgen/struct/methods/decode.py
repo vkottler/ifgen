@@ -8,6 +8,7 @@ from vcorelib.io import IndentedFileWriter
 # internal
 from ifgen.generation.interface import GenerateTask
 from ifgen.struct.methods.common import wrapper_method
+from ifgen.struct.methods.swap import decode_swapped_method
 
 
 def decode_method(writer: IndentedFileWriter) -> None:
@@ -40,24 +41,6 @@ def decode_native_method(
         writer.write("*buf = buffer;")
 
     del task
-
-
-def decode_swapped_method(
-    task: GenerateTask, writer: IndentedFileWriter
-) -> None:
-    """Generate a struct-decode method that uses swapped byte order."""
-
-    del task
-
-    with writer.javadoc():
-        writer.write("Decode using byte-order swapped from native.")
-        writer.empty()
-        writer.write("\\param[in] buffer Buffer to read.")
-
-    writer.write("inline void decode_swapped(const Buffer &buffer)")
-    with writer.scope():
-        writer.write("(void)buffer;")
-        writer.cpp_comment("Need to get individual field sizes.")
 
 
 def struct_decode(task: GenerateTask, writer: IndentedFileWriter) -> None:

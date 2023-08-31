@@ -147,6 +147,10 @@ class IfgenEnvironment(LoggerMixin):
             name, self.config.data["structs"].get("namespace", [])
         )
 
+    def size(self, type_name: str) -> int:
+        """Get the size of a given type."""
+        return self.types.size(type_string(type_name))
+
     def get_enum(self, name: str) -> RuntimeEnum:
         """Get a runtime enum instance for a given enumeration."""
 
