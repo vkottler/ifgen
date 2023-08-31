@@ -20,18 +20,23 @@ def no_swap(
 ) -> None:
     """Encode or decode a single-byte type."""
 
-    # need to handle this
-    del is_decode
-
     name = field["name"]
     kind = field["type"]
 
-    line = f"{name} = "
-    arg = "buffer[offset]"
-    if task.env.is_enum(kind):
-        arg = f"{kind}({arg})"
+    is_enum = task.env.is_enum(kind)
 
-    writer.write(line + arg + ";")
+    if is_decode:
+        line = f"{name} = "
+        arg = "(*buffer)[offset]"
+        if is_enum:
+            arg = f"{kind}({arg})"
+
+        writer.write(line + arg + ";")
+    else:
+        arg = name
+        if is_enum:
+            arg = f"uint8_t({arg})"
+        writer.write(f"(*buffer)[offset] = {arg};")
 
 
 def swap_struct(
@@ -52,8 +57,8 @@ def swap_struct(
     if is_decode:
         pointer = "const " + pointer
 
-    arg = f"*reinterpret_cast<{pointer}>"
-    arg += "(&buffer[offset])"
+    arg = f"reinterpret_cast<{pointer}>"
+    arg += "(&(*buffer)[offset])"
     writer.write(f"    {arg});")
 
 
@@ -78,8 +83,6 @@ def swap_fields(
     """Perform byte swaps on individual struct fields."""
 
     writer.write("std::size_t offset = 0;")
-    writer.write("(void)buffer;")
-    writer.write("(void)offset;")
 
     for field in task.instance["fields"]:
         writer.empty()
@@ -109,7 +112,7 @@ def decode_swapped_method(
         writer.empty()
         writer.write("\\param[in] buffer Buffer to read.")
 
-    writer.write("inline void decode_swapped(const Buffer &buffer)")
+    writer.write("inline void decode_swapped(const Buffer *buffer)")
     with writer.scope():
         swap_fields(task, writer)
 
@@ -124,6 +127,6 @@ def encode_swapped_method(
         writer.empty()
         writer.write("\\param[out] buffer Buffer to write.")
 
-    writer.write("inline void encode_swapped(Buffer &buffer)")
+    writer.write("inline void encode_swapped(Buffer *buffer)")
     with writer.scope():
         swap_fields(task, writer, is_decode=False)

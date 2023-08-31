@@ -35,10 +35,10 @@ def decode_native_method(
         writer.empty()
         writer.write("\\param[in] buffer Buffer to read.")
 
-    writer.write("inline void decode_native(const Buffer &buffer)")
+    writer.write("inline void decode_native(const Buffer *buffer)")
     with writer.scope():
         writer.write("auto buf = raw();")
-        writer.write("*buf = buffer;")
+        writer.write("*buf = *buffer;")
 
     del task
 

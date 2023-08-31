@@ -21,9 +21,9 @@ def encode_native_method(
         writer.empty()
         writer.write("\\param[out] buffer Buffer to write.")
 
-    writer.write("inline void encode_native(Buffer &buffer)")
+    writer.write("inline void encode_native(Buffer *buffer)")
     with writer.scope():
-        writer.write("buffer = *raw();")
+        writer.write("*buffer = *raw();")
 
     del task
 
