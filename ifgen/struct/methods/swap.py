@@ -2,11 +2,74 @@
 A module implementing interfaces for byte-swapping method generation.
 """
 
+# built-in
+from typing import Any
+
 # third-party
 from vcorelib.io import IndentedFileWriter
 
 # internal
 from ifgen.generation.interface import GenerateTask
+
+
+def no_swap(
+    field: dict[str, Any],
+    is_decode: bool,
+    task: GenerateTask,
+    writer: IndentedFileWriter,
+) -> None:
+    """Encode or decode a single-byte type."""
+
+    # need to handle this
+    del is_decode
+
+    name = field["name"]
+    kind = field["type"]
+
+    line = f"{name} = "
+    arg = "buffer[offset]"
+    if task.env.is_enum(kind):
+        arg = f"{kind}({arg})"
+
+    writer.write(line + arg + ";")
+
+
+def swap_struct(
+    field: dict[str, Any],
+    is_decode: bool,
+    task: GenerateTask,
+    writer: IndentedFileWriter,
+) -> None:
+    """Perform a byte swap for a struct type."""
+
+    del task
+
+    name = field["name"]
+    kind = field["type"]
+
+    writer.write(f"{name}.{'decode' if is_decode else 'encode'}_swapped(")
+    pointer = f"{kind}::Buffer *"
+    if is_decode:
+        pointer = "const " + pointer
+
+    arg = f"*reinterpret_cast<{pointer}>"
+    arg += "(&buffer[offset])"
+    writer.write(f"    {arg});")
+
+
+def swap_enum(
+    field: dict[str, Any],
+    is_decode: bool,
+    task: GenerateTask,
+    writer: IndentedFileWriter,
+) -> None:
+    """Perform a byte swap for an enumeration type."""
+
+    writer.cpp_comment("IS ENUM")
+
+    del field
+    del is_decode
+    del task
 
 
 def swap_fields(
@@ -19,36 +82,19 @@ def swap_fields(
     writer.write("(void)offset;")
 
     for field in task.instance["fields"]:
-        size = task.env.size(field["type"])
+        writer.empty()
+
         name = field["name"]
         kind = field["type"]
-
-        writer.empty()
         writer.c_comment(f"{kind} {name}")
 
-        is_enum = task.env.is_enum(kind)
-
-        if task.env.size(kind) == 1:
-            line = f"{name} = "
-            arg = "buffer[offset]"
-            if is_enum:
-                arg = f"{kind}({arg})"
-            writer.write(line + arg + ";")
-
+        size = task.env.size(kind)
+        if size == 1:
+            no_swap(field, is_decode, task, writer)
         elif task.env.is_struct(kind):
-            writer.write(
-                f"{name}.{'decode' if is_decode else 'encode'}_swapped("
-            )
-            pointer = f"{kind}::Buffer *"
-            if is_decode:
-                pointer = "const " + pointer
-
-            arg = f"*reinterpret_cast<{pointer}>"
-            arg += "(&buffer[offset])"
-            writer.write(f"    {arg});")
-
-        elif is_enum:
-            writer.cpp_comment("IS ENUM")
+            swap_struct(field, is_decode, task, writer)
+        elif task.env.is_enum(kind):
+            swap_enum(field, is_decode, task, writer)
 
         writer.write(f"offset += {size};")
 
