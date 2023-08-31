@@ -33,9 +33,11 @@ structs:
     fields:
       - name: field1
         type: int32_t
+        description: A field.
 
       - name: field2
         type: C::Test1
+        description: Another field.
 
       - name: field3
         type: Test2

@@ -3,7 +3,11 @@ A module implementing interfaces for struct-file generation.
 """
 
 # built-in
-from typing import Dict, Iterable, Union
+from contextlib import contextmanager
+from typing import Dict, Iterable, Iterator, Optional, Union
+
+# third-party
+from vcorelib.io import IndentedFileWriter
 
 # internal
 from ifgen import PKG_NAME
@@ -15,15 +19,42 @@ __all__ = ["create_struct", "create_struct_test"]
 FieldConfig = Dict[str, Union[int, str]]
 
 
-def struct_line(name: str, value: FieldConfig) -> str:
+def trailing_comment(data: str) -> str:
+    """Wrap some string data in a doxygen comment."""
+    return f" /*!< {data} */"
+
+
+LineWithComment = tuple[str, Optional[str]]
+LinesWithComments = list[LineWithComment]
+
+
+@contextmanager
+def trailing_comment_lines(
+    writer: IndentedFileWriter,
+) -> Iterator[LinesWithComments]:
+    """Align indentations for trailing comments."""
+
+    # Collect lines and comments.
+    lines_comments: LinesWithComments = []
+    yield lines_comments
+
+    longest = 0
+    for line, _ in lines_comments:
+        length = len(line)
+        if len(line) > longest:
+            longest = length
+
+    for line, comment in lines_comments:
+        padding = " " * (longest - len(line))
+        if comment:
+            line += padding + trailing_comment(comment)
+        writer.write(line)
+
+
+def struct_line(name: str, value: FieldConfig) -> LineWithComment:
     """Build a string for a struct-field line."""
 
-    result = f"{value['type']} {name};"
-
-    if value.get("description"):
-        result += f" /*!< {value['description']} */"
-
-    return result
+    return f"{value['type']} {name};", value.get("description")  # type: ignore
 
 
 TYPE_LOOKUP: Dict[str, str] = {}
@@ -74,26 +105,28 @@ def create_struct(task: GenerateTask) -> None:
         attributes = ["gnu::packed"]
         writer.write(f"struct [[{', '.join(attributes)}]] {task.name}")
         with writer.scope(suffix=";"):
-            writer.write(
-                (
-                    "static constexpr "
-                    f"{task.env.config.data['struct_id_underlying']} "
-                    f"id = {task.protocol().id};"
+            with trailing_comment_lines(writer) as lines:
+                lines.append(
+                    (
+                        "static constexpr "
+                        f"{task.env.config.data['struct_id_underlying']} "
+                        f"id = {task.protocol().id};",
+                        f"{task.name}'s identifier.",
+                    )
                 )
-            )
-            writer.write(
-                (
-                    f"static constexpr std::size_t size = "
-                    f"{task.env.types.size(task.name)};"
+                lines.append(
+                    (
+                        f"static constexpr std::size_t size = "
+                        f"{task.env.types.size(task.name)};",
+                        f"{task.name}'s size in bytes.",
+                    )
                 )
-            )
-            writer.empty()
 
             # Fields.
-            for field in task.instance["fields"]:
-                writer.write(struct_line(field.pop("name"), field))
-
-            writer.empty()
+            with writer.padding():
+                with trailing_comment_lines(writer) as lines:
+                    for field in task.instance["fields"]:
+                        lines.append(struct_line(field.pop("name"), field))
 
             # Methods.
             struct_methods(task, writer)

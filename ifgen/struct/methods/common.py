@@ -14,7 +14,11 @@ def wrapper_method(writer: IndentedFileWriter, is_encode: bool = True) -> None:
     line = f"inline void {method}("
 
     writer.write(
-        line + ("const " if not is_encode else "") + "Buffer &buffer,"
+        line
+        + ("const " if not is_encode else "")
+        + "Buffer "
+        + ("&" if not is_encode else "")
+        + "&buffer,"
     )
     writer.write(
         " " * len(line) + "std::endian endianness = std::endian::native)"

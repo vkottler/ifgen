@@ -29,7 +29,13 @@ def struct_methods(task: GenerateTask, writer: IndentedFileWriter) -> None:
     """Write generated-struct methods."""
 
     writer.write("using Buffer = std::array<uint8_t, size>;")
-    writer.empty()
+
+    with writer.padding():
+        with writer.javadoc():
+            writer.write("Get this instance as a fixed-size byte array.")
+        writer.write("Buffer *raw()")
+        with writer.scope():
+            writer.write("return reinterpret_cast<Buffer *>(this);")
 
     struct_encode(task, writer)
 

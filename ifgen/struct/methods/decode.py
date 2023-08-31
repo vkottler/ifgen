@@ -36,8 +36,8 @@ def decode_native_method(
 
     writer.write("inline void decode_native(const Buffer &buffer)")
     with writer.scope():
-        writer.write("(void)buffer;")
-        writer.cpp_comment("Need to get individual field sizes.")
+        writer.write("auto buf = raw();")
+        writer.write("*buf = buffer;")
 
     del task
 

@@ -22,8 +22,7 @@ def encode_native_method(
 
     writer.write("inline void encode_native(Buffer &buffer)")
     with writer.scope():
-        writer.write("(void)buffer;")
-        writer.cpp_comment("Need to get individual field sizes.")
+        writer.write("buffer = *raw();")
 
     del task
 
