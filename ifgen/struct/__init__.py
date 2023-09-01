@@ -5,9 +5,11 @@ A module implementing interfaces for struct-file generation.
 # built-in
 from typing import Dict, Iterable, Union
 
+# third-party
+from vcorelib.io.file_writer import CommentStyle, LineWithComment
+
 # internal
 from ifgen import PKG_NAME
-from ifgen.generation.comments import LineWithComment, trailing_comment_lines
 from ifgen.generation.interface import GenerateTask
 from ifgen.struct.methods import struct_methods
 from ifgen.struct.test import create_struct_test
@@ -70,7 +72,9 @@ def create_struct(task: GenerateTask) -> None:
         attributes = ["gnu::packed"]
         writer.write(f"struct [[{', '.join(attributes)}]] {task.name}")
         with writer.scope(suffix=";"):
-            with trailing_comment_lines(writer) as lines:
+            with writer.trailing_comment_lines(
+                style=CommentStyle.C_DOXYGEN
+            ) as lines:
                 lines.append(
                     (
                         "static constexpr "
@@ -87,11 +91,11 @@ def create_struct(task: GenerateTask) -> None:
                     )
                 )
 
-            # Fields.
-            with writer.padding():
-                with trailing_comment_lines(writer) as lines:
-                    for field in task.instance["fields"]:
-                        lines.append(struct_line(field["name"], field))
+                # Fields.
+                for field in task.instance["fields"]:
+                    lines.append(struct_line(field["name"], field))
+
+                lines.append(("", None))
 
             # Methods.
             struct_methods(task, writer)
