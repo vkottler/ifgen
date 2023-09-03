@@ -7,7 +7,6 @@
 #include "generated/structs/Test2.h"
 #include "generated/structs/Test3.h"
 #include <cassert>
-#include <cstring>
 #include <iostream>
 
 void test1_encode_decode(std::endian endianness)
@@ -24,6 +23,7 @@ void test1_encode_decode(std::endian endianness)
 
     C::Test1 dst;
     assert(dst.decode(&buffer, endianness) == C::Test1::size);
+    assert(src == dst);
 
     /* Verify the values transferred. */
     assert(dst.field1 == 0x55);
@@ -45,6 +45,7 @@ void test2_encode_decode(std::endian endianness)
 
     Test2 dst;
     assert(dst.decode(&buffer, endianness) == Test2::size);
+    assert(src == dst);
 
     /* Verify the values transferred. */
     assert(dst.field1 == 0x55);
@@ -74,6 +75,8 @@ void test3_encode_decode(std::endian endianness)
 
     Test3 dst = {};
     assert(dst.decode(&buffer, endianness) == Test3::size);
+    assert(src == dst);
+
     assert(dst.field1 == 70000);
 
     assert(dst.field2.field1 == 200);

@@ -54,7 +54,10 @@ def struct_methods(
 
     if header:
         writer.write("using Buffer = std::array<uint8_t, size>;")
-        writer.empty()
+        with writer.padding():
+            writer.write(
+                f"auto operator<=>(const {task.name} &) const = default;"
+            )
 
     struct_buffer_method(task, writer, header)
     writer.empty()
