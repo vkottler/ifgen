@@ -97,6 +97,9 @@ def swap_enum(
     assignment(writer, lhs, rhs)
 
 
+# def encode_primitive_swap()
+
+
 def swap_fields(
     task: GenerateTask, writer: IndentedFileWriter, is_decode: bool = True
 ) -> None:

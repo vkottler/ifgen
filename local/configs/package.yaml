@@ -12,6 +12,19 @@ ci_local:
   - "- run: sudo apt-get install clang-format-15"
   - "  if: matrix.system == 'ubuntu-latest'"
 
+  - "- run: gcc --version"
+  - "  if: matrix.system == 'ubuntu-latest'"
+  - "- run: g++ --version"
+  - "  if: matrix.system == 'ubuntu-latest'"
+
+  - "- run: sudo apt-get install gcc-12 g++-12"
+  - "  if: matrix.system == 'ubuntu-latest'"
+
+  - "- run: gcc --version"
+  - "  if: matrix.system == 'ubuntu-latest'"
+  - "- run: g++ --version"
+  - "  if: matrix.system == 'ubuntu-latest'"
+
 requirements:
   - runtimepy>=2.1.1
   - vcorelib>=2.6.1

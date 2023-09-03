@@ -44,6 +44,16 @@ jobs:
         if: matrix.system == 'ubuntu-latest'
       - run: sudo apt-get install clang-format-15
         if: matrix.system == 'ubuntu-latest'
+      - run: gcc --version
+        if: matrix.system == 'ubuntu-latest'
+      - run: g++ --version
+        if: matrix.system == 'ubuntu-latest'
+      - run: sudo apt-get install gcc-12 g++-12
+        if: matrix.system == 'ubuntu-latest'
+      - run: gcc --version
+        if: matrix.system == 'ubuntu-latest'
+      - run: g++ --version
+        if: matrix.system == 'ubuntu-latest'
       # End project-specific setup.
 
       - run: mk python-sa-types
