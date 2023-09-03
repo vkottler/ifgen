@@ -69,12 +69,19 @@ def assignment(writer: IndentedFileWriter, lhs: str, rhs: str) -> None:
 
     line = f"{lhs} = {rhs};"
 
-    if len(line) > 79:
+    if len(line) + 4 > 79:
         start = lhs + " ="
         writer.write(start)
         writer.write("    " + rhs + ";")
     else:
         writer.write(line)
+
+
+def to_integral(kind: str) -> str:
+    """Convert certain types to their corresponding integral types."""
+
+    lazy = {"float": "uint32_t", "double": "uint64_t"}
+    return lazy.get(kind, kind)
 
 
 def swap_enum(
@@ -88,16 +95,54 @@ def swap_enum(
     underlying = task.env.get_enum(field["type"]).primitive + "_t"
 
     if is_decode:
-        lhs = "// TODO"
-        rhs = "TODO"
+        lhs = f"{field['name']}"
+        writer.write(lhs + f" = {field['type']}(")
+
+        underlying = to_integral(underlying)
+        rhs = (
+            f"std::byteswap(*reinterpret_cast<const {underlying} *>"
+            f"(&buffer[offset])));"
+        )
+        writer.write("    " + rhs)
+
     else:
         lhs = f"*reinterpret_cast<{underlying} *>(&buffer[offset])"
+        underlying = to_integral(underlying)
         rhs = f"std::byteswap(static_cast<{underlying}>({field['name']}))"
+        assignment(writer, lhs, rhs)
+
+
+def encode_primitive_swap(
+    field: dict[str, Any], writer: IndentedFileWriter
+) -> None:
+    """Encode a primitive-sized element by swapping byte order."""
+
+    underlying = field["type"]
+    integral = to_integral(underlying)
+
+    rhs = "std::byteswap("
+    if field["type"] == integral:
+        lhs = f"*reinterpret_cast<{underlying} *>(&buffer[offset])"
+        rhs += f"{field['name']})"
+    else:
+        lhs = f"*reinterpret_cast<{integral} *>(&buffer[offset])"
+        rhs += f"reinterpret_cast<{integral} &>({field['name']}))"
 
     assignment(writer, lhs, rhs)
 
 
-# def encode_primitive_swap()
+def decode_primitive_swap(
+    field: dict[str, Any], writer: IndentedFileWriter
+) -> None:
+    """Decode a primitive-sized element by swapping byte order."""
+
+    lhs = f"{field['name']}"
+    underlying = to_integral(field["type"])
+    rhs = (
+        f"std::byteswap(*reinterpret_cast<const {underlying} *>"
+        f"(&buffer[offset]))"
+    )
+    assignment(writer, lhs, rhs)
 
 
 def swap_fields(
@@ -124,16 +169,9 @@ def swap_fields(
             writer.write(f"offset += {size};")
         else:
             if is_decode:
-                pass
+                decode_primitive_swap(field, writer)
             else:
-                lhs = (
-                    f"// *reinterpret_cast<{field['type']} *>(&buffer[offset])"
-                )
-                rhs = f"std::byteswap({field['name']})"
-
-                # if double or float, cast to uint32_t?
-
-                assignment(writer, lhs, rhs)
+                encode_primitive_swap(field, writer)
 
     writer.empty()
     writer.write("return offset;")
