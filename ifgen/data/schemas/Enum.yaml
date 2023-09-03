@@ -21,6 +21,10 @@ properties:
           description:
             type: string
 
+  use_map:
+    type: boolean
+    default: true
+
   underlying:
     type: string
     default: uint8_t

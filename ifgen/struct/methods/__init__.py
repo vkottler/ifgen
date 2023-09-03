@@ -25,22 +25,44 @@ def protocol_json(task: GenerateTask) -> dict[str, Any]:
     return protocol.export_json()
 
 
-def struct_methods(task: GenerateTask, writer: IndentedFileWriter) -> None:
-    """Write generated-struct methods."""
+def struct_buffer_method(
+    task: GenerateTask, writer: IndentedFileWriter, header: bool
+) -> None:
+    """Generate a method for raw buffer access."""
 
-    writer.write("using Buffer = std::array<uint8_t, size>;")
-
-    with writer.padding():
+    if header:
         with writer.javadoc():
             writer.write("Get this instance as a fixed-size byte array.")
-        writer.write("Buffer *raw()")
-        with writer.scope():
-            writer.write("return reinterpret_cast<Buffer *>(this);")
 
-    struct_encode(task, writer)
+    buff_type = task.cpp_namespace("Buffer", header=header)
 
-    with writer.padding():
-        struct_decode(task, writer)
+    # Returns a pointer.
+    method = task.cpp_namespace("raw()", prefix="*", header=header)
+    writer.write(f"{buff_type} {method}" + (";" if header else ""))
+
+    if header:
+        return
+
+    with writer.scope():
+        writer.write("return reinterpret_cast<Buffer *>(this);")
+
+
+def struct_methods(
+    task: GenerateTask, writer: IndentedFileWriter, header: bool
+) -> None:
+    """Write generated-struct methods."""
+
+    if header:
+        writer.write("using Buffer = std::array<uint8_t, size>;")
+        writer.empty()
+
+    struct_buffer_method(task, writer, header)
+    writer.empty()
+
+    struct_encode(task, writer, header)
+
+    writer.empty()
+    struct_decode(task, writer, header)
 
     to_json_method(
         task,
@@ -49,4 +71,5 @@ def struct_methods(task: GenerateTask, writer: IndentedFileWriter) -> None:
         dumps_indent=task.instance["json_indent"],
         task_name=False,
         static=True,
+        definition=header,
     )

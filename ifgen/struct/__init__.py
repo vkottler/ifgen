@@ -12,9 +12,10 @@ from vcorelib.io.file_writer import CommentStyle, LineWithComment
 from ifgen import PKG_NAME
 from ifgen.generation.interface import GenerateTask
 from ifgen.struct.methods import struct_methods
+from ifgen.struct.source import create_struct_source
 from ifgen.struct.test import create_struct_test
 
-__all__ = ["create_struct", "create_struct_test"]
+__all__ = ["create_struct", "create_struct_test", "create_struct_source"]
 FieldConfig = Dict[str, Union[int, str]]
 
 
@@ -72,6 +73,7 @@ def create_struct(task: GenerateTask) -> None:
         attributes = ["gnu::packed"]
         writer.write(f"struct [[{', '.join(attributes)}]] {task.name}")
         with writer.scope(suffix=";"):
+            writer.c_comment("Constant attributes.")
             with writer.trailing_comment_lines(
                 style=CommentStyle.C_DOXYGEN
             ) as lines:
@@ -91,6 +93,12 @@ def create_struct(task: GenerateTask) -> None:
                     )
                 )
 
+            writer.empty()
+            writer.c_comment("Fields.")
+
+            with writer.trailing_comment_lines(
+                style=CommentStyle.C_DOXYGEN
+            ) as lines:
                 # Fields.
                 for field in task.instance["fields"]:
                     lines.append(struct_line(field["name"], field))
@@ -98,7 +106,8 @@ def create_struct(task: GenerateTask) -> None:
                 lines.append(("", None))
 
             # Methods.
-            struct_methods(task, writer)
+            writer.c_comment("Methods.")
+            struct_methods(task, writer, True)
 
         writer.empty()
 

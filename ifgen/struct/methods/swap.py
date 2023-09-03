@@ -103,30 +103,44 @@ def swap_fields(
 
 
 def decode_swapped_method(
-    task: GenerateTask, writer: IndentedFileWriter
+    task: GenerateTask, writer: IndentedFileWriter, header: bool
 ) -> None:
     """Generate a struct-decode method that uses swapped byte order."""
 
-    with writer.javadoc():
-        writer.write("Decode using byte-order swapped from native.")
-        writer.empty()
-        writer.write("\\param[in] buffer Buffer to read.")
+    if header:
+        with writer.javadoc():
+            writer.write("Decode using byte-order swapped from native.")
+            writer.empty()
+            writer.write("\\param[in] buffer Buffer to read.")
 
-    writer.write("inline void decode_swapped(const Buffer *buffer)")
+    writer.write(
+        f"void {task.cpp_namespace('decode_swapped', header=header)}"
+        "(const Buffer *buffer)" + (";" if header else "")
+    )
+
+    if header:
+        return
+
     with writer.scope():
         swap_fields(task, writer)
 
 
 def encode_swapped_method(
-    task: GenerateTask, writer: IndentedFileWriter
+    task: GenerateTask, writer: IndentedFileWriter, header: bool
 ) -> None:
     """Generate a struct-encode method that uses swapped byte order."""
 
-    with writer.javadoc():
-        writer.write("Encode using byte-order swapped from native.")
-        writer.empty()
-        writer.write("\\param[out] buffer Buffer to write.")
+    if header:
+        with writer.javadoc():
+            writer.write("Encode using byte-order swapped from native.")
+            writer.empty()
+            writer.write("\\param[out] buffer Buffer to write.")
 
-    writer.write("inline void encode_swapped(Buffer *buffer)")
+    method = task.cpp_namespace("encode_swapped", header=header)
+    writer.write(f"void {method}(Buffer *buffer)" + (";" if header else ""))
+
+    if header:
+        return
+
     with writer.scope():
         swap_fields(task, writer, is_decode=False)

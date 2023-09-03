@@ -54,6 +54,7 @@ enums:
       C: {value: 1000}
 
   Enum2:
+    use_map: false
     namespace: [C]
     description: "Sample enum 2."
     json_indent: 4
