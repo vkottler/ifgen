@@ -27,7 +27,7 @@ def no_swap(
 
     if is_decode:
         line = f"{name} = "
-        arg = "(*buffer)[idx++]"
+        arg = "buf[idx++]"
         if is_enum:
             arg = f"{kind}({arg})"
 
@@ -36,7 +36,7 @@ def no_swap(
         arg = name
         if is_enum:
             arg = f"uint8_t({arg})"
-        writer.write(f"(*buffer)[idx++] = {arg};")
+        writer.write(f"buf[idx++] = {arg};")
 
 
 def swap_struct(
@@ -136,12 +136,21 @@ def decode_primitive_swap(
     """Decode a primitive-sized element by swapping byte order."""
 
     lhs = f"{field['name']}"
-    underlying = to_integral(field["type"])
-    rhs = (
-        f"std::byteswap(*reinterpret_cast<const {underlying} *>"
-        f"(&buf[idx]))"
-    )
-    assignment(writer, lhs, rhs)
+
+    underlying = field["type"]
+    integral = to_integral(underlying)
+    reinterp = f"reinterpret_cast<const {integral} *>"
+
+    if integral == underlying:
+        rhs = f"std::byteswap(*{reinterp}" f"(&buf[idx]))"
+        assignment(writer, lhs, rhs)
+    else:
+        assignment(
+            writer, "auto val", f"std::byteswap(*{reinterp}(&buf[idx]))"
+        )
+        assignment(
+            writer, lhs, f"*reinterpret_cast<const {underlying} *>(&val)"
+        )
 
 
 def swap_fields(

@@ -28,7 +28,7 @@ void test1_encode_decode(std::endian endianness)
     /* Verify the values transferred. */
     assert(dst.field1 == 0x55);
     assert(dst.field2 == Enum1::C);
-    // assert(dst.field3 == 2.5f);
+    assert(dst.field3 == 2.5f);
 }
 
 void test2_encode_decode(std::endian endianness)
@@ -49,7 +49,7 @@ void test2_encode_decode(std::endian endianness)
     /* Verify the values transferred. */
     assert(dst.field1 == 0x55);
     assert(dst.field2 == -500);
-    // assert(dst.field3 == 2.5f);
+    assert(dst.field3 == 2.5f);
 }
 
 void test3_encode_decode(std::endian endianness)
@@ -78,7 +78,13 @@ void test3_encode_decode(std::endian endianness)
 
     assert(dst.field2.field1 == 200);
     assert(dst.field2.field2 == Enum1::B);
-    // assert(dst.field2.field3 == -4000.0);
+    assert(dst.field2.field3 == -4000.0);
+
+    assert(dst.field3.field1 == -100);
+    assert(dst.field3.field2 == -300);
+    assert(dst.field3.field3 == -5.0f);
+
+    assert(dst.field4 == C::Enum2::green);
 }
 
 /**
