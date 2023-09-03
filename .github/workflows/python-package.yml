@@ -42,7 +42,7 @@ jobs:
       - uses: seanmiddleditch/gha-setup-ninja@master
         with: {version: 1.11.1}
         if: matrix.system == 'ubuntu-latest'
-      - run: sudo apt-get install clang-format-15
+      - run: sudo apt-get install gcc-12 g++-12 clang-15 clang-format-15
         if: matrix.system == 'ubuntu-latest'
       # End project-specific setup.
 
@@ -75,7 +75,7 @@ jobs:
 
       - run: |
           mk python-release owner=vkottler \
-                            repo=ifgen version=1.1.0
+                            repo=ifgen version=1.2.0
         if: |
           matrix.python-version == '3.11'
           && matrix.system == 'ubuntu-latest'

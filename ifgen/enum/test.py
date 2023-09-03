@@ -10,14 +10,35 @@ from ifgen.generation.interface import GenerateTask
 from ifgen.generation.test import unit_test_boilerplate
 
 
+def test_single(
+    task: GenerateTask, writer: IndentedFileWriter, enum: str
+) -> None:
+    """Generate test code for a single enumeration instance."""
+
+    with_namespace = f"{task.name}::{enum}"
+    writer.c_comment(f"Test {with_namespace}.")
+
+    to_string = f"to_string({with_namespace})"
+
+    writer.write(f"std::cout << {to_string} << std::endl;")
+    writer.write(f'assert(!strcmp({to_string}, "{enum}"));')
+    writer.write(f'assert(from_string("{enum}", instance));')
+    writer.write(f"assert(instance == {with_namespace});")
+    writer.empty()
+
+
 def unit_test_body(task: GenerateTask, writer: IndentedFileWriter) -> None:
     """Implement a simple unit test for the enumeration."""
 
+    writer.write(f"{task.name} instance;")
+    writer.empty()
+
     for enum in task.instance.get("enum", {}):
-        to_string = f"to_string({task.name}::{enum})"
-        writer.write(f"std::cout << {to_string} << std::endl;")
-        writer.write(f'assert(!strcmp({to_string}, "{enum}"));')
-        writer.empty()
+        test_single(task, writer, enum)
+
+    writer.c_comment("Attempt to decode this?")
+    writer.write(f"std::cout << {task.name}_json();")
+    writer.empty()
 
 
 def create_enum_test(task: GenerateTask) -> None:

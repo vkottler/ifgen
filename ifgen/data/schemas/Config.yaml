@@ -21,7 +21,7 @@ properties:
 
   test_dir:
     type: array
-    default: [apps]
+    default: [apps, generated]
     items:
       type: string
 
@@ -36,9 +36,28 @@ properties:
       "^[a-zA-Z0-9-_.]+$":
         $ref: package://ifgen/schemas/Struct.yaml
 
+  struct_id_underlying: &id_underlying
+    type: string
+    default: uint8_t
+    enum:
+      - int8_t
+      - int16_t
+      - int32_t
+      - int64_t
+
+      - uint8_t
+      - uint16_t
+      - uint32_t
+      - uint64_t
+
+  enum_id_underlying: *id_underlying
+
   enums:
     type: object
     additionalProperties: false
     patternProperties:
       "^[a-zA-Z0-9-_.]+$":
         $ref: package://ifgen/schemas/Enum.yaml
+
+  ifgen:
+    type: object

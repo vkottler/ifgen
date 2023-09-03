@@ -8,11 +8,14 @@ from pathlib import Path
 from typing import Any
 
 # third-party
+from runtimepy.codec.protocol import Protocol
 from runtimepy.codec.system import TypeSystem
+from runtimepy.enum import RuntimeEnum
 from vcorelib.logging import LoggerMixin
 from vcorelib.paths import normalize, rel
 
 # internal
+from ifgen import PKG_NAME
 from ifgen.config import Config
 from ifgen.paths import combine_if_not_absolute
 
@@ -22,6 +25,7 @@ class Generator(StrEnum):
 
     STRUCTS = "structs"
     ENUMS = "enums"
+    IFGEN = PKG_NAME
 
 
 def runtime_enum_data(data: dict[str, Any]) -> dict[str, int]:
@@ -135,3 +139,39 @@ class IfgenEnvironment(LoggerMixin):
         """Make a path to an interface's unit-test suite."""
 
         return self.test_dir.joinpath(str(generator), f"test_{name}.cc")
+
+    def get_protocol(self, name: str) -> Protocol:
+        """Get the protocol instance for a given struct."""
+
+        return self.types.get_protocol(
+            name, self.config.data["structs"].get("namespace", [])
+        )
+
+    def is_struct(self, name: str) -> bool:
+        """Determine if a field is a struct or not."""
+
+        try:
+            self.get_protocol(type_string(name))
+            return True
+        except KeyError:
+            return False
+
+    def size(self, type_name: str) -> int:
+        """Get the size of a given type."""
+        return self.types.size(type_string(type_name))
+
+    def get_enum(self, name: str) -> RuntimeEnum:
+        """Get a runtime enum instance for a given enumeration."""
+
+        return self.types.get_enum(
+            name, *self.config.data["enums"].get("namespace", [])
+        )
+
+    def is_enum(self, name: str) -> bool:
+        """Determine if a field is an enumeration or not."""
+
+        try:
+            self.get_enum(type_string(name))
+            return True
+        except KeyError:
+            return False

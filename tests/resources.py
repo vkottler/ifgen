@@ -24,7 +24,8 @@ def clean_scenario(name: str) -> Path:
     base = resource("scenarios", name)
 
     # Clean things that can affect tests.
-    for path in ["src"]:
+    src = Path("src")
+    for path in [src.joinpath("generated"), src.joinpath("apps", "generated")]:
         rmtree(base.joinpath(path), ignore_errors=True)
 
     return base

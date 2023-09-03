@@ -2,8 +2,10 @@
 A module implementing unit-testing related generation utilities.
 """
 
-# built-in
 from contextlib import contextmanager
+
+# built-in
+from os import linesep
 from typing import Iterator, List
 
 # third-party
@@ -24,12 +26,20 @@ def unit_test_boilerplate(
     if includes is None:
         includes = []
 
+    linesep.join([f"A unit test for {task.generator} {task.name}."])
+
     with task.boilerplate(
         includes=["<cassert>", "<cstring>", "<iostream>", f'"{include}"']
         + includes,
         is_test=True,
         use_namespace=False,
-        description=f"A unit test for {task.generator} {task.name}.",
+        description=linesep.join(
+            [
+                f"A unit test for {task.generator} {task.name}.",
+                "",
+                "\\return 0 on success.",
+            ]
+        ),
     ) as writer:
         writer.write("int main(void)")
         with writer.scope():

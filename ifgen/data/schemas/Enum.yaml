@@ -2,6 +2,7 @@
 includes:
   - has_description.yaml
   - has_namespace.yaml
+  - has_json_indent.yaml
 
 required: [enum]
 
@@ -19,6 +20,10 @@ properties:
             type: [string, number]
           description:
             type: string
+
+  use_map:
+    type: boolean
+    default: true
 
   underlying:
     type: string

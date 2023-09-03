@@ -27,7 +27,10 @@ def test_ifgen_command_basic():
     # Attempt to build and run generated tests.
     if platform == "linux":
         run([executable, "-m", "yambs", "-C", str(path), "native"], check=True)
-        run(["ninja", "-C", str(path), "debug", "format-check"], check=True)
+        run(
+            ["ninja", "-C", str(path), "debug", "clang", "format-check"],
+            check=True,
+        )
 
         # Run test apps.
         data: dict[str, Any] = ARBITER.decode(

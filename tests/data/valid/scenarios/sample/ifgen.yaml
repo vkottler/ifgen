@@ -5,6 +5,7 @@ structs:
   Test1:
     namespace: [C]
     description: "Sample struct 1."
+    json_indent: 4
     fields:
       - name: field1
         description: A field.
@@ -32,12 +33,17 @@ structs:
     fields:
       - name: field1
         type: int32_t
+        description: A field.
 
       - name: field2
         type: C::Test1
+        description: Another field.
 
       - name: field3
         type: Test2
+
+      - name: field4
+        type: C::Enum2
 
 enums:
   Enum1:
@@ -48,9 +54,12 @@ enums:
       C: {value: 1000}
 
   Enum2:
+    use_map: false
     namespace: [C]
     description: "Sample enum 2."
+    json_indent: 4
     enum:
+      unknown:
       red: {value: 1, description: A sample value.}
       green:
       blue: {value: 5}
