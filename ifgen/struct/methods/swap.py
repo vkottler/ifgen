@@ -27,7 +27,7 @@ def no_swap(
 
     if is_decode:
         line = f"{name} = "
-        arg = "(*buffer)[offset++]"
+        arg = "(*buffer)[idx++]"
         if is_enum:
             arg = f"{kind}({arg})"
 
@@ -36,7 +36,7 @@ def no_swap(
         arg = name
         if is_enum:
             arg = f"uint8_t({arg})"
-        writer.write(f"(*buffer)[offset++] = {arg};")
+        writer.write(f"(*buffer)[idx++] = {arg};")
 
 
 def swap_struct(
@@ -53,14 +53,14 @@ def swap_struct(
     kind = field["type"]
 
     writer.write(
-        f"offset += {name}.{'decode' if is_decode else 'encode'}_swapped("
+        f"idx += {name}.{'decode' if is_decode else 'encode'}_swapped("
     )
     pointer = f"{kind}::Buffer *"
     if is_decode:
         pointer = "const " + pointer
 
     arg = f"reinterpret_cast<{pointer}>"
-    arg += "(&(*buffer)[offset])"
+    arg += "(&(*buffer)[idx])"
     writer.write(f"    {arg});")
 
 
@@ -96,20 +96,19 @@ def swap_enum(
 
     if is_decode:
         lhs = f"{field['name']}"
-        writer.write(lhs + f" = {field['type']}(")
 
         underlying = to_integral(underlying)
         rhs = (
-            f"std::byteswap(*reinterpret_cast<const {underlying} *>"
-            f"(&buffer[offset])));"
+            f"{field['type']}(std::byteswap(*reinterpret_cast<const "
+            f"{underlying} *>(&buf[idx])))"
         )
-        writer.write("    " + rhs)
 
     else:
-        lhs = f"*reinterpret_cast<{underlying} *>(&buffer[offset])"
+        lhs = f"*reinterpret_cast<{underlying} *>(&buf[idx])"
         underlying = to_integral(underlying)
         rhs = f"std::byteswap(static_cast<{underlying}>({field['name']}))"
-        assignment(writer, lhs, rhs)
+
+    assignment(writer, lhs, rhs)
 
 
 def encode_primitive_swap(
@@ -122,10 +121,10 @@ def encode_primitive_swap(
 
     rhs = "std::byteswap("
     if field["type"] == integral:
-        lhs = f"*reinterpret_cast<{underlying} *>(&buffer[offset])"
+        lhs = f"*reinterpret_cast<{underlying} *>(&buf[idx])"
         rhs += f"{field['name']})"
     else:
-        lhs = f"*reinterpret_cast<{integral} *>(&buffer[offset])"
+        lhs = f"*reinterpret_cast<{integral} *>(&buf[idx])"
         rhs += f"reinterpret_cast<{integral} &>({field['name']}))"
 
     assignment(writer, lhs, rhs)
@@ -140,7 +139,7 @@ def decode_primitive_swap(
     underlying = to_integral(field["type"])
     rhs = (
         f"std::byteswap(*reinterpret_cast<const {underlying} *>"
-        f"(&buffer[offset]))"
+        f"(&buf[idx]))"
     )
     assignment(writer, lhs, rhs)
 
@@ -150,7 +149,8 @@ def swap_fields(
 ) -> None:
     """Perform byte swaps on individual struct fields."""
 
-    writer.write("std::size_t offset = 0;")
+    writer.write("std::size_t idx = 0;")
+    writer.write("auto buf = buffer->data();")
 
     for field in task.instance["fields"]:
         writer.empty()
@@ -166,15 +166,16 @@ def swap_fields(
             swap_struct(field, is_decode, task, writer)
         elif task.env.is_enum(kind):
             swap_enum(field, is_decode, task, writer)
-            writer.write(f"offset += {size};")
+            writer.write(f"idx += {size};")
         else:
             if is_decode:
                 decode_primitive_swap(field, writer)
             else:
                 encode_primitive_swap(field, writer)
+            writer.write(f"idx += {size};")
 
     writer.empty()
-    writer.write("return offset;")
+    writer.write("return idx;")
 
 
 def decode_swapped_method(

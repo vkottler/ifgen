@@ -21,7 +21,7 @@ properties:
 
   test_dir:
     type: array
-    default: [apps]
+    default: [apps, generated]
     items:
       type: string
 
