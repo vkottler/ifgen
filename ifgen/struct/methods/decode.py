@@ -20,38 +20,22 @@ def decode_method(
         with writer.javadoc():
             writer.write("Update this instance from a buffer.")
             writer.empty()
-            writer.write("\\param[in] buffer     Buffer to read.")
             writer.write(
-                "\\param[in] endianness Byte order from decoding elements."
+                task.command("param[in]", "buffer     Buffer to read.")
+            )
+            writer.write(
+                task.command(
+                    "param[in]",
+                    "endianness Byte order from decoding elements.",
+                )
+            )
+            writer.write(
+                task.command(
+                    "return", "              The number of bytes decoded."
+                )
             )
 
     wrapper_method(task, writer, header, is_encode=False)
-
-
-def decode_native_method(
-    task: GenerateTask, writer: IndentedFileWriter, header
-) -> None:
-    """Generate a struct-decode method that uses native byte order."""
-
-    if header:
-        with writer.javadoc():
-            writer.write("Decode using native byte-order.")
-            writer.empty()
-            writer.write("\\param[in] buffer Buffer to read.")
-
-    method = task.cpp_namespace("decode_native", header=header)
-    writer.write(
-        f"void {method}(const Buffer *buffer)" + (";" if header else "")
-    )
-
-    if header:
-        return
-
-    with writer.scope():
-        writer.write("auto buf = raw();")
-        writer.write("*buf = *buffer;")
-
-    del task
 
 
 def struct_decode(
@@ -59,9 +43,7 @@ def struct_decode(
 ) -> None:
     """Add a method for decoding structs."""
 
-    decode_native_method(task, writer, header)
-
-    with writer.padding():
-        decode_swapped_method(task, writer, header)
+    decode_swapped_method(task, writer, header)
+    writer.empty()
 
     decode_method(task, writer, header)

@@ -27,7 +27,7 @@ def no_swap(
 
     if is_decode:
         line = f"{name} = "
-        arg = "(*buffer)[offset]"
+        arg = "(*buffer)[offset++]"
         if is_enum:
             arg = f"{kind}({arg})"
 
@@ -36,7 +36,7 @@ def no_swap(
         arg = name
         if is_enum:
             arg = f"uint8_t({arg})"
-        writer.write(f"(*buffer)[offset] = {arg};")
+        writer.write(f"(*buffer)[offset++] = {arg};")
 
 
 def swap_struct(
@@ -52,7 +52,9 @@ def swap_struct(
     name = field["name"]
     kind = field["type"]
 
-    writer.write(f"{name}.{'decode' if is_decode else 'encode'}_swapped(")
+    writer.write(
+        f"offset += {name}.{'decode' if is_decode else 'encode'}_swapped("
+    )
     pointer = f"{kind}::Buffer *"
     if is_decode:
         pointer = "const " + pointer
@@ -98,8 +100,10 @@ def swap_fields(
             swap_struct(field, is_decode, task, writer)
         elif task.env.is_enum(kind):
             swap_enum(field, is_decode, task, writer)
+            writer.write(f"offset += {size};")
 
-        writer.write(f"offset += {size};")
+    writer.empty()
+    writer.write("return offset;")
 
 
 def decode_swapped_method(
@@ -111,10 +115,15 @@ def decode_swapped_method(
         with writer.javadoc():
             writer.write("Decode using byte-order swapped from native.")
             writer.empty()
-            writer.write("\\param[in] buffer Buffer to read.")
+            writer.write(task.command("param[in]", "buffer Buffer to read."))
+            writer.write(
+                task.command(
+                    "return", "          The number of bytes decoded."
+                )
+            )
 
     writer.write(
-        f"void {task.cpp_namespace('decode_swapped', header=header)}"
+        f"std::size_t {task.cpp_namespace('decode_swapped', header=header)}"
         "(const Buffer *buffer)" + (";" if header else "")
     )
 
@@ -134,10 +143,17 @@ def encode_swapped_method(
         with writer.javadoc():
             writer.write("Encode using byte-order swapped from native.")
             writer.empty()
-            writer.write("\\param[out] buffer Buffer to write.")
+            writer.write(task.command("param[out]", "buffer Buffer to write."))
+            writer.write(
+                task.command(
+                    "return", "           The number of bytes encoded."
+                )
+            )
 
     method = task.cpp_namespace("encode_swapped", header=header)
-    writer.write(f"void {method}(Buffer *buffer)" + (";" if header else ""))
+    writer.write(
+        f"std::size_t {method}(Buffer *buffer)" + (";" if header else "")
+    )
 
     if header:
         return
