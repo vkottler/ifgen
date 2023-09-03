@@ -64,6 +64,19 @@ def swap_struct(
     writer.write(f"    {arg});")
 
 
+def assignment(writer: IndentedFileWriter, lhs: str, rhs: str) -> None:
+    """Write an assignment line."""
+
+    line = f"{lhs} = {rhs};"
+
+    if len(line) > 79:
+        start = lhs + " ="
+        writer.write(start)
+        writer.write("    " + rhs + ";")
+    else:
+        writer.write(line)
+
+
 def swap_enum(
     field: dict[str, Any],
     is_decode: bool,
@@ -72,11 +85,16 @@ def swap_enum(
 ) -> None:
     """Perform a byte swap for an enumeration type."""
 
-    writer.cpp_comment("IS ENUM")
+    underlying = task.env.get_enum(field["type"]).primitive + "_t"
 
-    del field
-    del is_decode
-    del task
+    if is_decode:
+        lhs = "// TODO"
+        rhs = "TODO"
+    else:
+        lhs = f"*reinterpret_cast<{underlying} *>(&buffer[offset])"
+        rhs = f"std::byteswap(static_cast<{underlying}>({field['name']}))"
+
+    assignment(writer, lhs, rhs)
 
 
 def swap_fields(
@@ -101,6 +119,18 @@ def swap_fields(
         elif task.env.is_enum(kind):
             swap_enum(field, is_decode, task, writer)
             writer.write(f"offset += {size};")
+        else:
+            if is_decode:
+                pass
+            else:
+                lhs = (
+                    f"// *reinterpret_cast<{field['type']} *>(&buffer[offset])"
+                )
+                rhs = f"std::byteswap({field['name']})"
+
+                # if double or float, cast to uint32_t?
+
+                assignment(writer, lhs, rhs)
 
     writer.empty()
     writer.write("return offset;")
