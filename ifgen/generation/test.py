@@ -2,9 +2,8 @@
 A module implementing unit-testing related generation utilities.
 """
 
-from contextlib import contextmanager
-
 # built-in
+from contextlib import ExitStack, contextmanager
 from os import linesep
 from typing import Iterator, List
 
@@ -15,9 +14,50 @@ from vcorelib.io import IndentedFileWriter
 from ifgen.generation.interface import GenerateTask
 
 
+def unit_test_method_name(name: str, task: GenerateTask) -> str:
+    """Get the name of a unit test."""
+    return f"test_{task.name}_{name}"
+
+
+@contextmanager
+def unit_test_method(
+    name: str, task: GenerateTask, writer: IndentedFileWriter
+) -> Iterator[None]:
+    """Generate unit-test method boilerplate."""
+
+    unit_test_method_name(name, task)
+    writer.write(
+        f"void {unit_test_method_name(name, task)}(std::endian endianness)"
+    )
+    with writer.scope():
+        writer.write(f"using namespace {task.namespace()};")
+        writer.empty()
+        yield
+
+
+@contextmanager
+def unit_test_main(
+    task: GenerateTask, writer: IndentedFileWriter, description: bool = True
+) -> Iterator[None]:
+    """A method for generating main-function boilerplate for unit tests."""
+
+    if description:
+        with writer.javadoc():
+            writer.write(f"A unit test for {task.generator} {task.name}.")
+            writer.empty()
+            writer.write("\\return 0 on success.")
+
+    writer.write("int main(void)")
+    with writer.scope():
+        writer.write(f"using namespace {task.namespace()};")
+        writer.empty()
+        yield
+        writer.write("return 0;")
+
+
 @contextmanager
 def unit_test_boilerplate(
-    task: GenerateTask, includes: List[str] = None
+    task: GenerateTask, includes: List[str] = None, main: bool = True
 ) -> Iterator[IndentedFileWriter]:
     """Handle standard unit-test boilerplate."""
 
@@ -28,22 +68,23 @@ def unit_test_boilerplate(
 
     linesep.join([f"A unit test for {task.generator} {task.name}."])
 
-    with task.boilerplate(
-        includes=["<cassert>", "<cstring>", "<iostream>", f'"{include}"']
-        + includes,
-        is_test=True,
-        use_namespace=False,
-        description=linesep.join(
-            [
-                f"A unit test for {task.generator} {task.name}.",
-                "",
-                "\\return 0 on success.",
-            ]
-        ),
-    ) as writer:
-        writer.write("int main(void)")
-        with writer.scope():
-            writer.write(f"using namespace {task.namespace()};")
-            writer.empty()
-            yield writer
-            writer.write("return 0;")
+    with ExitStack() as stack:
+        writer = stack.enter_context(
+            task.boilerplate(
+                includes=[
+                    "<cassert>",
+                    "<cstring>",
+                    "<iostream>",
+                    f'"{include}"',
+                ]
+                + includes,
+                is_test=True,
+                use_namespace=False,
+                description=False,
+            )
+        )
+
+        if main:
+            stack.enter_context(unit_test_main(task, writer))
+
+        yield writer

@@ -14,6 +14,7 @@ from typing import (
     Iterator,
     NamedTuple,
     Optional,
+    Union,
 )
 
 # third-party
@@ -198,7 +199,7 @@ class GenerateTask(NamedTuple):
         includes: Iterable[str] = None,
         is_test: bool = False,
         use_namespace: bool = True,
-        description: str = None,
+        description: Union[bool, None, str] = None,
         json: bool = False,
     ) -> Iterator[IndentedFileWriter]:
         """
@@ -232,9 +233,9 @@ class GenerateTask(NamedTuple):
                     description = self.instance["description"]
 
             # Write struct definition.
-            if description is not None:
+            if description:
                 with writer.javadoc():
-                    writer.write(description)
+                    writer.write(description)  # type: ignore
 
             yield writer
 
