@@ -1,2 +1,5 @@
 [DESIGN]
 max-args=7
+
+[MESSAGES CONTROL]
+disable=duplicate-code

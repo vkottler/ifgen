@@ -19,7 +19,7 @@ def native_decode(writer: IndentedFileWriter) -> None:
 def native_encode(writer: IndentedFileWriter) -> None:
     """Write a buffer encoding method for native byte order."""
 
-    writer.write("*buffer = *raw();")
+    writer.write("*buffer = *raw_ro();")
 
 
 def wrapper_method(
@@ -49,6 +49,10 @@ def wrapper_method(
     if header:
         line += " = std::endian::native"
     line += ")"
+
+    if is_encode:
+        line += " const"
+
     if header:
         line += ";"
 

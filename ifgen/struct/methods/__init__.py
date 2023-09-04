@@ -26,25 +26,46 @@ def protocol_json(task: GenerateTask) -> dict[str, Any]:
 
 
 def struct_buffer_method(
-    task: GenerateTask, writer: IndentedFileWriter, header: bool
+    task: GenerateTask,
+    writer: IndentedFileWriter,
+    header: bool,
+    read_only: bool,
 ) -> None:
     """Generate a method for raw buffer access."""
 
     if header:
         with writer.javadoc():
-            writer.write("Get this instance as a fixed-size byte array.")
+            writer.write(
+                (
+                    "Get this instance as a "
+                    f"{'read-only ' if read_only else ''}"
+                    "fixed-size byte array."
+                )
+            )
 
     buff_type = task.cpp_namespace("Buffer", header=header)
 
+    if read_only:
+        buff_type = "const " + buff_type
+
     # Returns a pointer.
-    method = task.cpp_namespace("raw()", prefix="*", header=header)
-    writer.write(f"{buff_type} {method}" + (";" if header else ""))
+    method = task.cpp_namespace(
+        "raw()" if not read_only else "raw_ro()", prefix="*", header=header
+    )
+    writer.write(
+        f"{buff_type} {method}"
+        + (" const" if read_only else "")
+        + (";" if header else "")
+    )
 
     if header:
         return
 
     with writer.scope():
-        writer.write("return reinterpret_cast<Buffer *>(this);")
+        writer.write(
+            "return reinterpret_cast"
+            f"<{'const ' if read_only else ''}Buffer *>(this);"
+        )
 
 
 def struct_methods(
@@ -53,14 +74,16 @@ def struct_methods(
     """Write generated-struct methods."""
 
     if header:
-        writer.write("using Buffer = std::array<uint8_t, size>;")
+        writer.write("using Buffer = std::array<byte, size>;")
         with writer.padding():
             writer.write(
                 f"auto operator<=>(const {task.name} &) const = default;"
             )
 
-    struct_buffer_method(task, writer, header)
-    writer.empty()
+    struct_buffer_method(task, writer, header, False)
+
+    with writer.padding():
+        struct_buffer_method(task, writer, header, True)
 
     struct_encode(task, writer, header)
 

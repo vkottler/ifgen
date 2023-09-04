@@ -13,6 +13,7 @@ from ifgen import PKG_NAME
 from ifgen.generation.interface import GenerateTask
 from ifgen.struct.methods import struct_methods
 from ifgen.struct.source import create_struct_source
+from ifgen.struct.stream import struct_stream_methods
 from ifgen.struct.test import create_struct_test
 
 __all__ = ["create_struct", "create_struct_test", "create_struct_source"]
@@ -25,25 +26,8 @@ def struct_line(name: str, value: FieldConfig) -> LineWithComment:
     return f"{value['type']} {name};", value.get("description")  # type: ignore
 
 
-TYPE_LOOKUP: Dict[str, str] = {}
-for _item in [
-    "int8_t",
-    "int16_t",
-    "int32_t",
-    "int64_t",
-    "uint8_t",
-    "uint16_t",
-    "uint32_t",
-    "uint64_t",
-]:
-    TYPE_LOOKUP[_item] = "<cstdint>"
-
-
 def header_for_type(name: str, task: GenerateTask) -> str:
     """Determine the header file to import for a given type."""
-
-    if name in TYPE_LOOKUP:
-        return TYPE_LOOKUP[name]
 
     candidate = task.custom_include(name)
     if candidate:
@@ -109,9 +93,10 @@ def create_struct(task: GenerateTask) -> None:
             writer.c_comment("Methods.")
             struct_methods(task, writer, True)
 
-        writer.empty()
-
         # Add size assertion.
-        writer.write(
-            f"static_assert(sizeof({task.name}) == {task.name}::size);"
-        )
+        with writer.padding():
+            writer.write(
+                f"static_assert(sizeof({task.name}) == {task.name}::size);"
+            )
+
+        struct_stream_methods(task, writer, True)

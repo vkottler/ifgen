@@ -61,6 +61,13 @@ class GenerateTask(NamedTuple):
         return data if not prefix else prefix + data
 
     @property
+    def stream_implementation(self) -> bool:
+        """
+        Determine if this instances should include a stream implementations.
+        """
+        return self.env.config.data["stream_implementation"]  # type: ignore
+
+    @property
     def source_path(self) -> Path:
         """Get a source file for this task."""
         return self.path.with_suffix(".cc")
