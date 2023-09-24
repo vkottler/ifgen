@@ -33,8 +33,8 @@ void test1_encode_decode(std::endian endianness)
     assert(dst.field3 == 2.5f);
 
     std::array<std::byte, C::Test1::size * len> streambuf;
-    auto stream =
-        byte_spanstream(std::span<std::byte, C::Test1::size * len>(streambuf));
+    using TestSpan = std::span<std::byte, C::Test1::size * len>;
+    auto stream = byte_spanstream(TestSpan(streambuf));
 
     stream << dst;
     stream.seekg(0);
@@ -46,8 +46,6 @@ void test1_encode_decode(std::endian endianness)
     assert(from_stream.field1 == 0x55);
     assert(from_stream.field2 == Enum1::C);
     assert(from_stream.field3 == 2.5f);
-
-    assert(from_stream.span().size());
 
     for (std::size_t i = 0; i < len - 1; i++)
     {

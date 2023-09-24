@@ -40,13 +40,17 @@ def create_common(task: GenerateTask) -> None:
 
         with writer.padding():
             writer.c_comment("Create useful aliases for bytes.")
-            writer.write("using byte_span = std::span<std::byte>;")
+            writer.write("template <std::size_t Extent = std::dynamic_extent>")
+            writer.write("using byte_span = std::span<std::byte, Extent>;")
+            writer.write(
+                (
+                    "template <std::size_t size> using byte_array = "
+                    "std::array<std::byte, size>;"
+                )
+            )
 
         if streams:
             writer.c_comment("Abstract byte-stream interfaces.")
-            writer.write(
-                "using byte_streambuf = std::basic_streambuf<std::byte>;"
-            )
             writer.write("using byte_istream = std::basic_istream<std::byte>;")
             writer.write("using byte_ostream = std::basic_ostream<std::byte>;")
 
@@ -55,12 +59,6 @@ def create_common(task: GenerateTask) -> None:
                 "Concrete byte-stream interfaces (based on span)."
             )
             writer.write("using byte_spanbuf = std::basic_spanbuf<std::byte>;")
-            writer.write(
-                "using byte_ispanstream = std::basic_ispanstream<std::byte>;"
-            )
-            writer.write(
-                "using byte_ospanstream = std::basic_ospanstream<std::byte>;"
-            )
             writer.write(
                 "using byte_spanstream = std::basic_spanstream<std::byte>;"
             )

@@ -30,7 +30,16 @@ def unit_test_method(
         f"void {unit_test_method_name(name, task)}(std::endian endianness)"
     )
     with writer.scope():
-        writer.write(f"using namespace {task.namespace()};")
+        nspace = task.env.types.root_namespace
+
+        project_wide = nspace.namespace(track=False)
+        writer.write(f"using namespace {project_wide};")
+
+        with nspace.pushed(*task.instance.get("namespace", [])):
+            curr = nspace.namespace(track=False)
+            if curr != project_wide:
+                writer.write(f"using namespace {curr};")
+
         writer.empty()
         yield
 

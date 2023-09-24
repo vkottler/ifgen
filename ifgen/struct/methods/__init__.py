@@ -120,7 +120,7 @@ def struct_methods(
 
     if header:
         writer.write("using Buffer = std::array<std::byte, size>;")
-        writer.write("using Span = std::span<std::byte, size>;")
+        writer.write("using Span = byte_span<size>;")
         with writer.padding():
             writer.write(
                 f"auto operator<=>(const {task.name} &) const = default;"

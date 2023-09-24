@@ -15,6 +15,30 @@ from ifgen.generation.test import (
 )
 
 
+def assert_line(writer: IndentedFileWriter, data: str) -> None:
+    """Write an assert line to the file."""
+    writer.write(f"assert({data});")
+
+
+def unit_test_stream_tests(
+    task: GenerateTask, writer: IndentedFileWriter
+) -> None:
+    """Generate unit tests for stream interfaces."""
+
+    writer.c_comment("Test stream interactions.")
+
+    writer.write(f"byte_array<{task.name}::size * len> streambuf;")
+    writer.write(f"using TestSpan = byte_span<{task.name}::size * len>;")
+    writer.write("auto stream = byte_spanstream(TestSpan(streambuf));")
+
+    with writer.padding():
+        writer.write("stream << dst;")
+        writer.write("stream.seekg(0);")
+
+    writer.write(f"{task.name} from_stream;")
+    writer.write("stream >> from_stream;")
+
+
 def unit_test_basic_method(
     task: GenerateTask, writer: IndentedFileWriter
 ) -> None:
@@ -24,11 +48,34 @@ def unit_test_basic_method(
     """
 
     with unit_test_method("encode_decode_basic", task, writer):
-        writer.write("(void)endianness;")
+        writer.write("static constexpr std::size_t len = 10;")
         writer.empty()
 
-        writer.write(f"{task.name} src;")
-        writer.write("src.swap();")
+        nspaced = task.name
+        writer.write(f"{nspaced} src;")
+        assert_line(writer, f"src.span().size() == {nspaced}::size")
+
+        with writer.padding():
+            writer.write("src.swap();")
+
+        writer.c_comment("Eventually, we could assign member values here.")
+
+        with writer.padding():
+            writer.write(f"{nspaced}::Buffer buffer;")
+            assert_line(
+                writer, f"src.encode(&buffer, endianness) == {nspaced}::size"
+            )
+
+        writer.write(f"{nspaced} dst;")
+        assert_line(
+            writer, f"dst.decode(&buffer, endianness) == {nspaced}::size"
+        )
+        assert_line(writer, "src == dst")
+
+        with writer.padding():
+            writer.c_comment("Verify the values transferred.")
+
+        unit_test_stream_tests(task, writer)
 
 
 def unit_test_body(task: GenerateTask, writer: IndentedFileWriter) -> None:

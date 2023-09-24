@@ -87,11 +87,11 @@ class GenerateTask(NamedTuple):
 
         return self.env.get_protocol(self.name)
 
-    def namespace(self) -> str:
+    def namespace(self, *names: str) -> str:
         """Get this task's namespace."""
 
         nspace = self.env.types.root_namespace
-        with nspace.pushed(*self.instance.get("namespace", [])):
+        with nspace.pushed(*self.instance.get("namespace", []), *names):
             result = nspace.namespace(track=False)
 
         assert result, f"No namespace for '{self.name}'!"
