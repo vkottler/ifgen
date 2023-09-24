@@ -9,6 +9,8 @@
 #include <cassert>
 #include <iostream>
 
+static constexpr std::size_t len = 10;
+
 void test1_encode_decode(std::endian endianness)
 {
     using namespace A::B;
@@ -29,6 +31,32 @@ void test1_encode_decode(std::endian endianness)
     assert(dst.field1 == 0x55);
     assert(dst.field2 == Enum1::C);
     assert(dst.field3 == 2.5f);
+
+    std::array<std::byte, C::Test1::size * len> streambuf;
+    auto stream =
+        byte_spanstream(std::span<std::byte, C::Test1::size * len>(streambuf));
+
+    stream << dst;
+    stream.seekg(0);
+
+    C::Test1 from_stream;
+    stream >> from_stream;
+
+    /* Verify the values transferred. */
+    assert(from_stream.field1 == 0x55);
+    assert(from_stream.field2 == Enum1::C);
+    assert(from_stream.field3 == 2.5f);
+
+    assert(from_stream.span().size());
+
+    for (std::size_t i = 0; i < len - 1; i++)
+    {
+        stream << from_stream;
+    }
+    assert(stream.good());
+
+    stream << from_stream;
+    assert(not stream.good());
 }
 
 void test2_encode_decode(std::endian endianness)

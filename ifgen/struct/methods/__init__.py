@@ -28,7 +28,7 @@ def protocol_json(task: GenerateTask) -> dict[str, Any]:
 def span_method(
     task: GenerateTask, writer: IndentedFileWriter, header: bool
 ) -> None:
-    """TODO."""
+    """Generate a span method."""
 
     if header:
         with writer.javadoc():
