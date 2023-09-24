@@ -30,13 +30,12 @@ def no_swap(
         arg = "buf[idx++]"
         if is_enum:
             arg = f"{kind}({arg})"
+        else:
+            arg = f"std::to_integer<{kind}>({arg})"
 
         writer.write(line + arg + ";")
     else:
-        arg = name
-        if is_enum:
-            arg = f"byte({arg})"
-        writer.write(f"buf[idx++] = {arg};")
+        writer.write(f"buf[idx++] = std::byte({name});")
 
 
 def swap_struct(

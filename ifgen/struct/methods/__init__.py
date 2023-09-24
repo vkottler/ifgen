@@ -25,6 +25,27 @@ def protocol_json(task: GenerateTask) -> dict[str, Any]:
     return protocol.export_json()
 
 
+def span_method(
+    task: GenerateTask, writer: IndentedFileWriter, header: bool
+) -> None:
+    """TODO."""
+
+    if header:
+        with writer.javadoc():
+            writer.write(("Get this instance as a byte span."))
+
+    span_type = task.cpp_namespace("Span", header=header)
+    method = task.cpp_namespace("span", header=header)
+
+    writer.write(f"{span_type} {method}()" + (";" if header else ""))
+
+    if header:
+        return
+
+    with writer.scope():
+        writer.write("return Span(*raw());")
+
+
 def struct_buffer_method(
     task: GenerateTask,
     writer: IndentedFileWriter,
@@ -98,14 +119,17 @@ def struct_methods(
     """Write generated-struct methods."""
 
     if header:
-        writer.write("using Buffer = std::array<byte, size>;")
-        writer.write("using Span = std::span<byte, size>;")
+        writer.write("using Buffer = std::array<std::byte, size>;")
+        writer.write("using Span = std::span<std::byte, size>;")
         with writer.padding():
             writer.write(
                 f"auto operator<=>(const {task.name} &) const = default;"
             )
 
     struct_buffer_method(task, writer, header, False)
+
+    writer.empty()
+    span_method(task, writer, header)
 
     with writer.padding():
         struct_buffer_method(task, writer, header, True)
