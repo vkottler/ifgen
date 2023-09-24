@@ -1,0 +1,4 @@
+---
+name: sample
+description: A project for unit-testing with.
+version: {major: 0, minor: 1, patch: 0}

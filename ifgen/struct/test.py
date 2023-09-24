@@ -27,7 +27,8 @@ def unit_test_basic_method(
         writer.write("(void)endianness;")
         writer.empty()
 
-        writer.cpp_comment(f"{task.name} src;")
+        writer.write(f"{task.name} src;")
+        writer.write("src.swap();")
 
 
 def unit_test_body(task: GenerateTask, writer: IndentedFileWriter) -> None:

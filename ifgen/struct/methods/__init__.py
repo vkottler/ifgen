@@ -68,6 +68,30 @@ def struct_buffer_method(
         )
 
 
+def swap_method(
+    task: GenerateTask, writer: IndentedFileWriter, header: bool
+) -> None:
+    """Add an in-place swap method."""
+
+    if header:
+        with writer.javadoc():
+            writer.write("Swap this instance's bytes in place.")
+            writer.empty()
+            writer.write(
+                task.command("return", "A reference to the instance.")
+            )
+
+    method = task.cpp_namespace("swap", header=header)
+    writer.write(f"const {task.name} &{method}()" + (";" if header else ""))
+
+    if header:
+        return
+
+    with writer.scope():
+        writer.write("encode_swapped(raw());")
+        writer.write("return *this;")
+
+
 def struct_methods(
     task: GenerateTask, writer: IndentedFileWriter, header: bool
 ) -> None:
@@ -75,6 +99,7 @@ def struct_methods(
 
     if header:
         writer.write("using Buffer = std::array<byte, size>;")
+        writer.write("using Span = std::span<byte, size>;")
         with writer.padding():
             writer.write(
                 f"auto operator<=>(const {task.name} &) const = default;"
@@ -87,7 +112,9 @@ def struct_methods(
 
     struct_encode(task, writer, header)
 
-    writer.empty()
+    with writer.padding():
+        swap_method(task, writer, header)
+
     struct_decode(task, writer, header)
 
     to_json_method(

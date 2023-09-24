@@ -2,7 +2,7 @@
     =====================================
     generator=datazen
     version=3.1.3
-    hash=5e7b7fed8b0401fcfa361931270f999b
+    hash=858ab5326bd726eea64943ae6830b1bc
     =====================================
 -->
 
@@ -46,7 +46,8 @@ This package is tested on the following platforms:
 ```
 $ ./venv3.11/bin/ig -h
 
-usage: ig [-h] [--version] [-v] [-C DIR] {gen,noop} ...
+usage: ig [-h] [--version] [-v] [-q] [--curses] [--no-uvloop] [-C DIR]
+          {gen,noop} ...
 
 An interface generator for distributed computing.
 
@@ -54,6 +55,9 @@ options:
   -h, --help         show this help message and exit
   --version          show program's version number and exit
   -v, --verbose      set to increase logging verbosity
+  -q, --quiet        set to reduce output
+  --curses           whether or not to use curses.wrapper when starting
+  --no-uvloop        whether or not to disable uvloop as event loop driver
   -C DIR, --dir DIR  execute from a specific directory
 
 commands:

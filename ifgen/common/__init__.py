@@ -19,7 +19,13 @@ def create_common(task: GenerateTask) -> None:
 
     streams = task.stream_implementation
 
-    includes = ["<cstdint>", "<bit>"]
+    includes = [
+        "<cstdint>",
+        "<bit>",
+        "<span>" if not streams else "<spanstream>",
+    ]
+
+    # probably get rid of everything besides the spanstream
     if streams:
         includes.extend(["<streambuf>", "<istream>", "<ostream>"])
 
@@ -32,10 +38,28 @@ def create_common(task: GenerateTask) -> None:
             "              std::endian::native == std::endian::little);"
         )
 
-        writer.empty()
+        with writer.padding():
+            writer.c_comment("Create useful aliases for bytes.")
+            writer.write("using byte = uint8_t;")
+            writer.write("using byte_span = std::span<byte>;")
 
-        writer.write("using byte = uint8_t;")
         if streams:
+            writer.c_comment("Abstract byte-stream interfaces.")
             writer.write("using byte_streambuf = std::basic_streambuf<byte>;")
             writer.write("using byte_istream = std::basic_istream<byte>;")
             writer.write("using byte_ostream = std::basic_ostream<byte>;")
+
+            writer.empty()
+            writer.c_comment(
+                "Concrete byte-stream interfaces (based on span)."
+            )
+            writer.write("using byte_spanbuf = std::basic_spanbuf<byte>;")
+            writer.write(
+                "using byte_ispanstream = std::basic_ispanstream<byte>;"
+            )
+            writer.write(
+                "using byte_ospanstream = std::basic_ospanstream<byte>;"
+            )
+            writer.write(
+                "using byte_spanstream = std::basic_spanstream<byte>;"
+            )
