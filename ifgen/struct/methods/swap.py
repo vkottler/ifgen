@@ -30,13 +30,12 @@ def no_swap(
         arg = "buf[idx++]"
         if is_enum:
             arg = f"{kind}({arg})"
+        else:
+            arg = f"std::to_integer<{kind}>({arg})"
 
         writer.write(line + arg + ";")
     else:
-        arg = name
-        if is_enum:
-            arg = f"uint8_t({arg})"
-        writer.write(f"buf[idx++] = {arg};")
+        writer.write(f"buf[idx++] = std::byte({name});")
 
 
 def swap_struct(
@@ -125,7 +124,7 @@ def encode_primitive_swap(
         rhs += f"{field['name']})"
     else:
         lhs = f"*reinterpret_cast<{integral} *>(&buf[idx])"
-        rhs += f"reinterpret_cast<{integral} &>({field['name']}))"
+        rhs += f"reinterpret_cast<const {integral} &>({field['name']}))"
 
     assignment(writer, lhs, rhs)
 
@@ -233,7 +232,7 @@ def encode_swapped_method(
 
     method = task.cpp_namespace("encode_swapped", header=header)
     writer.write(
-        f"std::size_t {method}(Buffer *buffer)" + (";" if header else "")
+        f"std::size_t {method}(Buffer *buffer) const" + (";" if header else "")
     )
 
     if header:

@@ -14,6 +14,7 @@ from typing import (
     Iterator,
     NamedTuple,
     Optional,
+    Union,
 )
 
 # third-party
@@ -60,6 +61,13 @@ class GenerateTask(NamedTuple):
         return data if not prefix else prefix + data
 
     @property
+    def stream_implementation(self) -> bool:
+        """
+        Determine if this instances should include a stream implementations.
+        """
+        return self.env.config.data["stream_implementation"]  # type: ignore
+
+    @property
     def source_path(self) -> Path:
         """Get a source file for this task."""
         return self.path.with_suffix(".cc")
@@ -79,11 +87,11 @@ class GenerateTask(NamedTuple):
 
         return self.env.get_protocol(self.name)
 
-    def namespace(self) -> str:
+    def namespace(self, *names: str) -> str:
         """Get this task's namespace."""
 
         nspace = self.env.types.root_namespace
-        with nspace.pushed(*self.instance.get("namespace", [])):
+        with nspace.pushed(*self.instance.get("namespace", []), *names):
             result = nspace.namespace(track=False)
 
         assert result, f"No namespace for '{self.name}'!"
@@ -198,7 +206,7 @@ class GenerateTask(NamedTuple):
         includes: Iterable[str] = None,
         is_test: bool = False,
         use_namespace: bool = True,
-        description: str = None,
+        description: Union[bool, None, str] = None,
         json: bool = False,
     ) -> Iterator[IndentedFileWriter]:
         """
@@ -232,9 +240,9 @@ class GenerateTask(NamedTuple):
                     description = self.instance["description"]
 
             # Write struct definition.
-            if description is not None:
+            if description:
                 with writer.javadoc():
-                    writer.write(description)
+                    writer.write(description)  # type: ignore
 
             yield writer
 

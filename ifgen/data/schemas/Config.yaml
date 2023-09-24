@@ -61,3 +61,7 @@ properties:
 
   ifgen:
     type: object
+
+  stream_implementation:
+    type: boolean
+    default: true
