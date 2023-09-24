@@ -119,7 +119,7 @@ def struct_methods(
     """Write generated-struct methods."""
 
     if header:
-        writer.write("using Buffer = std::array<std::byte, size>;")
+        writer.write("using Buffer = byte_array<size>;")
         writer.write("using Span = byte_span<size>;")
         with writer.padding():
             writer.write(

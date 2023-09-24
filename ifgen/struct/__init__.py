@@ -45,7 +45,6 @@ def struct_includes(task: GenerateTask) -> Iterable[str]:
     }
 
     result.add(f'"../{PKG_NAME}/common.h"')
-    result.add("<array>")
 
     return result
 
