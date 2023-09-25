@@ -38,5 +38,6 @@ def test_ifgen_command_basic():
         ).data
         tests = data["tests"]
         for name, data in data["all"].items():
-            if name in tests:
-                run([data["variants"]["debug"]], check=True)
+            for variant in ["debug", "clang"]:
+                if name in tests:
+                    run([data["variants"][variant]], check=True)

@@ -52,7 +52,7 @@ def unit_test_basic_method(
         writer.empty()
 
         nspaced = task.name
-        writer.write(f"{nspaced} src;")
+        writer.write(f"{nspaced} src = {'{}'};")
         assert_line(writer, f"src.span().size() == {nspaced}::size")
 
         with writer.padding():
