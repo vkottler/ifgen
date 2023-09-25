@@ -24,7 +24,9 @@ def gen_cmd(args: _Namespace) -> int:
 
     root = normalize(args.root)
 
-    generate(root, load(combine_if_not_absolute(root, DEFAULT_CONFIG)))
+    generate(
+        root.resolve(), load(combine_if_not_absolute(root, DEFAULT_CONFIG))
+    )
 
     return 0
 
