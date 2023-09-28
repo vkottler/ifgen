@@ -1,5 +1,9 @@
 ---
 properties:
+  json:
+    type: boolean
+    default: false
+
   json_indent:
     type: [integer, "null"]
     default: null

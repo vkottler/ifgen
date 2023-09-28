@@ -93,9 +93,11 @@ def create_struct(task: GenerateTask) -> None:
             struct_methods(task, writer, True)
 
         # Add size assertion.
-        with writer.padding():
-            writer.write(
-                f"static_assert(sizeof({task.name}) == {task.name}::size);"
-            )
+        writer.empty()
+        writer.write(
+            f"static_assert(sizeof({task.name}) == {task.name}::size);"
+        )
 
-        struct_stream_methods(task, writer, True)
+        if task.instance["stream"]:
+            writer.empty()
+            struct_stream_methods(task, writer, True)
