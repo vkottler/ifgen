@@ -14,3 +14,8 @@ properties:
   volatile:
     type: boolean
     default: false
+
+  fields:
+    type: array
+    items:
+      $ref: package://ifgen/schemas/BitField.yaml
