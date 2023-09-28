@@ -27,6 +27,7 @@ def unit_test_stream_tests(
 
     writer.c_comment("Test stream interactions.")
 
+    writer.write("static constexpr std::size_t len = 10;")
     writer.write(f"byte_array<{task.name}::size * len> streambuf;")
     writer.write(f"using TestSpan = byte_span<{task.name}::size * len>;")
     writer.write("auto stream = byte_spanstream(TestSpan(streambuf));")
@@ -48,34 +49,40 @@ def unit_test_basic_method(
     """
 
     with unit_test_method("encode_decode_basic", task, writer):
-        writer.write("static constexpr std::size_t len = 10;")
-        writer.empty()
-
         nspaced = task.name
         writer.write(f"{nspaced} src = {'{}'};")
         assert_line(writer, f"src.span().size() == {nspaced}::size")
 
-        with writer.padding():
-            writer.write("src.swap();")
+        if task.instance["codec"]:
+            with writer.padding():
+                writer.write("src.swap();")
 
-        writer.c_comment("Eventually, we could assign member values here.")
+            writer.c_comment("Eventually, we could assign member values here.")
 
-        with writer.padding():
-            writer.write(f"{nspaced}::Buffer buffer;")
+            with writer.padding():
+                writer.write(f"{nspaced}::Buffer buffer;")
+                assert_line(
+                    writer,
+                    f"src.encode(&buffer, endianness) == {nspaced}::size",
+                )
+
+            writer.write(f"{nspaced} dst;")
             assert_line(
-                writer, f"src.encode(&buffer, endianness) == {nspaced}::size"
+                writer, f"dst.decode(&buffer, endianness) == {nspaced}::size"
             )
+            assert_line(writer, "src == dst")
 
-        writer.write(f"{nspaced} dst;")
-        assert_line(
-            writer, f"dst.decode(&buffer, endianness) == {nspaced}::size"
-        )
-        assert_line(writer, "src == dst")
-
-        with writer.padding():
+            writer.empty()
             writer.c_comment("Verify the values transferred.")
+        else:
+            writer.write("(void)endianness;")
+            if task.instance["stream"]:
+                writer.empty()
+                writer.write(f"{nspaced} dst = {'{}'};")
 
-        unit_test_stream_tests(task, writer)
+        if task.instance["stream"]:
+            writer.empty()
+            unit_test_stream_tests(task, writer)
 
 
 def unit_test_body(task: GenerateTask, writer: IndentedFileWriter) -> None:
@@ -92,8 +99,9 @@ def unit_test_body(task: GenerateTask, writer: IndentedFileWriter) -> None:
 
         writer.empty()
 
-    writer.c_comment("Attempt to decode this?")
-    writer.write(f"std::cout << {task.name}::json();")
+    if task.instance["json"]:
+        writer.c_comment("Attempt to decode this?")
+        writer.write(f"std::cout << {task.name}::json();")
 
 
 def create_struct_test(task: GenerateTask) -> None:

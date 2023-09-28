@@ -131,22 +131,25 @@ def struct_methods(
     writer.empty()
     span_method(task, writer, header)
 
-    with writer.padding():
-        struct_buffer_method(task, writer, header, True)
+    writer.empty()
+    struct_buffer_method(task, writer, header, True)
 
-    struct_encode(task, writer, header)
+    if task.instance["codec"]:
+        writer.empty()
+        struct_encode(task, writer, header)
 
-    with writer.padding():
-        swap_method(task, writer, header)
+        with writer.padding():
+            swap_method(task, writer, header)
 
-    struct_decode(task, writer, header)
+        struct_decode(task, writer, header)
 
-    to_json_method(
-        task,
-        writer,
-        protocol_json(task),
-        dumps_indent=task.instance["json_indent"],
-        task_name=False,
-        static=True,
-        definition=header,
-    )
+    if task.instance["json"]:
+        to_json_method(
+            task,
+            writer,
+            protocol_json(task),
+            dumps_indent=task.instance["json_indent"],
+            task_name=False,
+            static=True,
+            definition=header,
+        )

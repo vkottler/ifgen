@@ -20,10 +20,14 @@ __all__ = ["create_struct", "create_struct_test", "create_struct_source"]
 FieldConfig = Dict[str, Union[int, str]]
 
 
-def struct_line(name: str, value: FieldConfig) -> LineWithComment:
+def struct_line(
+    name: str, value: FieldConfig, volatile: bool
+) -> LineWithComment:
     """Build a string for a struct-field line."""
 
-    return f"{value['type']} {name};", value.get("description")  # type: ignore
+    return ("volatile " if volatile else "") + (  # type: ignore
+        f"{value['type']} {name};"
+    ), value.get("description")
 
 
 def header_for_type(name: str, task: GenerateTask) -> str:
@@ -84,7 +88,9 @@ def create_struct(task: GenerateTask) -> None:
             ) as lines:
                 # Fields.
                 for field in task.instance["fields"]:
-                    lines.append(struct_line(field["name"], field))
+                    lines.append(
+                        struct_line(field["name"], field, field["volatile"])
+                    )
 
                 lines.append(("", None))
 
@@ -93,9 +99,11 @@ def create_struct(task: GenerateTask) -> None:
             struct_methods(task, writer, True)
 
         # Add size assertion.
-        with writer.padding():
-            writer.write(
-                f"static_assert(sizeof({task.name}) == {task.name}::size);"
-            )
+        writer.empty()
+        writer.write(
+            f"static_assert(sizeof({task.name}) == {task.name}::size);"
+        )
 
-        struct_stream_methods(task, writer, True)
+        if task.instance["stream"]:
+            writer.empty()
+            struct_stream_methods(task, writer, True)

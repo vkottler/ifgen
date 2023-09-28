@@ -3,6 +3,7 @@ namespace: [A, B]
 
 structs:
   Test1:
+    json: true
     namespace: [C]
     description: "Sample struct 1."
     json_indent: 4
@@ -18,6 +19,7 @@ structs:
         type: double
 
   Test2:
+    json: true
     fields:
       - name: field1
         type: int8_t
@@ -30,8 +32,10 @@ structs:
         type: float
 
   Test3:
-    fields:
+    json: true
+    fields: &fields
       - name: field1
+        volatile: true
         type: int32_t
         description: A field.
 
@@ -45,8 +49,28 @@ structs:
       - name: field4
         type: C::Enum2
 
+      - name: field5
+        type: uint16_t
+
+  # Test scenarios where features are turned off.
+  Test4:
+    fields: *fields
+    stream: false
+  Test5:
+    fields: *fields
+    codec: false
+  Test6:
+    fields: *fields
+    json: false
+  Test7:
+    fields: *fields
+    stream: false
+    codec: false
+    json: false
+
 enums:
   Enum1:
+    json: true
     underlying: uint16_t
     enum:
       A:
@@ -54,12 +78,17 @@ enums:
       C: {value: 1000}
 
   Enum2:
+    json: true
     use_map: false
     namespace: [C]
     description: "Sample enum 2."
     json_indent: 4
-    enum:
+    enum: &enum
       unknown:
       red: {value: 1, description: A sample value.}
       green:
       blue: {value: 5}
+
+  Enum3:
+    json: false
+    enum: *enum

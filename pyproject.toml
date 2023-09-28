@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta:__legacy__"
 
 [project]
 name = "ifgen"
-version = "2.0.2"
+version = "2.1.0"
 description = "An interface generator for distributed computing."
 readme = "README.md"
 requires-python = ">=3.11"

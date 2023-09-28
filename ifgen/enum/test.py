@@ -15,6 +15,7 @@ def test_single(
 ) -> None:
     """Generate test code for a single enumeration instance."""
 
+    writer.empty()
     with_namespace = f"{task.name}::{enum}"
     writer.c_comment(f"Test {with_namespace}.")
 
@@ -24,20 +25,21 @@ def test_single(
     writer.write(f'assert(!strcmp({to_string}, "{enum}"));')
     writer.write(f'assert(from_string("{enum}", instance));')
     writer.write(f"assert(instance == {with_namespace});")
-    writer.empty()
 
 
 def unit_test_body(task: GenerateTask, writer: IndentedFileWriter) -> None:
     """Implement a simple unit test for the enumeration."""
 
     writer.write(f"{task.name} instance;")
-    writer.empty()
 
     for enum in task.instance.get("enum", {}):
         test_single(task, writer, enum)
 
-    writer.c_comment("Attempt to decode this?")
-    writer.write(f"std::cout << {task.name}_json();")
+    if task.instance["json"]:
+        writer.empty()
+        writer.c_comment("Attempt to decode this?")
+        writer.write(f"std::cout << {task.name}_json();")
+
     writer.empty()
 
 

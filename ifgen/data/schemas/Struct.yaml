@@ -7,6 +7,14 @@ includes:
 required: [fields]
 
 properties:
+  codec:
+    type: boolean
+    default: true
+
+  stream:
+    type: boolean
+    default: true
+
   fields:
     type: array
     items:

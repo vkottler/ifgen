@@ -69,10 +69,11 @@ def enum_header(task: GenerateTask, writer: IndentedFileWriter) -> None:
         task, writer, task.instance["use_map"], definition=True
     )
 
-    to_json_method(
-        task,
-        writer,
-        runtime.asdict(),
-        dumps_indent=task.instance["json_indent"],
-        definition=True,
-    )
+    if task.instance["json"]:
+        to_json_method(
+            task,
+            writer,
+            runtime.asdict(),
+            dumps_indent=task.instance["json_indent"],
+            definition=True,
+        )
