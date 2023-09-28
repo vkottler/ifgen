@@ -10,3 +10,7 @@ properties:
     pattern: &pattern "^[a-zA-Z0-9-_.:]+$"
 
   type: *pattern_string
+
+  volatile:
+    type: boolean
+    default: false

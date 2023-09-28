@@ -35,6 +35,7 @@ structs:
     json: true
     fields: &fields
       - name: field1
+        volatile: true
         type: int32_t
         description: A field.
 
@@ -47,6 +48,9 @@ structs:
 
       - name: field4
         type: C::Enum2
+
+      - name: field5
+        type: uint16_t
 
   # Test scenarios where features are turned off.
   Test4:
