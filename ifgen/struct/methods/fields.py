@@ -4,6 +4,7 @@ structs.
 """
 
 # built-in
+from contextlib import ExitStack
 from typing import Any
 
 # third-party
@@ -72,18 +73,21 @@ def bit_field_get_method(
 
     line = f"{kind} " + method
 
-    if is_flag:
-        writer.write(line)
-        with writer.scope():
+    with ExitStack() as stack:
+        if is_flag:
+            writer.write(line)
+            stack.enter_context(writer.scope())
             stmt = f"{parent['name']} & (1 << {field['index']})"
-            writer.write(f"return {stmt};")
-    else:
-        writer.write(line)
-        with writer.scope():
+        else:
+            writer.write(line)
+            stack.enter_context(writer.scope())
             mask = bit_mask_literal(field["width"])
             stmt = f"({parent['name']} >> {field['index']}u) & {mask}"
 
-            writer.write(f"return {stmt};")
+        if task.env.is_enum(kind):
+            stmt = f"{kind}({stmt})"
+
+        writer.write(f"return {stmt};")
 
 
 def bit_mask_literal(width: int) -> str:
@@ -128,7 +132,14 @@ def bit_field_set_method(
 
             with writer.padding():
                 writer.write(f"curr &= ~({mask} << {field['index']}u);")
-                writer.write(f"curr |= (value & {mask}) << {field['index']}u;")
+
+                val_str = "value"
+                if task.env.is_enum(kind):
+                    val_str = f"std::to_underlying({val_str})"
+
+                writer.write(
+                    f"curr |= ({val_str} & {mask}) << {field['index']}u;"
+                )
 
             writer.write(f"{parent['name']} = curr;")
 

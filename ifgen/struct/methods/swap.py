@@ -105,7 +105,7 @@ def swap_enum(
     else:
         lhs = f"*reinterpret_cast<{underlying} *>(&buf[idx])"
         underlying = to_integral(underlying)
-        rhs = f"std::byteswap(static_cast<{underlying}>({field['name']}))"
+        rhs = f"std::byteswap(std::to_underlying({field['name']}))"
 
     assignment(writer, lhs, rhs)
 

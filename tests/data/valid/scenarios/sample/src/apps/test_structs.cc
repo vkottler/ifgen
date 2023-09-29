@@ -162,6 +162,10 @@ void test7_toggle_bits()
 
     assert(data.get_field1_bit_field3());
     assert(data.get_field1_bit_field4());
+
+    data.set_field1_bit_field6(5);
+    assert(data.get_field1_bit_field6() == 5);
+    assert(data.field1 == ((5 << 8) + 14));
 }
 
 void test2_byte_swap()
