@@ -78,7 +78,10 @@ def create_struct(task: GenerateTask) -> None:
         includes=struct_includes(task), json=task.instance.get("json", False)
     ) as writer:
         attributes = ["gnu::packed"]
-        writer.write(f"struct [[{', '.join(attributes)}]] {task.name}")
+        writer.write(
+            ("volatile " if task.instance["volatile"] else "")
+            + f"struct [[{', '.join(attributes)}]] {task.name}"
+        )
         with writer.scope(suffix=";"):
             writer.c_comment("Constant attributes.")
             with writer.trailing_comment_lines(
