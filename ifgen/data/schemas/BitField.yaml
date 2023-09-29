@@ -2,7 +2,7 @@
 includes:
   - has_description.yaml
 
-required: [name, type, index]
+required: [name, index]
 
 properties:
   name: &pattern_string

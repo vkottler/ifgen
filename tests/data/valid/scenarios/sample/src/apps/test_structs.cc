@@ -6,6 +6,7 @@
 #include "generated/structs/Test1.h"
 #include "generated/structs/Test2.h"
 #include "generated/structs/Test3.h"
+#include "generated/structs/Test7.h"
 #include <cassert>
 #include <iostream>
 
@@ -116,6 +117,34 @@ void test3_encode_decode(std::endian endianness)
     assert(dst.field4 == C::Enum2::green);
 }
 
+void test7_toggle_bits()
+{
+    using namespace A::B;
+
+    Test7 data;
+    data.field1 = 0;
+
+    data.toggle_field1_bit_field2();
+    assert(data.field1 == 2);
+    data.toggle_field1_bit_field2();
+    assert(data.field1 == 0);
+
+    data.toggle_field1_bit_field3();
+    assert(data.field1 == 4);
+    data.toggle_field1_bit_field3();
+    assert(data.field1 == 0);
+
+    data.toggle_field1_bit_field4();
+    assert(data.field1 == 8);
+    data.toggle_field1_bit_field4();
+    assert(data.field1 == 0);
+
+    data.toggle_field1_bit_field2();
+    data.toggle_field1_bit_field3();
+    data.toggle_field1_bit_field4();
+    assert(data.field1 == 14);
+}
+
 /**
  * A unit test for structs Test1.
  *
@@ -134,6 +163,8 @@ int main(void)
     test3_encode_decode(std::endian::native);
     test3_encode_decode(std::endian::little);
     test3_encode_decode(std::endian::big);
+
+    test7_toggle_bits();
 
     std::cout << "Success." << std::endl;
     return 0;

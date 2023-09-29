@@ -40,20 +40,12 @@ structs:
         description: A field.
 
         fields:
-          - name: bit_field1
-            type: bool
-            index: 0
-            write: false
-          - name: bit_field2
-            type: bool
-            index: 1
-            read: false
-          - name: bit_field3
-            type: bool
-            index: 3
-          - name: bit_field4
-            type: bool
-            index: 4
+          - {name: bit_field1, index: 0, write: false}
+          - {name: bit_field2, index: 1, read: false}
+          - {name: bit_field3, index: 2}
+          - {name: bit_field4, index: 3}
+          - {name: bit_field5, index: 4, width: 4}
+          - {name: bit_field6, index: 8, width: 10}
 
       - name: field2
         type: C::Test1

@@ -74,7 +74,9 @@ def struct_fields(task: GenerateTask, writer: IndentedFileWriter) -> None:
 def create_struct(task: GenerateTask) -> None:
     """Create a header file based on a struct definition."""
 
-    with task.boilerplate(includes=struct_includes(task), json=True) as writer:
+    with task.boilerplate(
+        includes=struct_includes(task), json=task.instance.get("json", False)
+    ) as writer:
         attributes = ["gnu::packed"]
         writer.write(f"struct [[{', '.join(attributes)}]] {task.name}")
         with writer.scope(suffix=";"):
