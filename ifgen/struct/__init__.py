@@ -6,12 +6,17 @@ A module implementing interfaces for struct-file generation.
 from typing import Dict, Iterable, Union
 
 # third-party
-from vcorelib.io.file_writer import CommentStyle, LineWithComment
+from vcorelib.io.file_writer import (
+    CommentStyle,
+    IndentedFileWriter,
+    LineWithComment,
+)
 
 # internal
 from ifgen import PKG_NAME
 from ifgen.generation.interface import GenerateTask
 from ifgen.struct.methods import struct_methods
+from ifgen.struct.methods.fields import bit_fields
 from ifgen.struct.source import create_struct_source
 from ifgen.struct.stream import struct_stream_methods
 from ifgen.struct.test import create_struct_test
@@ -53,10 +58,25 @@ def struct_includes(task: GenerateTask) -> Iterable[str]:
     return result
 
 
+def struct_fields(task: GenerateTask, writer: IndentedFileWriter) -> None:
+    """Generate struct fields."""
+
+    writer.c_comment("Fields.")
+
+    with writer.trailing_comment_lines(style=CommentStyle.C_DOXYGEN) as lines:
+        # Fields.
+        for field in task.instance["fields"]:
+            lines.append(struct_line(field["name"], field, field["volatile"]))
+
+        lines.append(("", None))
+
+
 def create_struct(task: GenerateTask) -> None:
     """Create a header file based on a struct definition."""
 
-    with task.boilerplate(includes=struct_includes(task), json=True) as writer:
+    with task.boilerplate(
+        includes=struct_includes(task), json=task.instance.get("json", False)
+    ) as writer:
         attributes = ["gnu::packed"]
         writer.write(f"struct [[{', '.join(attributes)}]] {task.name}")
         with writer.scope(suffix=";"):
@@ -81,22 +101,12 @@ def create_struct(task: GenerateTask) -> None:
                 )
 
             writer.empty()
-            writer.c_comment("Fields.")
-
-            with writer.trailing_comment_lines(
-                style=CommentStyle.C_DOXYGEN
-            ) as lines:
-                # Fields.
-                for field in task.instance["fields"]:
-                    lines.append(
-                        struct_line(field["name"], field, field["volatile"])
-                    )
-
-                lines.append(("", None))
+            struct_fields(task, writer)
 
             # Methods.
             writer.c_comment("Methods.")
             struct_methods(task, writer, True)
+            bit_fields(task, writer, True)
 
         # Add size assertion.
         writer.empty()

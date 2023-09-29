@@ -23,6 +23,7 @@ def create_common(task: GenerateTask) -> None:
         "<cstdint>",
         "<bit>",
         "<span>" if not streams else "<spanstream>",
+        "<utility>",
     ]
 
     # probably get rid of everything besides the spanstream

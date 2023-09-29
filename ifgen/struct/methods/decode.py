@@ -43,7 +43,7 @@ def struct_decode(
 ) -> None:
     """Add a method for decoding structs."""
 
-    decode_swapped_method(task, writer, header)
-    writer.empty()
+    with writer.padding():
+        decode_swapped_method(task, writer, header)
 
     decode_method(task, writer, header)

@@ -1,0 +1,29 @@
+---
+includes:
+  - has_description.yaml
+
+required: [name, index]
+
+properties:
+  name: &pattern_string
+    type: string
+    pattern: "^[a-zA-Z0-9-_.:]+$"
+
+  type: *pattern_string
+
+  index:
+    type: integer
+    minimum: 0
+
+  width:
+    type: integer
+    minimum: 1
+    default: 1
+
+  read:
+    type: boolean
+    default: true
+
+  write:
+    type: boolean
+    default: true

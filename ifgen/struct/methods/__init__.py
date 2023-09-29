@@ -30,17 +30,17 @@ def span_method(
 ) -> None:
     """Generate a span method."""
 
-    if header:
-        with writer.javadoc():
-            writer.write(("Get this instance as a byte span."))
+    if not header:
+        writer.c_comment("Span method defined in header.")
+        return
+
+    with writer.javadoc():
+        writer.write(("Get this instance as a byte span."))
 
     span_type = task.cpp_namespace("Span", header=header)
     method = task.cpp_namespace("span", header=header)
 
-    writer.write(f"{span_type} {method}()" + (";" if header else ""))
-
-    if header:
-        return
+    writer.write(f"inline {span_type} {method}()")
 
     with writer.scope():
         writer.write("return Span(*raw());")
@@ -54,15 +54,17 @@ def struct_buffer_method(
 ) -> None:
     """Generate a method for raw buffer access."""
 
-    if header:
-        with writer.javadoc():
-            writer.write(
-                (
-                    "Get this instance as a "
-                    f"{'read-only ' if read_only else ''}"
-                    "fixed-size byte array."
-                )
+    if not header:
+        return
+
+    with writer.javadoc():
+        writer.write(
+            (
+                "Get this instance as a "
+                f"{'read-only ' if read_only else ''}"
+                "fixed-size byte array."
             )
+        )
 
     buff_type = task.cpp_namespace("Buffer", header=header)
 
@@ -74,13 +76,8 @@ def struct_buffer_method(
         "raw()" if not read_only else "raw_ro()", prefix="*", header=header
     )
     writer.write(
-        f"{buff_type} {method}"
-        + (" const" if read_only else "")
-        + (";" if header else "")
+        f"inline {buff_type} {method}" + (" const" if read_only else "")
     )
-
-    if header:
-        return
 
     with writer.scope():
         writer.write(
@@ -94,19 +91,18 @@ def swap_method(
 ) -> None:
     """Add an in-place swap method."""
 
-    if header:
-        with writer.javadoc():
-            writer.write("Swap this instance's bytes in place.")
-            writer.empty()
-            writer.write(
-                task.command("return", "A reference to the instance.")
-            )
+    if not header:
+        return
+
+    writer.empty()
+
+    with writer.javadoc():
+        writer.write("Swap this instance's bytes in place.")
+        writer.empty()
+        writer.write(task.command("return", "A reference to the instance."))
 
     method = task.cpp_namespace("swap", header=header)
-    writer.write(f"const {task.name} &{method}()" + (";" if header else ""))
-
-    if header:
-        return
+    writer.write(f"inline const {task.name} &{method}()")
 
     with writer.scope():
         writer.write("encode_swapped(raw());")
@@ -128,18 +124,21 @@ def struct_methods(
 
     struct_buffer_method(task, writer, header, False)
 
-    writer.empty()
+    if header:
+        writer.empty()
+
     span_method(task, writer, header)
 
-    writer.empty()
+    if header:
+        writer.empty()
+
     struct_buffer_method(task, writer, header, True)
 
     if task.instance["codec"]:
         writer.empty()
         struct_encode(task, writer, header)
 
-        with writer.padding():
-            swap_method(task, writer, header)
+        swap_method(task, writer, header)
 
         struct_decode(task, writer, header)
 
