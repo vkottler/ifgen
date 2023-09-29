@@ -143,6 +143,36 @@ void test7_toggle_bits()
     data.toggle_field1_bit_field3();
     data.toggle_field1_bit_field4();
     assert(data.field1 == 14);
+
+    data.clear_field1_bit_field2();
+    assert(data.field1 == 12);
+
+    data.clear_field1_bit_field3();
+    assert(data.field1 == 8);
+
+    data.clear_field1_bit_field4();
+    assert(data.field1 == 0);
+
+    data.set_field1_bit_field2();
+    data.set_field1_bit_field3();
+    data.set_field1_bit_field4();
+    assert(data.field1 == 14);
+}
+
+void test2_byte_swap()
+{
+    using namespace A::B;
+
+    Test2 test2 = {};
+
+    auto buf = test2.raw();
+    (*buf)[1] = std::byte(0xa5);
+    (*buf)[2] = std::byte(0x5a);
+
+    test2.swap();
+
+    assert((*buf)[1] == std::byte(0x5a));
+    assert((*buf)[2] == std::byte(0xa5));
 }
 
 /**
@@ -165,6 +195,7 @@ int main(void)
     test3_encode_decode(std::endian::big);
 
     test7_toggle_bits();
+    test2_byte_swap();
 
     std::cout << "Success." << std::endl;
     return 0;

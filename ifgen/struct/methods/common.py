@@ -34,32 +34,26 @@ def wrapper_method(
         "encode" if is_encode else "decode", header=header
     )
 
-    line_start = f"std::size_t {method}("
+    if not header:
+        writer.c_comment(f"'{method}' defined in header.")
+        return
+
+    line_start = f"inline std::size_t {method}("
     line = line_start + ("const " if not is_encode else "") + "Buffer *buffer,"
 
-    if header:
-        writer.write(line)
-        line = ""
-    else:
-        line += " "
+    writer.write(line)
+    line = ""
 
     line += (
         " " * len(line_start) if header else ""
     ) + "std::endian endianness"
-    if header:
-        line += " = std::endian::native"
+    line += " = std::endian::native"
     line += ")"
 
     if is_encode:
         line += " const"
 
-    if header:
-        line += ";"
-
     writer.write(line)
-
-    if header:
-        return
 
     with writer.scope():
         writer.write("std::size_t result = size;")

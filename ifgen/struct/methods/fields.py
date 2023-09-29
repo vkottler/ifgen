@@ -58,7 +58,12 @@ def bit_field_get_method(
 
     if header:
         with writer.javadoc():
-            writer.write(f"Get {name}'s {field['name']} field.")
+            writer.write(
+                (
+                    f"Get {name}'s {field['name']} "
+                    f"{'field' if field['width'] > 1 else 'bit'}."
+                )
+            )
 
     write_method = writer.cpp_comment if not header else writer.write
     write_method(f"{kind} " + method + (";" if header else ""))
@@ -66,6 +71,58 @@ def bit_field_get_method(
     # generate body
     if not header:
         pass
+
+
+def set_bit_method(
+    task: GenerateTask,
+    name: str,
+    field: dict[str, Any],
+    writer: IndentedFileWriter,
+    header: bool,
+    method_slug: str,
+) -> None:
+    """Generate a 'set' method for a bit-field."""
+
+    if not header:
+        return
+
+    method = task.cpp_namespace(f"set_{method_slug}()", header=header)
+    writer.empty()
+
+    with writer.javadoc():
+        writer.write(f"Set {name}'s {field['name']} bit.")
+
+    writer.write("inline void " + method)
+
+    with writer.scope():
+        stmt = f"1 << {field['index']}"
+        writer.write(f"{name} |= {stmt};")
+
+
+def clear_bit_method(
+    task: GenerateTask,
+    name: str,
+    field: dict[str, Any],
+    writer: IndentedFileWriter,
+    header: bool,
+    method_slug: str,
+) -> None:
+    """Generate a 'clear' method for a bit-field."""
+
+    if not header:
+        return
+
+    method = task.cpp_namespace(f"clear_{method_slug}()", header=header)
+    writer.empty()
+
+    with writer.javadoc():
+        writer.write(f"Clear {name}'s {field['name']} bit.")
+
+    writer.write("inline void " + method)
+
+    with writer.scope():
+        stmt = f"~(1 << {field['index']})"
+        writer.write(f"{name} &= {stmt};")
 
 
 def bit_field_toggle_method(
@@ -78,21 +135,23 @@ def bit_field_toggle_method(
 ) -> None:
     """Generate a 'toggle' method for a bit-field."""
 
+    set_bit_method(task, name, field, writer, header, method_slug)
+    clear_bit_method(task, name, field, writer, header, method_slug)
+
+    if not header:
+        return
+
     method = task.cpp_namespace(f"toggle_{method_slug}()", header=header)
     writer.empty()
 
-    if header:
-        with writer.javadoc():
-            writer.write(f"Toggle {name}'s {field['name']} bit.")
+    with writer.javadoc():
+        writer.write(f"Toggle {name}'s {field['name']} bit.")
 
-    writer.write("void " + method + (";" if header else ""))
-
-    if header:
-        return
+    writer.write("inline void " + method)
 
     with writer.scope():
-        stmt = f"{name} ^ (1 << {field['index']})"
-        writer.write(f"{name} = {stmt};")
+        stmt = f"1 << {field['index']}"
+        writer.write(f"{name} ^= {stmt};")
 
 
 def bit_field_set_method(
@@ -106,25 +165,25 @@ def bit_field_set_method(
 ) -> None:
     """Generate a 'set' method for a bit-field."""
 
-    write_method = writer.cpp_comment if not header else writer.write
-
-    method = task.cpp_namespace(
-        f"set_{method_slug}({kind} value)", header=header
-    )
-    writer.empty()
-
-    if header:
-        with writer.javadoc():
-            writer.write(f"Set {name}'s {field['name']} field.")
-
-    write_method("void " + method + (";" if header else ""))
-
-    if not header:
-        pass
-
     # Generate a toggle method for bit fields.
     if field["width"] == 1:
         bit_field_toggle_method(task, name, field, writer, header, method_slug)
+    else:
+        write_method = writer.cpp_comment if not header else writer.write
+
+        method = task.cpp_namespace(
+            f"set_{method_slug}({kind} value)", header=header
+        )
+        writer.empty()
+
+        if header:
+            with writer.javadoc():
+                writer.write(f"Set {name}'s {field['name']} field.")
+
+        write_method("void " + method + (";" if header else ""))
+
+        if not header:
+            pass
 
 
 def bit_field(

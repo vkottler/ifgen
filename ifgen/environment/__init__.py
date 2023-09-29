@@ -74,6 +74,8 @@ class IfgenEnvironment(LoggerMixin):
             self.source, normalize(*self.config.data["test_dir"])
         )
 
+        self.generated: set[Path] = set()
+
         # Create output directories.
         for subdir in Generator:
             for path in [self.output, self.test_dir]:
@@ -120,7 +122,11 @@ class IfgenEnvironment(LoggerMixin):
             )
 
     def make_path(
-        self, name: str, generator: Generator, from_output: bool = False
+        self,
+        name: str,
+        generator: Generator,
+        from_output: bool = False,
+        track: bool = True,
     ) -> Path:
         """Make part of a task's path."""
 
@@ -129,19 +135,24 @@ class IfgenEnvironment(LoggerMixin):
         if from_output:
             result = self.output.joinpath(result)
 
+        if track:
+            self.generated.add(result)
+
         return result
 
     def rel_include(self, name: str, generator: Generator) -> Path:
         """Get an include path to a generated output."""
 
         return rel(self.output, base=self.source).joinpath(
-            self.make_path(name, generator)
+            self.make_path(name, generator, track=False)
         )
 
     def make_test_path(self, name: str, generator: Generator) -> Path:
         """Make a path to an interface's unit-test suite."""
 
-        return self.test_dir.joinpath(str(generator), f"test_{name}.cc")
+        result = self.test_dir.joinpath(str(generator), f"test_{name}.cc")
+        self.generated.add(result)
+        return result
 
     def get_protocol(self, name: str) -> Protocol:
         """Get the protocol instance for a given struct."""
