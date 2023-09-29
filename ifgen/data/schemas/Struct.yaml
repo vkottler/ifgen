@@ -15,6 +15,11 @@ properties:
     type: boolean
     default: true
 
+  instances:
+    type: array
+    items:
+      $ref: package://ifgen/schemas/StructInstance.yaml
+
   fields:
     type: array
     items:

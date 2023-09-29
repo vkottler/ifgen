@@ -3,7 +3,7 @@ A module implementing interfaces for struct-file generation.
 """
 
 # built-in
-from typing import Dict, Iterable, Union
+from typing import Any, Dict, Iterable, Union
 
 # third-party
 from vcorelib.io.file_writer import (
@@ -71,6 +71,29 @@ def struct_fields(task: GenerateTask, writer: IndentedFileWriter) -> None:
         lines.append(("", None))
 
 
+def struct_instance(
+    task: GenerateTask, writer: IndentedFileWriter, instance: dict[str, Any]
+) -> None:
+    """Generate struct instances."""
+
+    writer.empty()
+
+    if instance.get("description"):
+        with writer.javadoc():
+            writer.write(instance["description"])
+
+    type_base = f"{task.name} *"
+    writer.write(
+        (
+            "static "
+            + ("volatile " if instance["volatile"] else "")
+            + f"{type_base}const "
+            f"{instance['name']} = "
+            f"reinterpret_cast<{type_base}>({instance['address']});"
+        )
+    )
+
+
 def create_struct(task: GenerateTask) -> None:
     """Create a header file based on a struct definition."""
 
@@ -117,3 +140,6 @@ def create_struct(task: GenerateTask) -> None:
         if task.instance["stream"]:
             writer.empty()
             struct_stream_methods(task, writer, True)
+
+        for instance in task.instance.get("instances", []):
+            struct_instance(task, writer, instance)
