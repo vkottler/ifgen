@@ -133,11 +133,13 @@ void test7_toggle_bits()
     assert(data.field1 == 4);
     data.toggle_field1_bit_field3();
     assert(data.field1 == 0);
+    assert(not data.get_field1_bit_field3());
 
     data.toggle_field1_bit_field4();
     assert(data.field1 == 8);
     data.toggle_field1_bit_field4();
     assert(data.field1 == 0);
+    assert(not data.get_field1_bit_field4());
 
     data.toggle_field1_bit_field2();
     data.toggle_field1_bit_field3();
@@ -157,6 +159,9 @@ void test7_toggle_bits()
     data.set_field1_bit_field3();
     data.set_field1_bit_field4();
     assert(data.field1 == 14);
+
+    assert(data.get_field1_bit_field3());
+    assert(data.get_field1_bit_field4());
 }
 
 void test2_byte_swap()
