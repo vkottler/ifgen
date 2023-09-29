@@ -1,0 +1,17 @@
+---
+includes:
+  - has_description.yaml
+
+required: [name, address]
+
+properties:
+  volatile:
+    type: boolean
+    default: true
+
+  name:
+    type: string
+    pattern: "^[a-zA-Z0-9-_.:]+$"
+
+  address:
+    type: string

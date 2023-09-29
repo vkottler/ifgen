@@ -20,7 +20,6 @@ structs:
 
   Test2:
     json: true
-    volatile: true
     fields:
       - name: field1
         type: int8_t
@@ -77,6 +76,11 @@ structs:
     stream: false
     codec: false
     json: false
+    instances:
+      - {name: "periph1", address: "0xA0000000", description: "A peripheral."}
+      - {name: "periph2", address: "0xB0000000"}
+      - {name: "periph3", address: "0xC0000000"}
+      - {name: "periph4", address: "0xD0000000"}
 
 enums:
   Enum1:
