@@ -6,6 +6,7 @@ An entry-point for the 'svd' command.
 from argparse import ArgumentParser as _ArgumentParser
 from argparse import Namespace as _Namespace
 from pathlib import Path
+from xml.etree import ElementTree
 
 # third-party
 from vcorelib.args import CommandFunction as _CommandFunction
@@ -14,7 +15,8 @@ from vcorelib.args import CommandFunction as _CommandFunction
 def svd_cmd(args: _Namespace) -> int:
     """Execute the svd command."""
 
-    print(args)
+    parsed = ElementTree.parse(args.svd_file).getroot()
+    print(parsed)
 
     return 0
 

@@ -11,6 +11,7 @@ ci_local:
   - "  if: matrix.system == 'ubuntu-latest'"
   - "- run: sudo apt-get install gcc-12 g++-12 clang-15 clang-format-15"
   - "  if: matrix.system == 'ubuntu-latest'"
+  - "- run: pip${{'{{matrix.python-version}}'}} install yambs"
 
 requirements:
   - runtimepy>=2.1.1
