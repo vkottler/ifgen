@@ -25,3 +25,5 @@ dev_requirements:
 commands:
   - name: gen
     description: generate interfaces
+  - name: svd
+    description: process CMSIS-SVD files

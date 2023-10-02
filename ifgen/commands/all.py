@@ -1,7 +1,7 @@
 # =====================================
 # generator=datazen
 # version=3.1.3
-# hash=82d3e6412db11a8131084785589ca821
+# hash=347b61ef0ea6ed99b2f085b2d17fb232
 # =====================================
 
 """
@@ -17,6 +17,7 @@ from vcorelib.args import CommandRegister as _CommandRegister
 
 # internal
 from ifgen.commands.gen import add_gen_cmd
+from ifgen.commands.svd import add_svd_cmd
 
 
 def commands() -> _List[_Tuple[str, str, _CommandRegister]]:
@@ -27,6 +28,11 @@ def commands() -> _List[_Tuple[str, str, _CommandRegister]]:
             "gen",
             "generate interfaces",
             add_gen_cmd,
+        ),
+        (
+            "svd",
+            "process CMSIS-SVD files",
+            add_svd_cmd,
         ),
         ("noop", "command stub (does nothing)", lambda _: lambda _: 0),
     ]
