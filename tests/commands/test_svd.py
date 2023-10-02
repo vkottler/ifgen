@@ -13,6 +13,8 @@ from tests.resources import resource
 def test_svd_command_basic():
     """Test the 'svd' command."""
 
-    assert (
-        ifgen_main([PKG_NAME, "svd", str(resource("svd", "XMC4700.svd"))]) == 0
-    )
+    for svd in ["XMC4700", "rp2040"]:
+        assert (
+            ifgen_main([PKG_NAME, "svd", str(resource("svd", f"{svd}.svd"))])
+            == 0
+        )

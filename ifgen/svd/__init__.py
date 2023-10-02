@@ -1,0 +1,15 @@
+"""
+A module implementing interfaces for working with ARM CMSIS-SVD files.
+"""
+
+# internal
+from ifgen.svd.cpu import process_cpu
+from ifgen.svd.device import process_device
+from ifgen.svd.task import TAG_PROCESSORS
+
+
+def register_processors() -> None:
+    """Register tag-processing methods."""
+
+    TAG_PROCESSORS["device"] = process_device
+    TAG_PROCESSORS["cpu"] = process_cpu
