@@ -9,6 +9,24 @@ from typing import Iterable
 # internal
 from ifgen.svd.string import StringKeyVal, StringKeyValueMixin
 
+# https://www.keil.com/pack/doc/CMSIS/SVD/html/
+#     elem_special.html#registerPropertiesGroup_gr
+REGISTER_PROPERTIES = [
+    StringKeyVal("size", False),
+    StringKeyVal("access", False),
+    StringKeyVal("protection", False),
+    StringKeyVal("resetValue", False),
+    StringKeyVal("resetMask", False),
+]
+ARRAY_PROPERTIES = [
+    StringKeyVal("dim", False),
+    StringKeyVal("dimIncrement", False),
+    StringKeyVal("dimIndex", False),
+    StringKeyVal("dimName", False),
+    # This is an object.
+    # StringKeyVal("dimArrayIndex", False),
+]
+
 
 @dataclass
 class Device(StringKeyValueMixin):
@@ -31,11 +49,4 @@ class Device(StringKeyValueMixin):
             StringKeyVal("headerDefinitionsPrefix", False),
             StringKeyVal("addressUnitBits", True),
             StringKeyVal("width", True),
-            # https://www.keil.com/pack/doc/CMSIS/SVD/html/
-            #     elem_special.html#registerPropertiesGroup_gr
-            StringKeyVal("size", False),
-            StringKeyVal("access", False),
-            StringKeyVal("protection", False),
-            StringKeyVal("resetValue", False),
-            StringKeyVal("resetMask", False),
-        ]
+        ] + REGISTER_PROPERTIES

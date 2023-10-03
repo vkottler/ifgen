@@ -12,7 +12,7 @@ from ifgen.svd.string import StringKeyVal, StringKeyValueMixin
 
 @dataclass
 class Interrupt(StringKeyValueMixin):
-    """A container for Interrupt information."""
+    """A container for interrupt information."""
 
     @classmethod
     def string_keys(cls) -> Iterable[StringKeyVal]:
