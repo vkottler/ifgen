@@ -10,6 +10,7 @@ from xml.etree import ElementTree
 # internal
 from ifgen.svd.model.derived import DerivedMixin, derived_from_stack
 from ifgen.svd.model.device import ARRAY_PROPERTIES, REGISTER_PROPERTIES
+from ifgen.svd.model.field import FieldMap, get_fields
 from ifgen.svd.string import StringKeyVal
 
 
@@ -18,6 +19,7 @@ class Register(DerivedMixin):
     """A container for register information."""
 
     derived_from: Optional["Register"]
+    fields: Optional[FieldMap]
 
     @classmethod
     def string_keys(cls) -> Iterable[StringKeyVal]:
@@ -60,10 +62,13 @@ def get_registers(registers: ElementTree.Element) -> RegisterMap:
 
         # Handle writeConstraint at some point?
 
-        # handle fields
+        # Load fields.
+        fields = None
+        fields_elem = register.find("fields")
+        if fields_elem is not None:
+            fields = get_fields(fields_elem)
 
-        inst = Register.create(register, derived_register)
-
+        inst = Register.create(register, derived_register, fields)
         result[inst.name] = inst
 
     return result
