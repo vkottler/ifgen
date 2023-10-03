@@ -2,11 +2,11 @@
     =====================================
     generator=datazen
     version=3.1.3
-    hash=8029fe72450486aa7dd6a3a4e42d7ad7
+    hash=6f2705d0caa7d536cae7a9eb581f7d7d
     =====================================
 -->
 
-# ifgen ([2.3.0](https://pypi.org/project/ifgen/))
+# ifgen ([2.4.0](https://pypi.org/project/ifgen/))
 
 [![python](https://img.shields.io/pypi/pyversions/ifgen.svg)](https://pypi.org/project/ifgen/)
 ![Build Status](https://github.com/vkottler/ifgen/workflows/Python%20Package/badge.svg)
@@ -47,7 +47,7 @@ This package is tested on the following platforms:
 $ ./venv3.11/bin/ig -h
 
 usage: ig [-h] [--version] [-v] [-q] [--curses] [--no-uvloop] [-C DIR]
-          {gen,noop} ...
+          {gen,svd,noop} ...
 
 An interface generator for distributed computing.
 
@@ -61,8 +61,9 @@ options:
   -C DIR, --dir DIR  execute from a specific directory
 
 commands:
-  {gen,noop}         set of available commands
+  {gen,svd,noop}     set of available commands
     gen              generate interfaces
+    svd              process CMSIS-SVD files
     noop             command stub (does nothing)
 
 ```
