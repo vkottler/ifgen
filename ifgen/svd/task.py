@@ -10,6 +10,7 @@ from typing import Callable, Dict
 from xml.etree import ElementTree
 
 # third-party
+from vcorelib.io import ARBITER
 from vcorelib.logging import LoggerType
 
 # internal
@@ -39,3 +40,13 @@ class SvdProcessingTask:
         task = SvdProcessingTask(SvdModel({}))
         task.process(ElementTree.parse(path).getroot())
         return task
+
+    def generate_configs(self, path: Path) -> None:
+        """Generate output configuration files."""
+
+        path.mkdir(exist_ok=True, parents=True)
+
+        # Write metadata that doesn't currently get used for generation.
+        ARBITER.encode(path.joinpath("metadata.json"), self.model.metadata())
+
+        # generate outputs
