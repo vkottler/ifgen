@@ -5,7 +5,7 @@ A module implementing interfaces for string-data elements.
 # built-in
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Type, TypeVar
 from xml.etree import ElementTree
 
 # third-party
@@ -20,10 +20,21 @@ class StringKeyVal:
     required: bool = True
 
 
+T = TypeVar("T", bound="StringKeyValueMixin")
+
+
 class StringKeyValueMixin(ABC):
     """A mixin for SVD data model classes."""
 
     raw_data: dict[str, str]
+
+    @classmethod
+    def create(cls: Type[T], elem: ElementTree.Element, *args, **kwargs) -> T:
+        """Create a device instance from an element."""
+
+        inst = cls(*args, **kwargs)
+        inst.raw(elem)
+        return inst
 
     @classmethod
     @abstractmethod

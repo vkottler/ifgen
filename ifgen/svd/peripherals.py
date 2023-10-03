@@ -23,21 +23,21 @@ def process_peripheral(
     if derived is not None:
         derived_periph = task.model.peripherals[derived]
 
-    peripheral = Peripheral(derived_periph)
+    peripheral = Peripheral(derived_periph, [])
     peripheral.log(elem, logger)
 
-    if derived_periph is not None:
-        logger.info(
-            "Peripheral '%s' derived from '%s'.",
-            peripheral.name,
-            derived_periph.name,
-        )
+    # Handle registers.
+    registers = elem.find("registers")
+    if registers is not None:
+        peripheral.handle_registers(registers)
 
-    # addressBlock
+    # Handle address blocks.
+    for address_block in elem.iterfind("addressBlock"):
+        peripheral.handle_address_block(address_block)
 
-    # interrupt
-
-    # registers
+    # Handle interrupts.
+    for interrupt in elem.iterfind("interrupt"):
+        peripheral.handle_interrupt(interrupt)
 
     task.model.register_peripheral(elem, peripheral)
 

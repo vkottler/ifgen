@@ -5,7 +5,6 @@ A module implementing a data model for ARM CMSIS-SVD 'device' data.
 # built-in
 from dataclasses import dataclass
 from typing import Iterable
-from xml.etree import ElementTree
 
 # internal
 from ifgen.svd.string import StringKeyVal, StringKeyValueMixin
@@ -14,17 +13,6 @@ from ifgen.svd.string import StringKeyVal, StringKeyValueMixin
 @dataclass
 class Device(StringKeyValueMixin):
     """A container for device information."""
-
-    metadata: dict[str, str]
-
-    @classmethod
-    def create(cls, elem: ElementTree.Element) -> "Device":
-        """Create a device instance from an element."""
-
-        raw = cls.get_values(elem)
-        inst = cls(raw)
-        inst.raw_data = raw
-        return inst
 
     @classmethod
     def string_keys(cls) -> Iterable[StringKeyVal]:
