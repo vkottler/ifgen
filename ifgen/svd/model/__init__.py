@@ -4,41 +4,26 @@ A module implementing a data model for ARM CMSIS-SVD 'device' data.
 
 # built-in
 from dataclasses import dataclass
-from typing import Iterable
-from xml.etree import ElementTree
+from typing import Optional
 
 # internal
-from ifgen.svd.string import StringKeyVal, StringKeyValueMixin
+from ifgen.svd.model.cpu import Cpu
+from ifgen.svd.model.device import Device
 
 
 @dataclass
-class Device(StringKeyValueMixin):
-    """A container for device information."""
+class SvdModel:
+    """A model for SVD data."""
 
-    metadata: dict[str, str]
+    device: Optional[Device] = None
+    cpu: Optional[Cpu] = None
 
-    @classmethod
-    def create(cls, elem: ElementTree.Element) -> "Device":
-        """Create a device instance from an element."""
+    def assign_device(self, device: Device) -> None:
+        """Assign a device instance."""
+        assert self.device is None, self.device
+        self.device = device
 
-        raw = cls.get_values(elem)
-        inst = cls(raw)
-        inst._raw = raw
-        return inst
-
-    @classmethod
-    def string_keys(cls) -> Iterable[StringKeyVal]:
-        """Get string keys for this instance type."""
-
-        # https://www.keil.com/pack/doc/CMSIS/SVD/html/elem_device.html
-        return [
-            StringKeyVal("vendor", False),
-            StringKeyVal("vendorID", False),
-            StringKeyVal("name", True),
-            StringKeyVal("series", False),
-            StringKeyVal("version", True),
-            StringKeyVal("description", True),
-            StringKeyVal("licenseText", False),
-            StringKeyVal("headerSystemFilename", False),
-            StringKeyVal("headerDefinitionsPrefix", False),
-        ]
+    def assign_cpu(self, cpu: Cpu) -> None:
+        """Assign a cpu instance."""
+        assert self.cpu is None, self.cpu
+        self.cpu = cpu

@@ -6,15 +6,14 @@ A module implementing an SVD-processing task interface.
 from dataclasses import dataclass
 from logging import getLogger
 from pathlib import Path
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict
 from xml.etree import ElementTree
 
 # third-party
 from vcorelib.logging import LoggerType
 
 # internal
-from ifgen.svd.model import Device
-from ifgen.svd.model.cpu import Cpu
+from ifgen.svd.model import SvdModel
 
 TagProcessor = Callable[
     [ElementTree.Element, "SvdProcessingTask", LoggerType], None
@@ -27,8 +26,7 @@ TAG_PROCESSORS: TagProcessorMap = {}
 class SvdProcessingTask:
     """A container for SVD-processing state."""
 
-    device: Optional[Device] = None
-    cpu: Optional[Cpu] = None
+    model: SvdModel
 
     def process(self, elem: ElementTree.Element) -> None:
         """Process a single element."""
@@ -38,6 +36,6 @@ class SvdProcessingTask:
     def svd(path: Path) -> "SvdProcessingTask":
         """Process a single SVD file."""
 
-        task = SvdProcessingTask()
+        task = SvdProcessingTask(SvdModel())
         task.process(ElementTree.parse(path).getroot())
         return task

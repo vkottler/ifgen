@@ -1,5 +1,5 @@
 """
-A module implementing a 'cpu' SVD-element processor.
+A module implementing a 'peripherals' SVD-element processor.
 """
 
 # built-in
@@ -9,15 +9,15 @@ from xml.etree import ElementTree
 from vcorelib.logging import LoggerType
 
 # internal
-from ifgen.svd.model.cpu import Cpu
 from ifgen.svd.task import SvdProcessingTask
 
 
-def process_cpu(
+def process_peripherals(
     elem: ElementTree.Element, task: SvdProcessingTask, logger: LoggerType
 ) -> None:
-    """Process a SVD cpu element."""
+    """Process a SVD peripherals element."""
 
-    cpu = Cpu()
-    cpu.log(elem, logger)
-    task.model.assign_cpu(cpu)
+    # iterate over peripherals and register individual periphs
+    print(elem)
+    del task
+    del logger

@@ -36,5 +36,6 @@ class Cpu(StringKeyValueMixin):
             StringKeyVal("vendorSystickConfig", True),
             StringKeyVal("deviceNumInterrupts", False),
             StringKeyVal("sauNumRegions", False),
-            StringKeyVal("sauRegionsConfig", False),
+            # This is an object (not currently implemented).
+            # StringKeyVal("sauRegionsConfig", False),
         ]

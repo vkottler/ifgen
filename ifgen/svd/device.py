@@ -9,7 +9,7 @@ from xml.etree import ElementTree
 from vcorelib.logging import LoggerType
 
 # internal
-from ifgen.svd.model import Device
+from ifgen.svd.model.device import Device
 from ifgen.svd.task import SvdProcessingTask
 
 
@@ -19,11 +19,16 @@ def process_device(
     """Process a SVD device element."""
 
     # Assign the device.
-    assert task.device is None, task.device
-    task.device = Device.create(elem)
-    task.device.log(elem, logger)
+    dev = Device.create(elem)
+    dev.log(elem, logger)
+    task.model.assign_device(dev)
 
     # Process the CPU metadata.
     cpu = elem.find("cpu")
     if cpu is not None:
         task.process(cpu)
+
+    # Process peripherals.
+    peripherals = elem.find("peripherals")
+    if peripherals is not None:
+        task.process(peripherals)

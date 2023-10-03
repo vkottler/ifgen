@@ -48,7 +48,10 @@ class StringKeyValueMixin(ABC):
 
         if logger is not None:
             for key, value in self.raw(elem).items():
-                logger.info("%s: '%s'.", key, value)
+                for line in value.splitlines():
+                    line = line.strip().replace("\\n", "")
+                    if line:
+                        logger.info("%s: %s", key, line)
 
     @classmethod
     def get_values(cls, elem: ElementTree.Element) -> dict[str, str]:
