@@ -23,7 +23,7 @@ class Device(StringKeyValueMixin):
 
         raw = cls.get_values(elem)
         inst = cls(raw)
-        inst._raw = raw
+        inst.raw_data = raw
         return inst
 
     @classmethod

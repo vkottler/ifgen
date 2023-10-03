@@ -23,7 +23,7 @@ class StringKeyVal:
 class StringKeyValueMixin(ABC):
     """A mixin for SVD data model classes."""
 
-    _raw: dict[str, str]
+    raw_data: dict[str, str]
 
     @classmethod
     @abstractmethod
@@ -33,10 +33,10 @@ class StringKeyValueMixin(ABC):
     def raw(self, elem: ElementTree.Element) -> dict[str, str]:
         """Get raw data for this instance based on string keys."""
 
-        result = getattr(self, "_raw", None)
+        result = getattr(self, "raw_data", None)
         if result is None:
-            self._raw = self.get_values(elem)
-            result = self._raw
+            self.raw_data = self.get_values(elem)
+            result = self.raw_data
 
         assert result is not None
         return result

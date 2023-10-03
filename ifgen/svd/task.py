@@ -36,6 +36,6 @@ class SvdProcessingTask:
     def svd(path: Path) -> "SvdProcessingTask":
         """Process a single SVD file."""
 
-        task = SvdProcessingTask(SvdModel())
+        task = SvdProcessingTask(SvdModel({}))
         task.process(ElementTree.parse(path).getroot())
         return task
