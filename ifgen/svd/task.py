@@ -54,10 +54,10 @@ class SvdProcessingTask:
 
         # Organize peripherals into groups based on ones derived from others
         # and process them.
-        for name, group in peripheral_groups(self.model.peripherals).items():
+        for group in peripheral_groups(self.model.peripherals).values():
             output_dir = path.joinpath(group.root.base_name)
             output_dir.mkdir(exist_ok=True)
-            handle_group(output_dir, name, group, includes)
+            handle_group(output_dir, group, includes)
 
         ARBITER.encode(
             path.joinpath("all.yaml"), {"includes": [str(x) for x in includes]}

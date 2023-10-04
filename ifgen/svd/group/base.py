@@ -4,6 +4,7 @@ A module implementing base interfaces for processing a group of peripherals.
 
 # built-in
 from dataclasses import dataclass
+from typing import Iterator
 
 # internal
 from ifgen.svd.model.peripheral import Peripheral
@@ -20,6 +21,12 @@ class PeripheralGroup:
     def size(self) -> int:
         """Get the size of this peripheral group."""
         return 1 + len(self.derivatives)
+
+    @property
+    def peripherals(self) -> Iterator[Peripheral]:
+        """Get all peripheral instances."""
+        yield self.root
+        yield from self.derivatives
 
 
 def peripheral_groups(
