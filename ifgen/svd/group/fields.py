@@ -6,8 +6,7 @@ A module for generating configuration data for struct fields.
 from typing import Any
 
 # internal
-from ifgen.svd.model.cluster import Cluster, RegisterData
-from ifgen.svd.model.register import Register
+from ifgen.svd.model.peripheral import Cluster, Register, RegisterData
 
 StructMap = dict[str, Any]
 StructField = dict[str, Any]
@@ -35,9 +34,12 @@ def handle_cluster(cluster: Cluster, structs: StructMap) -> StructField:
 def handle_register(register: Register) -> StructField:
     """Handle a register entry."""
 
-    # handle register is array
-    size = register.raw_data["size"]
-    data = {"name": register.name, "type": f"uint{size}_t"}
+    # handle register is array + get size from peripheral if necessary
+    # assert "size" in register.raw_data, register.name
+    # size = register.raw_data["size"]
+    # data = {"name": register.name, "type": f"uint{size}_t"}
+    data = {"name": register.name}
+
     register.handle_description(data)
     return data
 

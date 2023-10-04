@@ -4,14 +4,14 @@ A module implementing a data model for ARM CMSIS-SVD 'peripheral' data.
 
 # built-in
 from dataclasses import dataclass
-from typing import Iterable, List, Optional
+from typing import Iterable, List, Optional, Union
 from xml.etree import ElementTree
 
 # internal
 from ifgen.svd.model.address_block import AddressBlock
-from ifgen.svd.model.cluster import RegisterData, handle_registers
 from ifgen.svd.model.derived import DerivedMixin
 from ifgen.svd.model.device import ARRAY_PROPERTIES, REGISTER_PROPERTIES
+from ifgen.svd.model.field import FieldMap
 from ifgen.svd.model.interrupt import Interrupt
 from ifgen.svd.string import StringKeyVal
 
@@ -26,6 +26,68 @@ def peripheral_name(name: str, inst: bool = True) -> str:
             name = name[:-1]
 
     return name
+
+
+RegisterData = list[Union["Register", "Cluster"]]
+
+
+@dataclass
+class Cluster(DerivedMixin):
+    """A container for cluster information."""
+
+    derived_from: Optional["Cluster"]
+    children: RegisterData
+    peripheral: "Peripheral"
+
+    @classmethod
+    def string_keys(cls) -> Iterable[StringKeyVal]:
+        """Get string keys for this instance type."""
+
+        return (
+            ARRAY_PROPERTIES
+            + [
+                StringKeyVal("name", True),
+                StringKeyVal("description", False),
+                StringKeyVal("alternateCluster", False),
+                StringKeyVal("headerStructName", False),
+                StringKeyVal("addressOffset", True),
+            ]
+            + REGISTER_PROPERTIES
+        )
+
+
+@dataclass
+class Register(DerivedMixin):
+    """A container for register information."""
+
+    derived_from: Optional["Register"]
+    fields: Optional[FieldMap]
+    peripheral: "Peripheral"
+
+    @classmethod
+    def string_keys(cls) -> Iterable[StringKeyVal]:
+        """Get string keys for this instance type."""
+
+        return (
+            ARRAY_PROPERTIES
+            + [
+                StringKeyVal("name", True),
+                StringKeyVal("displayName", False),
+                StringKeyVal("description", False),
+                StringKeyVal("alternateGroup", False),
+                StringKeyVal("alternateRegister", False),
+                StringKeyVal("addressOffset", True),
+            ]
+            + REGISTER_PROPERTIES
+            + [
+                # is enum
+                StringKeyVal("dataType", False),
+                # is enum
+                StringKeyVal("modifiedWriteValues", False),
+                # is enum
+                StringKeyVal("readAction", False),
+            ]
+        )
 
 
 @dataclass
@@ -44,10 +106,6 @@ class Peripheral(DerivedMixin):
     def base_name(self) -> str:
         """Get the base peripheral name."""
         return peripheral_name(self.name, inst=False)
-
-    def handle_registers(self, registers: ElementTree.Element) -> None:
-        """Handle the 'registers' element."""
-        self.registers = handle_registers(registers)
 
     def handle_address_block(self, address_block: ElementTree.Element) -> None:
         """Handle an 'address_block' element."""
