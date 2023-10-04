@@ -35,7 +35,9 @@ def handle_cluster(cluster: Cluster, structs: StructMap) -> StructField:
 def handle_register(register: Register) -> StructField:
     """Handle a register entry."""
 
-    data = {"name": register.name}
+    # handle register is array
+    size = register.raw_data["size"]
+    data = {"name": register.name, "type": f"uint{size}_t"}
     register.handle_description(data)
     return data
 
