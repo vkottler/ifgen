@@ -4,19 +4,16 @@ A module implementing a data model for ARM CMSIS-SVD 'peripheral' data.
 
 # built-in
 from dataclasses import dataclass
-from typing import Iterable, List, Optional, Tuple
+from typing import Iterable, List, Optional
 from xml.etree import ElementTree
 
 # internal
 from ifgen.svd.model.address_block import AddressBlock
-from ifgen.svd.model.cluster import ClusterMap, get_clusters
+from ifgen.svd.model.cluster import RegisterData, handle_registers
 from ifgen.svd.model.derived import DerivedMixin
 from ifgen.svd.model.device import ARRAY_PROPERTIES, REGISTER_PROPERTIES
 from ifgen.svd.model.interrupt import Interrupt
-from ifgen.svd.model.register import RegisterMap, get_registers
 from ifgen.svd.string import StringKeyVal
-
-RegisterData = Tuple[ClusterMap, RegisterMap]
 
 
 def peripheral_name(name: str, inst: bool = True) -> str:
@@ -36,9 +33,12 @@ class Peripheral(DerivedMixin):
     """A container for peripheral information."""
 
     derived_from: Optional["Peripheral"]
+
+    # Currently treated as metadata.
     interrupts: List[Interrupt]
     address_blocks: List[AddressBlock]
-    registers: List[RegisterData]
+
+    registers: RegisterData
 
     @property
     def base_name(self) -> str:
@@ -47,10 +47,7 @@ class Peripheral(DerivedMixin):
 
     def handle_registers(self, registers: ElementTree.Element) -> None:
         """Handle the 'registers' element."""
-
-        self.registers.append(
-            (get_clusters(registers), get_registers(registers))
-        )
+        self.registers = handle_registers(registers)
 
     def handle_address_block(self, address_block: ElementTree.Element) -> None:
         """Handle an 'address_block' element."""

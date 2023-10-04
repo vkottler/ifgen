@@ -8,7 +8,7 @@ from typing import Iterable, Optional
 from xml.etree import ElementTree
 
 # internal
-from ifgen.svd.model.derived import DerivedMixin, derived_from_stack
+from ifgen.svd.model.derived import DerivedMixin
 from ifgen.svd.model.device import ARRAY_PROPERTIES, REGISTER_PROPERTIES
 from ifgen.svd.model.field import FieldMap, get_fields
 from ifgen.svd.string import StringKeyVal
@@ -50,25 +50,24 @@ class Register(DerivedMixin):
 RegisterMap = dict[str, Register]
 
 
-def get_registers(registers: ElementTree.Element) -> RegisterMap:
-    """Get register elements."""
+def register(
+    element: ElementTree.Element, register_map: RegisterMap
+) -> Register:
+    """Create a Register instance from an SVD element."""
 
-    result: RegisterMap = {}
-    for register in derived_from_stack(registers.iterfind("register")):
-        derived_register = None
-        derived = register.attrib.get("derivedFrom")
-        if derived is not None:
-            derived_register = result[derived]  # pragma: nocover
+    derived_register = None
+    derived = element.attrib.get("derivedFrom")
+    if derived is not None:
+        derived_register = register_map[derived]  # pragma: nocover
 
-        # Handle writeConstraint at some point?
+    # Handle writeConstraint at some point?
 
-        # Load fields.
-        fields = None
-        fields_elem = register.find("fields")
-        if fields_elem is not None:
-            fields = get_fields(fields_elem)
+    # Load fields.
+    fields = None
+    fields_elem = element.find("fields")
+    if fields_elem is not None:
+        fields = get_fields(fields_elem)
 
-        inst = Register.create(register, derived_register, fields)
-        result[inst.name] = inst
-
-    return result
+    inst = Register.create(element, derived_register, fields)
+    register_map[inst.name] = inst
+    return inst

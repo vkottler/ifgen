@@ -24,12 +24,20 @@ class SvdModel:
     def metadata(self) -> dict[str, Any]:
         """Get device and CPU metadata."""
 
-        result = {}
+        result: dict[str, Any] = {}
 
         if self.device is not None:
             result["device"] = self.device.raw_data
         if self.cpu is not None:
             result["cpu"] = self.cpu.raw_data
+
+        for name, peripheral in self.peripherals.items():
+            result[name] = {
+                "interrupts": [x.raw_data for x in peripheral.interrupts],
+                "address_blocks": [
+                    x.raw_data for x in peripheral.address_blocks
+                ],
+            }
 
         return result
 

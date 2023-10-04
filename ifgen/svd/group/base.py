@@ -18,11 +18,6 @@ class PeripheralGroup:
     derivatives: list[Peripheral]
 
     @property
-    def size(self) -> int:
-        """Get the size of this peripheral group."""
-        return 1 + len(self.derivatives)
-
-    @property
     def peripherals(self) -> Iterator[Peripheral]:
         """Get all peripheral instances."""
         yield self.root

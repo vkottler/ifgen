@@ -4,13 +4,17 @@ A module implementing a data model for ARM CMSIS-SVD 'cluster' data.
 
 # built-in
 from dataclasses import dataclass
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Union
 from xml.etree import ElementTree
 
 # internal
-from ifgen.svd.model.derived import DerivedMixin, derived_from_stack
+from ifgen.svd.model.derived import DerivedMixin
 from ifgen.svd.model.device import ARRAY_PROPERTIES, REGISTER_PROPERTIES
+from ifgen.svd.model.register import Register, RegisterMap, register
 from ifgen.svd.string import StringKeyVal
+
+ClusterMap = dict[str, "Cluster"]
+RegisterData = list[Union[Register, "Cluster"]]
 
 
 @dataclass
@@ -18,6 +22,7 @@ class Cluster(DerivedMixin):
     """A container for cluster information."""
 
     derived_from: Optional["Cluster"]
+    children: RegisterData
 
     @classmethod
     def string_keys(cls) -> Iterable[StringKeyVal]:
@@ -38,20 +43,49 @@ class Cluster(DerivedMixin):
         )
 
 
-ClusterMap = dict[str, Cluster]
+def handle_registers(
+    registers: ElementTree.Element,
+    cluster_map: ClusterMap = None,
+    register_map: RegisterMap = None,
+) -> RegisterData:
+    """Handle the 'registers' element."""
 
+    result: RegisterData = []
 
-def get_clusters(registers: ElementTree.Element) -> ClusterMap:
-    """Get register clusters."""
+    if cluster_map is None:
+        cluster_map = {}
+    if register_map is None:
+        register_map = {}
 
-    result: ClusterMap = {}
-    for cluster in derived_from_stack(registers.iterfind("cluster")):
-        derived_cluster = None
-        derived = cluster.attrib.get("derivedFrom")
-        if derived is not None:
-            derived_cluster = result[derived]  # pragma: nocover
-
-        inst = Cluster.create(cluster, derived_cluster)
-        result[inst.name] = inst
+    for item in registers:
+        if item.tag == "cluster":
+            result.append(
+                cluster(item, cluster_map, register_map=register_map)
+            )
+        elif item.tag == "register":
+            result.append(register(item, register_map))
 
     return result
+
+
+def cluster(
+    element: ElementTree.Element,
+    cluster_map: ClusterMap,
+    register_map: RegisterMap = None,
+) -> Cluster:
+    """Create a Cluster instance from an SVD element."""
+
+    derived_cluster = None
+    derived = element.attrib.get("derivedFrom")
+    if derived is not None:
+        derived_cluster = cluster_map[derived]  # pragma: nocover
+
+    inst = Cluster.create(
+        element,
+        derived_cluster,
+        handle_registers(
+            element, cluster_map=cluster_map, register_map=register_map
+        ),
+    )
+    cluster_map[inst.name] = inst
+    return inst
