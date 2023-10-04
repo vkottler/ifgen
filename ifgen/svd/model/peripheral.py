@@ -19,6 +19,18 @@ from ifgen.svd.string import StringKeyVal
 RegisterData = Tuple[ClusterMap, RegisterMap]
 
 
+def peripheral_name(name: str, inst: bool = True) -> str:
+    """Get the name of a peripheral."""
+
+    name = name.lower()
+
+    if not inst:
+        if name[-1].isdigit():
+            name = name[:-1]
+
+    return name
+
+
 @dataclass
 class Peripheral(DerivedMixin):
     """A container for peripheral information."""
@@ -27,6 +39,11 @@ class Peripheral(DerivedMixin):
     interrupts: List[Interrupt]
     address_blocks: List[AddressBlock]
     registers: List[RegisterData]
+
+    @property
+    def base_name(self) -> str:
+        """Get the base peripheral name."""
+        return peripheral_name(self.name, inst=False)
 
     def handle_registers(self, registers: ElementTree.Element) -> None:
         """Handle the 'registers' element."""

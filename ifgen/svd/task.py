@@ -6,7 +6,7 @@ A module implementing an SVD-processing task interface.
 from dataclasses import dataclass
 from logging import getLogger
 from pathlib import Path
-from typing import Callable, Dict
+from typing import Callable
 from xml.etree import ElementTree
 
 # third-party
@@ -14,12 +14,13 @@ from vcorelib.io import ARBITER
 from vcorelib.logging import LoggerType
 
 # internal
+from ifgen.svd.group import handle_group, peripheral_groups
 from ifgen.svd.model import SvdModel
 
 TagProcessor = Callable[
     [ElementTree.Element, "SvdProcessingTask", LoggerType], None
 ]
-TagProcessorMap = Dict[str, TagProcessor]
+TagProcessorMap = dict[str, TagProcessor]
 TAG_PROCESSORS: TagProcessorMap = {}
 
 
@@ -49,4 +50,15 @@ class SvdProcessingTask:
         # Write metadata that doesn't currently get used for generation.
         ARBITER.encode(path.joinpath("metadata.json"), self.model.metadata())
 
-        # generate outputs
+        includes: set[Path] = set()
+
+        # Organize peripherals into groups based on ones derived from others
+        # and process them.
+        for name, group in peripheral_groups(self.model.peripherals).items():
+            output_dir = path.joinpath(group.root.base_name)
+            output_dir.mkdir(exist_ok=True)
+            handle_group(output_dir, name, group, includes)
+
+        ARBITER.encode(
+            path.joinpath("all.yaml"), {"includes": [str(x) for x in includes]}
+        )

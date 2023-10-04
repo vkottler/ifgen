@@ -15,7 +15,7 @@ ci_local:
 
 requirements:
   - runtimepy>=2.1.1
-  - vcorelib>=2.6.1
+  - vcorelib>=3.0.0
 
 dev_requirements:
   - pytest-cov
