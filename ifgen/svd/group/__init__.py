@@ -11,8 +11,8 @@ from vcorelib.io import ARBITER
 
 # internal
 from ifgen.svd.group.base import PeripheralGroup, peripheral_groups
-from ifgen.svd.group.fields import struct_fields
-from ifgen.svd.model.peripheral import Peripheral, peripheral_name
+from ifgen.svd.group.fields import DEFAULT_STRUCT, StructMap, struct_fields
+from ifgen.svd.model.peripheral import Peripheral
 
 __all__ = ["PeripheralGroup", "peripheral_groups", "handle_group"]
 
@@ -21,21 +21,24 @@ def struct_instance(peripheral: Peripheral) -> dict[str, Any]:
     """Get struct instance data."""
 
     return {
-        "name": peripheral_name(peripheral.name),
+        "name": peripheral.name,
         "address": peripheral.raw_data["baseAddress"],
     }
 
 
-def struct_data(group: PeripheralGroup) -> dict[str, Any]:
+def struct_data(group: PeripheralGroup, structs: StructMap) -> dict[str, Any]:
     """Get struct data for a peripheral group."""
 
-    data = {
-        "instances": [struct_instance(x) for x in group.peripherals],
-        "fields": struct_fields(group.root),
-        "stream": False,
-        "codec": False,
-    }
+    data: dict[str, Any] = {}
+    peripheral = group.root
+    peripheral.handle_description(data)
 
+    data["instances"] = [struct_instance(x) for x in group.peripherals]
+    data["fields"] = struct_fields(peripheral.registers, structs)
+
+    # let's compute expected size?
+
+    data.update(DEFAULT_STRUCT)
     return data
 
 
@@ -46,11 +49,7 @@ def handle_group(
 
     output = output_dir.joinpath("include.yaml")
     includes.add(output)
-    ARBITER.encode(
-        output,
-        {
-            "structs": {
-                group.root.base_name: struct_data(group),  # type: ignore
-            }
-        },
-    )
+
+    structs: StructMap = {}
+    structs[group.root.base_name] = struct_data(group, structs)
+    ARBITER.encode(output, {"structs": structs})

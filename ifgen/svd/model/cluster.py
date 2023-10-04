@@ -28,8 +28,6 @@ class Cluster(DerivedMixin):
     def string_keys(cls) -> Iterable[StringKeyVal]:
         """Get string keys for this instance type."""
 
-        # Not currently handling nested registers or clusters.
-
         return (
             ARRAY_PROPERTIES
             + [

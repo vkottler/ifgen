@@ -115,10 +115,19 @@ def create_struct(task: GenerateTask) -> None:
                         f"{task.name}'s identifier.",
                     )
                 )
+                size = task.env.types.size(task.name)
+
+                # If expected size is set, verify it.
+                if "expected_size" in task.instance:
+                    assert task.instance["expected_size"] == size, (
+                        task.name,
+                        task.instance["expected_size"],
+                        size,
+                    )
+
                 lines.append(
                     (
-                        f"static constexpr std::size_t size = "
-                        f"{task.env.types.size(task.name)};",
+                        f"static constexpr std::size_t size = {size};",
                         f"{task.name}'s size in bytes.",
                     )
                 )

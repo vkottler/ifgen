@@ -5,7 +5,7 @@ A module implementing interfaces for string-data elements.
 # built-in
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Iterable, Optional, Type, TypeVar
+from typing import Any, Iterable, Optional, Type, TypeVar
 from xml.etree import ElementTree
 
 # third-party
@@ -40,6 +40,20 @@ class StringKeyValueMixin(ABC):
     @abstractmethod
     def string_keys(cls) -> Iterable[StringKeyVal]:
         """Get string keys for this instance type."""
+
+    def handle_description(
+        self, data: dict[str, Any] = None
+    ) -> dict[str, Any]:
+        """Handle a possible description entry."""
+
+        if data is None:
+            data = {}
+
+        description = self.raw_data.get("description")
+        if description:
+            data["description"] = description
+
+        return data
 
     def raw(self, elem: ElementTree.Element) -> dict[str, str]:
         """Get raw data for this instance based on string keys."""
