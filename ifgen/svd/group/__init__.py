@@ -11,6 +11,7 @@ from vcorelib.io import ARBITER
 
 # internal
 from ifgen.svd.group.base import PeripheralGroup, peripheral_groups
+from ifgen.svd.group.fields import struct_fields
 from ifgen.svd.model.peripheral import Peripheral, peripheral_name
 
 __all__ = ["PeripheralGroup", "peripheral_groups", "handle_group"]
@@ -28,7 +29,12 @@ def struct_instance(peripheral: Peripheral) -> dict[str, Any]:
 def struct_data(group: PeripheralGroup) -> dict[str, Any]:
     """Get struct data for a peripheral group."""
 
-    data = {"instances": [struct_instance(x) for x in group.peripherals]}
+    data = {
+        "instances": [struct_instance(x) for x in group.peripherals],
+        "fields": struct_fields(group.root),
+        "stream": False,
+        "codec": False,
+    }
 
     return data
 
