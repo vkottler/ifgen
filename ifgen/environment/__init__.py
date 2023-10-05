@@ -51,7 +51,9 @@ def runtime_enum_data(data: dict[str, Any]) -> dict[str, int]:
 def type_string(data: str) -> str:
     """Handle some type name conversions."""
 
-    return data.replace("_t", "")
+    if "int" in data:
+        data = data.replace("_t", "")
+    return data
 
 
 class IfgenEnvironment(LoggerMixin):
@@ -110,12 +112,14 @@ class IfgenEnvironment(LoggerMixin):
 
         for name, struct in self.config.data.get("structs", {}).items():
             self.types.register(name, *struct["namespace"])
+
             for field in struct["fields"]:
                 self.types.add(
                     name,
                     field["name"],
                     type_string(field["type"]),
                     array_length=field.get("array_length"),
+                    exact=False,
                 )
 
             self.logger.info(
@@ -159,11 +163,11 @@ class IfgenEnvironment(LoggerMixin):
         self.generated.add(result)
         return result
 
-    def get_protocol(self, name: str) -> Protocol:
+    def get_protocol(self, name: str, exact: bool = False) -> Protocol:
         """Get the protocol instance for a given struct."""
 
         return self.types.get_protocol(
-            name, self.config.data["structs"].get("namespace", [])
+            name, self.config.data["structs"].get("namespace", []), exact=exact
         )
 
     def is_struct(self, name: str) -> bool:
@@ -175,15 +179,15 @@ class IfgenEnvironment(LoggerMixin):
         except KeyError:
             return False
 
-    def size(self, type_name: str) -> int:
+    def size(self, type_name: str, exact: bool = False) -> int:
         """Get the size of a given type."""
-        return self.types.size(type_string(type_name))
+        return self.types.size(type_string(type_name), exact=exact)
 
-    def get_enum(self, name: str) -> RuntimeEnum:
+    def get_enum(self, name: str, exact: bool = False) -> RuntimeEnum:
         """Get a runtime enum instance for a given enumeration."""
 
         return self.types.get_enum(
-            name, *self.config.data["enums"].get("namespace", [])
+            name, *self.config.data["enums"].get("namespace", []), exact=exact
         )
 
     def is_enum(self, name: str) -> bool:

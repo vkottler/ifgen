@@ -14,7 +14,7 @@ ci_local:
   - "- run: pip${{'{{matrix.python-version}}'}} install yambs"
 
 requirements:
-  - runtimepy>=2.13.0
+  - runtimepy>=2.13.2
   - vcorelib>=3.0.0
 
 dev_requirements:

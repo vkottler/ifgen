@@ -12,6 +12,7 @@ from xml.etree import ElementTree
 # third-party
 from vcorelib.io import ARBITER
 from vcorelib.logging import LoggerType
+from vcorelib.paths import rel
 
 # internal
 from ifgen.svd.group import handle_group, peripheral_groups
@@ -47,8 +48,10 @@ class SvdProcessingTask:
 
         path.mkdir(exist_ok=True, parents=True)
 
+        meta = self.model.metadata()
+
         # Write metadata that doesn't currently get used for generation.
-        ARBITER.encode(path.joinpath("metadata.json"), self.model.metadata())
+        ARBITER.encode(path.joinpath("metadata.json"), meta)
 
         includes: set[Path] = set()
 
@@ -60,5 +63,11 @@ class SvdProcessingTask:
             handle_group(output_dir, group, includes)
 
         ARBITER.encode(
-            path.joinpath("all.yaml"), {"includes": [str(x) for x in includes]}
+            path.joinpath("ifgen.yaml"),
+            {
+                "includes": [
+                    str(rel(x.resolve(), base=path)) for x in includes
+                ],
+                "namespace": [meta["device"]["name"]],
+            },
         )
