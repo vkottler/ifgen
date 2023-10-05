@@ -111,6 +111,9 @@ class IfgenEnvironment(LoggerMixin):
         for name, struct in self.config.data.get("structs", {}).items():
             self.types.register(name, *struct["namespace"])
             for field in struct["fields"]:
+                # handle if a field is an array
+                # array_length
+
                 self.types.add(name, field["name"], type_string(field["type"]))
 
             self.logger.info(

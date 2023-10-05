@@ -13,6 +13,10 @@ properties:
 
   type: *pattern_string
 
+  array_length:
+    type: integer
+    minimum: 2
+
   fields:
     type: array
     items:
