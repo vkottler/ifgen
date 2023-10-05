@@ -159,7 +159,7 @@ def create_struct(task: GenerateTask) -> None:
                     )
                 )
 
-                size = task.env.types.size(task.name)
+                size = task.env.size(task.name)
                 enforce_expected_size(size, task.instance, task.name)
 
                 lines.append(

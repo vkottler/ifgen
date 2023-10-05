@@ -1,13 +1,30 @@
 #!/bin/bash
 
-mkdir >/dev/null -p build
+do_test() {
+	rm -rf build/svd
+	mkdir -p build/svd && pushd build/svd || exit
 
-pushd build || exit
+	PKG=ifgen
+	IG=../../venv/bin/ig
 
-for CHIP in rp2040 XMC4700; do
-	../venv/bin/ig svd -o $CHIP package://ifgen/svd/$CHIP.svd &
-done
+	for CHIP in rp2040 XMC4700; do
+		mkdir -p $CHIP/$PKG
+		$IG svd -o $CHIP/$PKG package://$PKG/svd/$CHIP.svd &
+		ENTRY=$CHIP/$PKG.yaml
+		echo "---" > $ENTRY
+		echo "includes:" >> $ENTRY
+		echo "  - $PKG/$PKG.yaml" >> $ENTRY
+	done
 
-wait
+	wait
 
-popd >/dev/null || exit
+	for CHIP in rp2040 XMC4700; do
+		$IG -C $CHIP gen &
+	done
+
+	wait
+
+	popd >/dev/null || exit
+}
+
+time do_test

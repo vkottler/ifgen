@@ -42,7 +42,9 @@ def struct_data(group: PeripheralGroup, structs: StructMap) -> dict[str, Any]:
 
 
 def handle_group(
-    output_dir: Path, group: PeripheralGroup, includes: set[Path]
+    output_dir: Path,
+    group: PeripheralGroup,
+    includes: set[Path],
 ) -> None:
     """Handle a peripheral group."""
 

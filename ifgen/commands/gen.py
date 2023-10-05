@@ -16,17 +16,13 @@ from ifgen.config import load
 from ifgen.generation import generate
 from ifgen.paths import combine_if_not_absolute
 
-DEFAULT_CONFIG = f"{PKG_NAME}.yaml"
-
 
 def gen_cmd(args: _Namespace) -> int:
     """Execute the gen command."""
 
     root = normalize(args.root)
 
-    generate(
-        root.resolve(), load(combine_if_not_absolute(root, DEFAULT_CONFIG))
-    )
+    generate(root.resolve(), load(combine_if_not_absolute(root, args.config)))
 
     return 0
 
@@ -34,6 +30,12 @@ def gen_cmd(args: _Namespace) -> int:
 def add_gen_cmd(parser: _ArgumentParser) -> _CommandFunction:
     """Add gen-command arguments to its parser."""
 
+    parser.add_argument(
+        "-c",
+        "--config",
+        default=f"{PKG_NAME}.yaml",
+        help="configuration file to use",
+    )
     parser.add_argument(
         "-r",
         "--root",

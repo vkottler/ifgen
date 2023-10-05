@@ -24,12 +24,24 @@ def handle_cluster(
     cluster_struct["expected_size"] = size
     cluster_struct.update(DEFAULT_STRUCT)
 
-    # compute expected size?
+    raw_name = cluster.name.replace("[%s]", "")
 
-    structs[cluster.name] = cluster_struct
+    cluster_name = cluster.raw_data.get(
+        "headerStructName", f"{raw_name}_instance"
+    )
+    structs[cluster_name] = cluster_struct
 
     # This needs to be an array element somehow. Use a namespace?
-    result: StructField = {"name": cluster.name, "expected_size": size}
+    array_dim = int(cluster.raw_data.get("dim", 1))
+    size *= array_dim
+    result: StructField = {
+        "name": raw_name,
+        "type": cluster_name,
+        "expected_size": size,
+    }
+    if array_dim > 1:
+        result["array_length"] = array_dim
+
     cluster.handle_description(result)
     return size, result
 
@@ -37,13 +49,18 @@ def handle_cluster(
 def handle_register(register: Register) -> tuple[int, StructField]:
     """Handle a register entry."""
 
+    array_dim = int(register.raw_data.get("dim", 1))
+
     # handle register is array + get size from peripheral if necessary
-    size = register.size
+    size = register.size * array_dim
     data = {
-        "name": register.name,
+        "name": register.name.replace("[%s]", ""),
         "type": register.c_type,
         "expected_size": size,
     }
+    if array_dim > 1:
+        data["array_length"] = array_dim
+
     register.handle_description(data)
     return size, data
 
