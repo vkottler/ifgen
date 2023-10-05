@@ -66,6 +66,11 @@ def struct_fields(task: GenerateTask, writer: IndentedFileWriter) -> None:
     with writer.trailing_comment_lines(style=CommentStyle.C_DOXYGEN) as lines:
         # Fields.
         for field in task.instance["fields"]:
+            enforce_expected_size(
+                task.env.size(field["type"]),
+                field,
+                f"{task.name}.{field['name']}",
+            )
             lines.append(struct_line(field["name"], field, field["volatile"]))
 
         lines.append(("", None))
@@ -94,6 +99,20 @@ def struct_instance(
     )
 
 
+def enforce_expected_size(
+    size: int, data: dict[str, Any], assert_msg: str
+) -> None:
+    """Enforce an expected-size field."""
+
+    # If expected size is set, verify it.
+    if "expected_size" in data:
+        assert data["expected_size"] == size, (
+            assert_msg,
+            data["expected_size"],
+            size,
+        )
+
+
 def create_struct(task: GenerateTask) -> None:
     """Create a header file based on a struct definition."""
 
@@ -115,15 +134,9 @@ def create_struct(task: GenerateTask) -> None:
                         f"{task.name}'s identifier.",
                     )
                 )
-                size = task.env.types.size(task.name)
 
-                # If expected size is set, verify it.
-                if "expected_size" in task.instance:
-                    assert task.instance["expected_size"] == size, (
-                        task.name,
-                        task.instance["expected_size"],
-                        size,
-                    )
+                size = task.env.types.size(task.name)
+                enforce_expected_size(size, task.instance, task.name)
 
                 lines.append(
                     (

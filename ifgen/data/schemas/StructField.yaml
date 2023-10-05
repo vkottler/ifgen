@@ -2,6 +2,7 @@
 includes:
   - has_description.yaml
   - has_volatile.yaml
+  - has_expected_size.yaml
 
 required: [name, type]
 

@@ -64,6 +64,23 @@ class Register(DerivedMixin):
     fields: Optional[FieldMap]
     peripheral: "Peripheral"
 
+    @property
+    def bits(self) -> int:
+        """Get the size of this register in bits."""
+        result = self.raw_data.get("size", self.peripheral.bits)
+        assert result is not None
+        return int(result)
+
+    @property
+    def size(self) -> int:
+        """Get the size of this register in bytes."""
+        return self.bits // 8
+
+    @property
+    def c_type(self) -> str:
+        """Get the C type for this register."""
+        return f"uint{self.bits}_t"
+
     @classmethod
     def string_keys(cls) -> Iterable[StringKeyVal]:
         """Get string keys for this instance type."""
@@ -101,6 +118,13 @@ class Peripheral(DerivedMixin):
     address_blocks: List[AddressBlock]
 
     registers: RegisterData
+
+    @property
+    def bits(self) -> Optional[int]:
+        """Get size for this peripheral in bits."""
+
+        result = self.derived_elem.raw_data.get("size")
+        return int(result) if result is not None else None
 
     @property
     def base_name(self) -> str:

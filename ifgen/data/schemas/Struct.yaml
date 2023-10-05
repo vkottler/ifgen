@@ -3,6 +3,7 @@ includes:
   - has_description.yaml
   - has_namespace.yaml
   - has_json_indent.yaml
+  - has_expected_size.yaml
 
 required: [fields]
 
@@ -14,9 +15,6 @@ properties:
   stream:
     type: boolean
     default: true
-
-  expected_size:
-    type: integer
 
   instances:
     type: array
