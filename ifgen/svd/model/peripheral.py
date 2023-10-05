@@ -4,19 +4,107 @@ A module implementing a data model for ARM CMSIS-SVD 'peripheral' data.
 
 # built-in
 from dataclasses import dataclass
-from typing import Iterable, List, Optional, Tuple
+from typing import Iterable, List, Optional, Union
 from xml.etree import ElementTree
 
 # internal
 from ifgen.svd.model.address_block import AddressBlock
-from ifgen.svd.model.cluster import ClusterMap, get_clusters
 from ifgen.svd.model.derived import DerivedMixin
 from ifgen.svd.model.device import ARRAY_PROPERTIES, REGISTER_PROPERTIES
+from ifgen.svd.model.field import FieldMap
 from ifgen.svd.model.interrupt import Interrupt
-from ifgen.svd.model.register import RegisterMap, get_registers
 from ifgen.svd.string import StringKeyVal
 
-RegisterData = Tuple[ClusterMap, RegisterMap]
+
+def peripheral_name(name: str, inst: bool = True) -> str:
+    """Get the name of a peripheral."""
+
+    name = name.lower()
+
+    if not inst:
+        if name[-1].isdigit():
+            name = name[:-1]
+
+    return name
+
+
+RegisterData = list[Union["Register", "Cluster"]]
+
+
+@dataclass
+class Cluster(DerivedMixin):
+    """A container for cluster information."""
+
+    derived_from: Optional["Cluster"]
+    children: RegisterData
+    peripheral: "Peripheral"
+
+    @classmethod
+    def string_keys(cls) -> Iterable[StringKeyVal]:
+        """Get string keys for this instance type."""
+
+        return (
+            ARRAY_PROPERTIES
+            + [
+                StringKeyVal("name", True),
+                StringKeyVal("description", False),
+                StringKeyVal("alternateCluster", False),
+                StringKeyVal("headerStructName", False),
+                StringKeyVal("addressOffset", True),
+            ]
+            + REGISTER_PROPERTIES
+        )
+
+
+@dataclass
+class Register(DerivedMixin):
+    """A container for register information."""
+
+    derived_from: Optional["Register"]
+    fields: Optional[FieldMap]
+    peripheral: "Peripheral"
+
+    @property
+    def bits(self) -> int:
+        """Get the size of this register in bits."""
+        result = self.raw_data.get("size", self.peripheral.bits)
+        assert result is not None
+        return int(result)
+
+    @property
+    def size(self) -> int:
+        """Get the size of this register in bytes."""
+        return self.bits // 8
+
+    @property
+    def c_type(self) -> str:
+        """Get the C type for this register."""
+        return f"uint{self.bits}_t"
+
+    @classmethod
+    def string_keys(cls) -> Iterable[StringKeyVal]:
+        """Get string keys for this instance type."""
+
+        return (
+            ARRAY_PROPERTIES
+            + [
+                StringKeyVal("name", True),
+                StringKeyVal("displayName", False),
+                StringKeyVal("description", False),
+                StringKeyVal("alternateGroup", False),
+                StringKeyVal("alternateRegister", False),
+                StringKeyVal("addressOffset", True),
+            ]
+            + REGISTER_PROPERTIES
+            + [
+                # is enum
+                StringKeyVal("dataType", False),
+                # is enum
+                StringKeyVal("modifiedWriteValues", False),
+                # is enum
+                StringKeyVal("readAction", False),
+            ]
+        )
 
 
 @dataclass
@@ -24,16 +112,24 @@ class Peripheral(DerivedMixin):
     """A container for peripheral information."""
 
     derived_from: Optional["Peripheral"]
+
+    # Currently treated as metadata.
     interrupts: List[Interrupt]
     address_blocks: List[AddressBlock]
-    registers: List[RegisterData]
 
-    def handle_registers(self, registers: ElementTree.Element) -> None:
-        """Handle the 'registers' element."""
+    registers: RegisterData
 
-        self.registers.append(
-            (get_clusters(registers), get_registers(registers))
-        )
+    @property
+    def bits(self) -> Optional[int]:
+        """Get size for this peripheral in bits."""
+
+        result = self.derived_elem.raw_data.get("size")
+        return int(result) if result is not None else None
+
+    @property
+    def base_name(self) -> str:
+        """Get the base peripheral name."""
+        return peripheral_name(self.name, inst=False)
 
     def handle_address_block(self, address_block: ElementTree.Element) -> None:
         """Handle an 'address_block' element."""

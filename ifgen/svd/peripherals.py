@@ -11,6 +11,7 @@ from vcorelib.logging import LoggerType
 # internal
 from ifgen.svd.model.derived import derived_from_stack
 from ifgen.svd.model.peripheral import Peripheral
+from ifgen.svd.process import handle_registers
 from ifgen.svd.task import SvdProcessingTask
 
 
@@ -30,7 +31,7 @@ def process_peripheral(
     # Handle registers.
     registers = elem.find("registers")
     if registers is not None:
-        peripheral.handle_registers(registers)
+        peripheral.registers = handle_registers(registers, peripheral)
 
     # Handle address blocks.
     for address_block in elem.iterfind("addressBlock"):

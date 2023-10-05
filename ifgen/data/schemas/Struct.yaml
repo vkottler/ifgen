@@ -3,6 +3,7 @@ includes:
   - has_description.yaml
   - has_namespace.yaml
   - has_json_indent.yaml
+  - has_expected_size.yaml
 
 required: [fields]
 

@@ -22,7 +22,11 @@ class DerivedMixin(StringKeyValueMixin):
     @property
     def derived_elem(self: T) -> T:
         """Get the derived element."""
-        return getattr(self, "derived_from")  # type: ignore
+
+        result = getattr(self, "derived_from", None)
+        if result is None:
+            result = self
+        return result
 
     @property
     def name(self) -> str:

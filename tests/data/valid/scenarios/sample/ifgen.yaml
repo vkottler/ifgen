@@ -7,6 +7,7 @@ structs:
     namespace: [C]
     description: "Sample struct 1."
     json_indent: 4
+    expected_size: 11
     fields:
       - name: field1
         description: A field.

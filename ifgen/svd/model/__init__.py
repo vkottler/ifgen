@@ -4,7 +4,7 @@ A module implementing a data model for ARM CMSIS-SVD 'device' data.
 
 # built-in
 from dataclasses import dataclass
-from typing import Optional
+from typing import Any, Optional
 from xml.etree import ElementTree
 
 # internal
@@ -20,6 +20,26 @@ class SvdModel:
     peripherals: dict[str, Peripheral]
     device: Optional[Device] = None
     cpu: Optional[Cpu] = None
+
+    def metadata(self) -> dict[str, Any]:
+        """Get device and CPU metadata."""
+
+        result: dict[str, Any] = {}
+
+        if self.device is not None:
+            result["device"] = self.device.raw_data
+        if self.cpu is not None:
+            result["cpu"] = self.cpu.raw_data
+
+        for name, peripheral in self.peripherals.items():
+            result[name] = {
+                "interrupts": [x.raw_data for x in peripheral.interrupts],
+                "address_blocks": [
+                    x.raw_data for x in peripheral.address_blocks
+                ],
+            }
+
+        return result
 
     def assign_device(self, device: Device) -> None:
         """Assign a device instance."""

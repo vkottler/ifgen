@@ -6,19 +6,21 @@ A module implementing an SVD-processing task interface.
 from dataclasses import dataclass
 from logging import getLogger
 from pathlib import Path
-from typing import Callable, Dict
+from typing import Callable
 from xml.etree import ElementTree
 
 # third-party
+from vcorelib.io import ARBITER
 from vcorelib.logging import LoggerType
 
 # internal
+from ifgen.svd.group import handle_group, peripheral_groups
 from ifgen.svd.model import SvdModel
 
 TagProcessor = Callable[
     [ElementTree.Element, "SvdProcessingTask", LoggerType], None
 ]
-TagProcessorMap = Dict[str, TagProcessor]
+TagProcessorMap = dict[str, TagProcessor]
 TAG_PROCESSORS: TagProcessorMap = {}
 
 
@@ -39,3 +41,24 @@ class SvdProcessingTask:
         task = SvdProcessingTask(SvdModel({}))
         task.process(ElementTree.parse(path).getroot())
         return task
+
+    def generate_configs(self, path: Path) -> None:
+        """Generate output configuration files."""
+
+        path.mkdir(exist_ok=True, parents=True)
+
+        # Write metadata that doesn't currently get used for generation.
+        ARBITER.encode(path.joinpath("metadata.json"), self.model.metadata())
+
+        includes: set[Path] = set()
+
+        # Organize peripherals into groups based on ones derived from others
+        # and process them.
+        for group in peripheral_groups(self.model.peripherals).values():
+            output_dir = path.joinpath(group.root.base_name)
+            output_dir.mkdir(exist_ok=True)
+            handle_group(output_dir, group, includes)
+
+        ARBITER.encode(
+            path.joinpath("all.yaml"), {"includes": [str(x) for x in includes]}
+        )
