@@ -3,6 +3,7 @@ A module implementing interfaces for byte-swapping method generation.
 """
 
 # built-in
+from contextlib import ExitStack
 from typing import Any
 
 # third-party
@@ -17,10 +18,14 @@ def no_swap(
     is_decode: bool,
     task: GenerateTask,
     writer: IndentedFileWriter,
+    is_array: bool,
 ) -> None:
     """Encode or decode a single-byte type."""
 
     name = field["name"]
+    if is_array:
+        name += "[i]"
+
     kind = field["type"]
 
     is_enum = task.env.is_enum(kind)
@@ -43,12 +48,16 @@ def swap_struct(
     is_decode: bool,
     task: GenerateTask,
     writer: IndentedFileWriter,
+    is_array: bool,
 ) -> None:
     """Perform a byte swap for a struct type."""
 
     del task
 
     name = field["name"]
+    if is_array:
+        name += "[i]"
+
     kind = field["type"]
 
     writer.write(
@@ -88,14 +97,18 @@ def swap_enum(
     is_decode: bool,
     task: GenerateTask,
     writer: IndentedFileWriter,
+    is_array: bool,
 ) -> None:
     """Perform a byte swap for an enumeration type."""
 
     underlying = task.env.get_enum(field["type"]).primitive + "_t"
 
-    if is_decode:
-        lhs = f"{field['name']}"
+    name = field["name"]
+    if is_array:
+        name += "[i]"
 
+    if is_decode:
+        lhs = name
         underlying = to_integral(underlying)
         rhs = (
             f"{field['type']}(std::byteswap(*reinterpret_cast<const "
@@ -105,36 +118,42 @@ def swap_enum(
     else:
         lhs = f"*reinterpret_cast<{underlying} *>(&buf[idx])"
         underlying = to_integral(underlying)
-        rhs = f"std::byteswap(std::to_underlying({field['name']}))"
+        rhs = f"std::byteswap(std::to_underlying({name}))"
 
     assignment(writer, lhs, rhs)
 
 
 def encode_primitive_swap(
-    field: dict[str, Any], writer: IndentedFileWriter
+    field: dict[str, Any], writer: IndentedFileWriter, is_array: bool
 ) -> None:
     """Encode a primitive-sized element by swapping byte order."""
 
     underlying = field["type"]
     integral = to_integral(underlying)
 
+    name = field["name"]
+    if is_array:
+        name += "[i]"
+
     rhs = "std::byteswap("
     if field["type"] == integral:
         lhs = f"*reinterpret_cast<{underlying} *>(&buf[idx])"
-        rhs += f"{field['name']})"
+        rhs += f"{name})"
     else:
         lhs = f"*reinterpret_cast<{integral} *>(&buf[idx])"
-        rhs += f"reinterpret_cast<const {integral} &>({field['name']}))"
+        rhs += f"reinterpret_cast<const {integral} &>({name}))"
 
     assignment(writer, lhs, rhs)
 
 
 def decode_primitive_swap(
-    field: dict[str, Any], writer: IndentedFileWriter
+    field: dict[str, Any], writer: IndentedFileWriter, is_array: bool
 ) -> None:
     """Decode a primitive-sized element by swapping byte order."""
 
     lhs = f"{field['name']}"
+    if is_array:
+        lhs += "[i]"
 
     underlying = field["type"]
     integral = to_integral(underlying)
@@ -167,20 +186,27 @@ def swap_fields(
         kind = field["type"]
         writer.c_comment(f"{kind} {name}")
 
-        size = task.env.size(kind)
-        if size == 1:
-            no_swap(field, is_decode, task, writer)
-        elif task.env.is_struct(kind):
-            swap_struct(field, is_decode, task, writer)
-        elif task.env.is_enum(kind):
-            swap_enum(field, is_decode, task, writer)
-            writer.write(f"idx += {size};")
-        else:
-            if is_decode:
-                decode_primitive_swap(field, writer)
+        with ExitStack() as stack:
+            is_array = "array_length" in field
+            if is_array:
+                array_cmp = task.cpp_namespace(f"{name}_length")
+                writer.write(f"for (std::size_t i = 0; i < {array_cmp}; i++)")
+                stack.enter_context(writer.scope())
+
+            size = task.env.size(kind)
+            if size == 1:
+                no_swap(field, is_decode, task, writer, is_array)
+            elif task.env.is_struct(kind):
+                swap_struct(field, is_decode, task, writer, is_array)
+            elif task.env.is_enum(kind):
+                swap_enum(field, is_decode, task, writer, is_array)
+                writer.write(f"idx += {size};")
             else:
-                encode_primitive_swap(field, writer)
-            writer.write(f"idx += {size};")
+                if is_decode:
+                    decode_primitive_swap(field, writer, is_array)
+                else:
+                    encode_primitive_swap(field, writer, is_array)
+                writer.write(f"idx += {size};")
 
     writer.empty()
     writer.write("return idx;")
