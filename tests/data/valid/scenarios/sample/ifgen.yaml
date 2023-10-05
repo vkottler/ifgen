@@ -84,7 +84,7 @@ structs:
       - {name: "periph4", address: "0xD0000000"}
 
   TestArrays:
-    expected_size: 139
+    expected_size: 169
     fields:
       - name: array1
         expected_size: 55
@@ -105,8 +105,16 @@ structs:
         type: uint32_t
         array_length: 10
 
-    stream: false
-    codec: false
+      - name: array4
+        expected_size: 10
+        type: int8_t
+        array_length: 10
+
+      - name: array5
+        type: Enum1
+        expected_size: 20
+        array_length: 10
+
     json: false
 
 enums:

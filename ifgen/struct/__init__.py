@@ -32,7 +32,7 @@ def struct_line(
 
     line = f"{value['type']} {name}"
     if array_length is not None:
-        line += f"[{array_length}]"
+        line += f"[{name}_length]"
 
     return ("volatile " if volatile else "") + (  # type: ignore
         f"{line};"
@@ -75,6 +75,19 @@ def struct_fields(task: GenerateTask, writer: IndentedFileWriter) -> None:
                 field,
                 f"{task.name}.{field['name']}",
             )
+
+            if "array_length" in field:
+                lines.append(
+                    (
+                        (
+                            f"static constexpr std::size_t "
+                            f"{field['name']}_length = "
+                            f"{field['array_length']};"
+                        ),
+                        None,
+                    )
+                )
+
             lines.append(
                 struct_line(
                     field["name"],
