@@ -83,6 +83,32 @@ structs:
       - {name: "periph3", address: "0xC0000000"}
       - {name: "periph4", address: "0xD0000000"}
 
+  TestArrays:
+    expected_size: 139
+    fields:
+      - name: array1
+        expected_size: 55
+        type: C::Test1
+        array_length: 5
+
+      - name: array2
+        expected_size: 33
+        type: C::Test1
+        array_length: 3
+
+      - name: field1
+        expected_size: 11
+        type: C::Test1
+
+      - name: array3
+        expected_size: 40
+        type: uint32_t
+        array_length: 10
+
+    stream: false
+    codec: false
+    json: false
+
 enums:
   Enum1:
     json: true

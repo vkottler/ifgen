@@ -26,12 +26,16 @@ FieldConfig = Dict[str, Union[int, str]]
 
 
 def struct_line(
-    name: str, value: FieldConfig, volatile: bool
+    name: str, value: FieldConfig, volatile: bool, array_length: int = None
 ) -> LineWithComment:
     """Build a string for a struct-field line."""
 
+    line = f"{value['type']} {name}"
+    if array_length is not None:
+        line += f"[{array_length}]"
+
     return ("volatile " if volatile else "") + (  # type: ignore
-        f"{value['type']} {name};"
+        f"{line};"
     ), value.get("description")
 
 
@@ -67,11 +71,18 @@ def struct_fields(task: GenerateTask, writer: IndentedFileWriter) -> None:
         # Fields.
         for field in task.instance["fields"]:
             enforce_expected_size(
-                task.env.size(field["type"]),
+                task.env.size(field["type"]) * field.get("array_length", 1),
                 field,
                 f"{task.name}.{field['name']}",
             )
-            lines.append(struct_line(field["name"], field, field["volatile"]))
+            lines.append(
+                struct_line(
+                    field["name"],
+                    field,
+                    field["volatile"],
+                    array_length=field.get("array_length"),
+                )
+            )
 
         lines.append(("", None))
 
