@@ -77,6 +77,7 @@ structs:
     stream: false
     codec: false
     json: false
+    unit_test: false
     instances:
       - {name: "periph1", address: "0xA0000000", description: "A peripheral."}
       - {name: "periph2", address: "0xB0000000"}
@@ -84,6 +85,7 @@ structs:
       - {name: "periph4", address: "0xD0000000"}
 
   TestArrays:
+    json: false
     expected_size: 169
     fields:
       - name: array1
@@ -115,7 +117,22 @@ structs:
         expected_size: 20
         array_length: 10
 
+  Test8:
+    fields:
+      - name: array1
+        type: C::Test1
+        const: true
+        array_length: 5
+
+      - name: array2
+        type: C::Test1
+        volatile: true
+        array_length: 5
+
+    stream: false
+    codec: false
     json: false
+    methods: false
 
 enums:
   Enum1:

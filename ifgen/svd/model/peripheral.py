@@ -77,6 +77,15 @@ class Register(DerivedMixin):
         return self.bits // 8
 
     @property
+    def access(self) -> str:
+        """Get the access setting for this register."""
+
+        return self.raw_data.get(
+            "access",
+            self.peripheral.access,  # type: ignore
+        )
+
+    @property
     def c_type(self) -> str:
         """Get the C type for this register."""
         return f"uint{self.bits}_t"
@@ -125,6 +134,11 @@ class Peripheral(DerivedMixin):
 
         result = self.derived_elem.raw_data.get("size")
         return int(result) if result is not None else None
+
+    @property
+    def access(self) -> Optional[str]:
+        """Get the possible 'access' field default."""
+        return self.derived_elem.raw_data.get("access")
 
     @property
     def base_name(self) -> str:

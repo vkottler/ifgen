@@ -46,5 +46,6 @@ def unit_test_body(task: GenerateTask, writer: IndentedFileWriter) -> None:
 def create_enum_test(task: GenerateTask) -> None:
     """Create a unit test for the enum string-conversion methods."""
 
-    with unit_test_boilerplate(task) as writer:
-        unit_test_body(task, writer)
+    if task.instance["unit_test"]:
+        with unit_test_boilerplate(task) as writer:
+            unit_test_body(task, writer)
