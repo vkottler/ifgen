@@ -10,7 +10,12 @@ from ifgen.svd.model.peripheral import Cluster, Register, RegisterData
 
 StructMap = dict[str, Any]
 StructField = dict[str, Any]
-DEFAULT_STRUCT = {"stream": False, "codec": False}
+DEFAULT_STRUCT = {
+    "stream": False,
+    "codec": False,
+    "methods": False,
+    "unit_test": False,
+}
 
 
 def handle_cluster(
@@ -60,6 +65,8 @@ def handle_register(register: Register) -> tuple[int, StructField]:
     }
     if array_dim > 1:
         data["array_length"] = array_dim
+    if register.access == "read-only":
+        data["const"] = True
 
     register.handle_description(data)
     return size, data

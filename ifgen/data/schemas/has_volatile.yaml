@@ -3,3 +3,7 @@ properties:
   volatile:
     type: boolean
     default: false
+
+  const:
+    type: boolean
+    default: false

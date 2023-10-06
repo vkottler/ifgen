@@ -51,7 +51,11 @@ def unit_test_basic_method(
     with unit_test_method("encode_decode_basic", task, writer):
         nspaced = task.name
         writer.write(f"{nspaced} src = {'{}'};")
-        assert_line(writer, f"src.span().size() == {nspaced}::size")
+
+        if task.instance["methods"]:
+            assert_line(writer, f"src.span().size() == {nspaced}::size")
+        else:
+            writer.write("(void)src;")
 
         if task.instance["codec"]:
             with writer.padding():
@@ -107,10 +111,11 @@ def unit_test_body(task: GenerateTask, writer: IndentedFileWriter) -> None:
 def create_struct_test(task: GenerateTask) -> None:
     """Create a unit test for the enum string-conversion methods."""
 
-    with unit_test_boilerplate(task, main=False) as writer:
-        unit_test_basic_method(task, writer)
+    if task.instance["unit_test"]:
+        with unit_test_boilerplate(task, main=False) as writer:
+            unit_test_basic_method(task, writer)
 
-        writer.empty()
+            writer.empty()
 
-        with unit_test_main(task, writer):
-            unit_test_body(task, writer)
+            with unit_test_main(task, writer):
+                unit_test_body(task, writer)
