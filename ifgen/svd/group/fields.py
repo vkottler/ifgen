@@ -56,7 +56,6 @@ def handle_register(register: Register) -> tuple[int, StructField]:
 
     array_dim = int(register.raw_data.get("dim", 1))
 
-    # handle register is array + get size from peripheral if necessary
     size = register.size * array_dim
     data = {
         "name": register.name.replace("[%s]", ""),
@@ -65,10 +64,16 @@ def handle_register(register: Register) -> tuple[int, StructField]:
     }
     if array_dim > 1:
         data["array_length"] = array_dim
-    if register.access == "read-only":
+
+    # Add expected offset.
+
+    access = register.access
+    if access == "read-only":
         data["const"] = True
 
-    register.handle_description(data)
+    notes = [access]
+
+    register.handle_description(data, prefix=f"({', '.join(notes)}) ")
     return size, data
 
 

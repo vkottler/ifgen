@@ -42,7 +42,7 @@ class StringKeyValueMixin(ABC):
         """Get string keys for this instance type."""
 
     def handle_description(
-        self, data: dict[str, Any] = None
+        self, data: dict[str, Any] = None, prefix: str = None
     ) -> dict[str, Any]:
         """Handle a possible description entry."""
 
@@ -50,8 +50,9 @@ class StringKeyValueMixin(ABC):
             data = {}
 
         description = self.raw_data.get("description")
+
         if description:
-            data["description"] = description
+            data["description"] = (prefix if prefix else "") + description
 
         return data
 
