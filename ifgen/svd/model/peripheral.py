@@ -80,10 +80,22 @@ class Register(DerivedMixin):
     def access(self) -> str:
         """Get the access setting for this register."""
 
-        return self.raw_data.get(
-            "access",
-            self.peripheral.access,  # type: ignore
-        )
+        access = self.raw_data.get("access", self.peripheral.access)
+
+        read = False
+        write = False
+
+        if access is None and self.fields is not None:
+            for field in self.fields.values():
+                if "access" in field.raw_data:
+                    read |= "read" in field.raw_data["access"]
+                    write |= "write" in field.raw_data["access"]
+
+        if read and not write:
+            return "read-only"
+        if write and not read:
+            return "write-only"
+        return "read-write"
 
     @property
     def c_type(self) -> str:
