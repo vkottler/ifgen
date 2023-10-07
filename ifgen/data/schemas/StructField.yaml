@@ -17,6 +17,9 @@ properties:
     type: integer
     minimum: 2
 
+  expected_offset:
+    type: integer
+
   fields:
     type: array
     items:

@@ -111,12 +111,25 @@ class IfgenEnvironment(LoggerMixin):
         """Register configuration structs."""
 
         for name, struct in self.config.data.get("structs", {}).items():
-            self.types.register(name, *struct["namespace"])
+            namespace = [*struct["namespace"]]
+            self.types.register(name, *namespace)
 
             for field in struct["fields"]:
+                field_name = field["name"]
+
+                # Validate expected offset.
+                if "expected_offset" in field:
+                    size = self.types.size(name, *namespace)
+                    expected: int = field["expected_offset"]
+
+                    assert size == expected, (
+                        f"({name}.{field_name}) current={size} "
+                        f"!= expected={expected}"
+                    )
+
                 self.types.add(
                     name,
-                    field["name"],
+                    field_name,
                     type_string(field["type"]),
                     array_length=field.get("array_length"),
                     exact=False,

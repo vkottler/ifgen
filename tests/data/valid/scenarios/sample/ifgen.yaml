@@ -12,12 +12,15 @@ structs:
       - name: field1
         description: A field.
         type: uint8_t
+        expected_offset: 0
 
       - name: field2
         type: Enum1
+        expected_offset: 1
 
       - name: field3
         type: double
+        expected_offset: 3
 
   Test2:
     json: true
