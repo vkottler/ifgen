@@ -18,6 +18,8 @@ from vcorelib.paths import normalize, rel
 # internal
 from ifgen import PKG_NAME
 from ifgen.config import Config
+from ifgen.environment.field import process_field
+from ifgen.environment.padding import PaddingManager, type_string
 from ifgen.paths import combine_if_not_absolute
 
 
@@ -46,14 +48,6 @@ def runtime_enum_data(data: dict[str, Any]) -> dict[str, int]:
                 curr_value = value["value"] + 1
 
     return result
-
-
-def type_string(data: str) -> str:
-    """Handle some type name conversions."""
-
-    if "int" in data:
-        data = data.replace("_t", "")
-    return data
 
 
 class IfgenEnvironment(LoggerMixin):
@@ -86,6 +80,7 @@ class IfgenEnvironment(LoggerMixin):
                 dest.mkdir(parents=True, exist_ok=True)
 
         self.types = TypeSystem(*self.config.data["namespace"])
+        self.padding = PaddingManager()
         self._register_enums()
         self._register_structs()
 
@@ -114,26 +109,24 @@ class IfgenEnvironment(LoggerMixin):
             namespace = [*struct["namespace"]]
             self.types.register(name, *namespace)
 
+            field_groups = []
+
+            self.padding.reset()
             for field in struct["fields"]:
-                field_name = field["name"]
-
-                # Validate expected offset.
-                if "expected_offset" in field:
-                    size = self.types.size(name, *namespace)
-                    expected: int = field["expected_offset"]
-
-                    assert size == expected, (
-                        f"({name}.{field_name}) current={size} "
-                        f"!= expected={expected}"
+                padding = list(
+                    process_field(
+                        name, self.padding, self.types, field, namespace
                     )
-
-                self.types.add(
-                    name,
-                    field_name,
-                    type_string(field["type"]),
-                    array_length=field.get("array_length"),
-                    exact=False,
                 )
+                if padding:
+                    field_groups.append(padding)
+                field_groups.append([field])
+
+            # Re-assign fields structure.
+            struct["fields"] = []
+            for group in field_groups:
+                for field in group:
+                    struct["fields"].append(field)
 
             self.logger.info(
                 "Registered struct '%s' (%d bytes).",

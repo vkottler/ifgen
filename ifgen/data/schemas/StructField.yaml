@@ -17,6 +17,10 @@ properties:
     type: integer
     minimum: 2
 
+  padding:
+    type: boolean
+    default: false
+
   expected_offset:
     type: integer
 

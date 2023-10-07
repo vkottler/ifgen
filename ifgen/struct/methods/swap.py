@@ -194,6 +194,13 @@ def swap_fields(
                 stack.enter_context(writer.scope())
 
             size = task.env.size(kind)
+
+            # Handle padding.
+            if field["padding"]:
+                writer.c_comment(f"Advance for padding field '{name}'.")
+                writer.write(f"idx += {size};")
+                continue
+
             if size == 1:
                 no_swap(field, is_decode, task, writer, is_array)
             elif task.env.is_struct(kind):

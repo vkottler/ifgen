@@ -137,6 +137,27 @@ structs:
     json: false
     methods: false
 
+  TestPadding:
+    json: false
+    fields:
+      - name: field1
+        type: uint32_t
+        expected_offset: 4
+
+      # Starts at 8.
+      - name: field2
+        type: uint16_t
+        expected_offset: 11
+
+      # Starts at 13.
+      - name: field3
+        type: uint32_t
+
+      # Starts at 17.
+      - name: field4
+        type: uint16_t
+        expected_offset: 25
+
 enums:
   Enum1:
     json: true
