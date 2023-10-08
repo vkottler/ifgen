@@ -23,6 +23,7 @@ def to_json_method(
     static: bool = False,
     dumps_indent: int = None,
     definition: bool = False,
+    inline: bool = False,
 ) -> None:
     """Create a _json() method for a given task."""
 
@@ -45,17 +46,15 @@ def to_json_method(
     else:
         method_name = task.cpp_namespace(method_name, header=definition)
 
-    line = f"const char *{method_name}()"
+    line = ""
+    if inline:
+        line = "inline "
+
+    line += f"const char *{method_name}()"
     if static:
         line = "static " + line
 
-    if definition and not static:
-        line += ";"
-
     writer.write(line)
-
-    if definition and not static:
-        return
 
     with writer.scope():
         return_line = "return "

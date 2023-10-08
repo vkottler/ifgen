@@ -76,4 +76,5 @@ def enum_header(task: GenerateTask, writer: IndentedFileWriter) -> None:
             runtime.asdict(),
             dumps_indent=task.instance["json_indent"],
             definition=True,
+            inline=True,
         )

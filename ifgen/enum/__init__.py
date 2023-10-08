@@ -14,5 +14,9 @@ __all__ = ["create_enum", "create_enum_source", "create_enum_test"]
 def create_enum(task: GenerateTask) -> None:
     """Create a header file based on an enum definition."""
 
-    with task.boilerplate(includes=["<cstdint>"], json=True) as writer:
+    includes = ["<cstdint>"]
+    if not task.instance["use_map"]:
+        includes.append("<cstring>")
+
+    with task.boilerplate(includes=includes, json=True) as writer:
         enum_header(task, writer)
