@@ -3,6 +3,7 @@ includes:
   - has_description.yaml
   - has_volatile.yaml
   - has_expected_size.yaml
+  - has_bit_fields.yaml
 
 required: [name, type]
 
@@ -24,7 +25,7 @@ properties:
   expected_offset:
     type: integer
 
-  fields:
+  alternates:
     type: array
     items:
-      $ref: package://ifgen/schemas/BitField.yaml
+      $ref: package://ifgen/schemas/StructFieldAlternate.yaml

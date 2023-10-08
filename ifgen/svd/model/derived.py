@@ -14,6 +14,7 @@ from vcorelib.logging import LoggerType
 from ifgen.svd.string import StringKeyValueMixin
 
 T = TypeVar("T", bound="DerivedMixin")
+DEFAULT_ALTERNATE = "alternateRegister"
 
 
 class DerivedMixin(StringKeyValueMixin):
@@ -37,6 +38,22 @@ class DerivedMixin(StringKeyValueMixin):
     def derived(self) -> bool:
         """Whether or not this peripheral is derived from another."""
         return getattr(self, "derived_from", None) is not None
+
+    @property
+    def alternates(self: T) -> list[T]:
+        """Get alternates of this instance."""
+
+        if not hasattr(self, "_alternates"):
+            self._alternates: list[T] = []
+        return self._alternates
+
+    def is_alternate(self, key: str = DEFAULT_ALTERNATE) -> bool:
+        """Determine if this instance is an alternate of another."""
+        return isinstance(self.alternate(key=key), str)
+
+    def alternate(self, key: str = DEFAULT_ALTERNATE) -> Optional[str]:
+        """Get a possible alternate for this instance."""
+        return self.raw_data.get(key)
 
     def log(
         self, elem: ElementTree.Element, logger: Optional[LoggerType]

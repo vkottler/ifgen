@@ -1,0 +1,16 @@
+---
+includes:
+  - has_description.yaml
+  - has_bit_fields.yaml
+  - has_volatile.yaml
+
+required: [name]
+
+properties:
+  name:
+    type: string
+    pattern: "^[a-zA-Z0-9-_.:]+$"
+
+  array_length:
+    type: integer
+    minimum: 2

@@ -19,12 +19,13 @@ def enum_source(task: GenerateTask, writer: IndentedFileWriter) -> None:
     writer.empty()
     string_to_enum_function(task, writer, task.instance["use_map"])
 
-    to_json_method(
-        task,
-        writer,
-        task.enum().asdict(),
-        dumps_indent=task.instance["json_indent"],
-    )
+    if task.instance["json"]:
+        to_json_method(
+            task,
+            writer,
+            task.enum().asdict(),
+            dumps_indent=task.instance["json_indent"],
+        )
 
 
 def create_enum_source(task: GenerateTask) -> None:
