@@ -64,14 +64,17 @@ def enum_to_string_function(
         enum_to_string_map(task, writer)
         writer.empty()
 
-    line = f"const char *to_string({task.name} instance)"
+    line = ""
+    if not use_map:
+        line = "inline "
+    line += f"const char *to_string({task.name} instance)"
 
-    if definition:
+    if definition and use_map:
         line += ";"
 
     writer.write(line)
 
-    if definition:
+    if definition and use_map:
         return
 
     with writer.scope():
@@ -146,14 +149,18 @@ def string_to_enum_function(
         enum_from_string_map(task, writer)
         writer.empty()
 
-    line = f"bool from_string(const char *data, {task.name} &output)"
+    line = ""
+    if not use_map:
+        line = "inline "
 
-    if definition:
+    line += f"bool from_string(const char *data, {task.name} &output)"
+
+    if definition and use_map:
         line += ";"
 
     writer.write(line)
 
-    if definition:
+    if definition and use_map:
         return
 
     with writer.scope():

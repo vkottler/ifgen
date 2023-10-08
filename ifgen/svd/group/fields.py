@@ -144,6 +144,13 @@ def translate_enums(enum: EnumeratedValues) -> dict[str, Any]:
     return result
 
 
+ENUM_DEFAULTS: dict[str, Any] = {
+    "unit_test": False,
+    "json": False,
+    "use_map": False,
+}
+
+
 def process_bit_fields(
     register: Register,
     output: dict[str, Any],
@@ -159,7 +166,7 @@ def process_bit_fields(
 
     # Process fields.
     for name, field in register.fields.items():
-        field_data = {"name": name}
+        field_data: dict[str, Any] = {"name": name}
         bit_field_data(field, field_data)
         result.append(field_data)
 
@@ -171,11 +178,14 @@ def process_bit_fields(
             field_data["type"] = enum_name
 
             # Register enumeration.
-            enums[enum_name] = {
-                "enum": translate_enums(field.enum),
-                "unit_test": False,
-                "json": False,
-            }
+            new_enum: dict[str, Any] = {"enum": translate_enums(field.enum)}
+            new_enum.update(ENUM_DEFAULTS)
+
+            # Increase size of underlying if necessary.
+            if field_data["width"] > 8:
+                new_enum["underlying"] = "uint16_t"
+
+            enums[enum_name] = new_enum
 
     if result:
         output["fields"] = result

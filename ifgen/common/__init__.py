@@ -10,7 +10,7 @@ from ifgen.generation.test import unit_test_boilerplate
 def create_common_test(task: GenerateTask) -> None:
     """Create a unit test for the enum string-conversion methods."""
 
-    with unit_test_boilerplate(task) as writer:
+    with unit_test_boilerplate(task, declare_namespace=True) as writer:
         writer.cpp_comment("TODO.")
 
 

@@ -66,7 +66,10 @@ def unit_test_main(
 
 @contextmanager
 def unit_test_boilerplate(
-    task: GenerateTask, includes: List[str] = None, main: bool = True
+    task: GenerateTask,
+    includes: List[str] = None,
+    main: bool = True,
+    declare_namespace: bool = False,
 ) -> Iterator[IndentedFileWriter]:
     """Handle standard unit-test boilerplate."""
 
@@ -92,6 +95,17 @@ def unit_test_boilerplate(
                 description=False,
             )
         )
+
+        if declare_namespace:
+            writer.write(f"namespace {task.namespace()}")
+            with writer.scope(suffix=";"):
+                writer.c_comment(
+                    (
+                        "Declared to ensure this namespace "
+                        "has been declared in general."
+                    )
+                )
+            writer.empty()
 
         if main:
             stack.enter_context(unit_test_main(task, writer))
