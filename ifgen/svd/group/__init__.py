@@ -35,7 +35,10 @@ def struct_data(group: PeripheralGroup, structs: StructMap) -> dict[str, Any]:
 
     data["instances"] = [struct_instance(x) for x in group.peripherals]
     size, data["fields"] = struct_fields(peripheral.registers, structs)
-    data["expected_size"] = size
+
+    # Too difficult due to padding.
+    # data["expected_size"] = size
+    del size
 
     data.update(DEFAULT_STRUCT)
     return data

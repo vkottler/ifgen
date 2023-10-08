@@ -12,12 +12,15 @@ structs:
       - name: field1
         description: A field.
         type: uint8_t
+        expected_offset: 0
 
       - name: field2
         type: Enum1
+        expected_offset: 1
 
       - name: field3
         type: double
+        expected_offset: 3
 
   Test2:
     json: true
@@ -133,6 +136,27 @@ structs:
     codec: false
     json: false
     methods: false
+
+  TestPadding:
+    json: false
+    fields:
+      - name: field1
+        type: uint32_t
+        expected_offset: 4
+
+      # Starts at 8.
+      - name: field2
+        type: uint16_t
+        expected_offset: 11
+
+      # Starts at 13.
+      - name: field3
+        type: uint32_t
+
+      # Starts at 17.
+      - name: field4
+        type: uint16_t
+        expected_offset: 25
 
 enums:
   Enum1:

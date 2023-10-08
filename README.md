@@ -1,12 +1,12 @@
 <!--
     =====================================
     generator=datazen
-    version=3.1.3
-    hash=d5eb082354a829efe2f84742b07b0ac2
+    version=3.1.4
+    hash=bbcc2775742fc278f7e8100ffd6b5399
     =====================================
 -->
 
-# ifgen ([2.5.3](https://pypi.org/project/ifgen/))
+# ifgen ([2.6.0](https://pypi.org/project/ifgen/))
 
 [![python](https://img.shields.io/pypi/pyversions/ifgen.svg)](https://pypi.org/project/ifgen/)
 ![Build Status](https://github.com/vkottler/ifgen/workflows/Python%20Package/badge.svg)
