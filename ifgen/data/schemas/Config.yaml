@@ -38,7 +38,7 @@ properties:
 
   struct_id_underlying: &id_underlying
     type: string
-    default: uint8_t
+    default: uint16_t
     enum:
       - int8_t
       - int16_t

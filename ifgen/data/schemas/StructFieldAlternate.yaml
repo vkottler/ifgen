@@ -1,10 +1,11 @@
 ---
 includes:
+  - has_description.yaml
   - has_bit_fields.yaml
+  - has_volatile.yaml
 
 required: [name]
 
-additionalProperties: false
 properties:
   name:
     type: string

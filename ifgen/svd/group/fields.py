@@ -6,6 +6,7 @@ A module for generating configuration data for struct fields.
 from typing import Any, Iterable
 
 # internal
+from ifgen.svd.model.enum import EnumeratedValues
 from ifgen.svd.model.field import Field
 from ifgen.svd.model.peripheral import Cluster, Register, RegisterData
 
@@ -40,7 +41,7 @@ EnumMap = dict[str, Any]
 
 
 def handle_cluster(
-    cluster: Cluster, structs: StructMap, enums: EnumMap
+    cluster: Cluster, structs: StructMap, enums: EnumMap, peripheral: str
 ) -> tuple[int, StructField]:
     """Handle a cluster element."""
 
@@ -50,7 +51,7 @@ def handle_cluster(
     # Register a struct for this cluster. Should we use a namespace for this?
     cluster_struct: dict[str, Any] = cluster.handle_description()
     size, cluster_struct["fields"] = struct_fields(
-        cluster.children, structs, enums
+        cluster.children, structs, enums, peripheral
     )
 
     # Too difficult due to padding (may need to comment out).
@@ -110,11 +111,44 @@ def bit_field_data(field: Field, output: dict[str, Any]) -> None:
     output["read"] = "read" in field.access
     output["write"] = "write" in field.access
 
-    # type (string), handle creating an enum definition for this field.
+
+def translate_enums(enum: EnumeratedValues) -> dict[str, Any]:
+    """Generate an enumeration definition."""
+
+    result: dict[str, Any] = {}
+    enum.handle_description(result)
+
+    for name, value in enum.derived_elem.enum.items():
+        enum_data: dict[str, Any] = {}
+        value.handle_description(enum_data)
+
+        value_str: str = value.raw_data["value"]
+
+        prefix = ""
+        for possible_prefix in ("#", "0b", "0x"):
+            if value_str.startswith(possible_prefix):
+                prefix = possible_prefix
+                break
+
+        if prefix in ("#", "0b"):
+            enum_data["value"] = int(
+                value_str[len(prefix) :].replace("X", "1"), 2
+            )
+        elif prefix == "0x":
+            enum_data["value"] = int(value_str[len(prefix) :], 16)
+        else:
+            enum_data["value"] = int(value_str)
+
+        result[name] = enum_data
+
+    return result
 
 
 def process_bit_fields(
-    register: Register, output: dict[str, Any], enums: EnumMap
+    register: Register,
+    output: dict[str, Any],
+    enums: EnumMap,
+    peripheral: str,
 ) -> None:
     """Get bit-field declarations for a given register."""
 
@@ -123,8 +157,6 @@ def process_bit_fields(
 
     result: list[dict[str, Any]] = []
 
-    del enums
-
     # Process fields.
     for name, field in register.fields.items():
         field_data = {"name": name}
@@ -132,13 +164,28 @@ def process_bit_fields(
         result.append(field_data)
 
         # Handle creating an enumeration.
+        if field.enum is not None:
+            enum_name = f"{peripheral}_{register.name}_{name}".replace(
+                "[%s]", ""
+            )
+            field_data["type"] = enum_name
+
+            # Register enumeration.
+            enums[enum_name] = {
+                "enum": translate_enums(field.enum),
+                "unit_test": False,
+                "json": False,
+            }
 
     if result:
         output["fields"] = result
 
 
 def handle_register(
-    register: Register, register_map: RegisterMap, enums: EnumMap
+    register: Register,
+    register_map: RegisterMap,
+    enums: EnumMap,
+    peripheral: str,
 ) -> tuple[int, StructField]:
     """Handle a register entry."""
 
@@ -171,7 +218,7 @@ def handle_register(
     register.handle_description(data, prefix=f"({', '.join(notes)}) ")
 
     # Handle bit fields.
-    process_bit_fields(register, data, enums)
+    process_bit_fields(register, data, enums, peripheral)
 
     # Handle alternates.
     alts = register.alternates
@@ -180,7 +227,13 @@ def handle_register(
 
         for item in alts:
             alt_data: dict[str, Any] = {"name": item.name}
-            process_bit_fields(register_map[item.name], alt_data, enums)
+            if item.access == "read-only":
+                alt_data["const"] = True
+            item.handle_description(alt_data, prefix=f"({item.access}) ")
+
+            process_bit_fields(
+                register_map[item.name], alt_data, enums, peripheral
+            )
 
             # Forward array information (might be necessary at some point).
             # if "array_length" in data:
@@ -197,6 +250,7 @@ def struct_fields(
     registers: RegisterData,
     structs: StructMap,
     enums: EnumMap,
+    peripheral: str,
     size: int = None,
 ) -> tuple[int, list[StructField]]:
     """Generate data for struct fields."""
@@ -214,9 +268,9 @@ def struct_fields(
 
     for item in registers:
         inst_size, field = (
-            handle_cluster(item, structs, enums)
+            handle_cluster(item, structs, enums, peripheral)
             if isinstance(item, Cluster)
-            else handle_register(item, register_map, enums)
+            else handle_register(item, register_map, enums, peripheral)
         )
         if inst_size > 0:
             fields.append(field)

@@ -3,6 +3,7 @@ A module implementing interfaces for struct-file generation.
 """
 
 # built-in
+from contextlib import ExitStack
 from typing import Any, Dict, Iterable, Union
 
 # third-party
@@ -60,10 +61,23 @@ def header_for_type(name: str, task: GenerateTask) -> str:
 def struct_includes(task: GenerateTask) -> Iterable[str]:
     """Determine headers that need to be included for a given struct."""
 
-    result = {
-        header_for_type(config["type"], task)
-        for config in task.instance["fields"]
-    }
+    result = set()
+    for config in task.instance["fields"]:
+        if "type" in config:
+            result.add(header_for_type(config["type"], task))
+
+        # Add includes for bit-fields.
+        for bit_field in config.get("fields", []):
+            if "type" in bit_field:
+                result.add(header_for_type(bit_field["type"], task))
+
+        # Add includes for alternates.
+        for alternate in config.get("alternates", []):
+            for alternate_bit_field in alternate.get("fields", []):
+                if "type" in alternate_bit_field:
+                    result.add(
+                        header_for_type(alternate_bit_field["type"], task)
+                    )
 
     result.add(f'"../{PKG_NAME}/common.h"')
 
@@ -96,15 +110,31 @@ def struct_fields(task: GenerateTask, writer: IndentedFileWriter) -> None:
                     )
                 )
 
-            lines.append(
-                struct_line(
-                    field["name"],
-                    field,
-                    field["volatile"],
-                    field["const"],
-                    array_length=field.get("array_length"),
-                )
-            )
+            with ExitStack() as stack:
+                is_union = field.get("alternates")
+                all_fields = [field]
+                if is_union:
+                    writer.write("union")
+                    stack.enter_context(writer.scope(suffix=";"))
+                    all_fields.extend(field["alternates"])
+
+                for possible_union in all_fields:
+                    if "type" not in possible_union:
+                        possible_union["type"] = field["type"]
+
+                    line, comment = struct_line(
+                        possible_union["name"],
+                        possible_union,
+                        possible_union["volatile"],
+                        possible_union["const"],
+                        array_length=possible_union.get("array_length"),
+                    )
+                    if is_union:
+                        writer.write(
+                            line + ("" if not comment else f" /* {comment} */")
+                        )
+                    else:
+                        lines.append((line, comment))
 
         lines.append(("", None))
 
