@@ -31,7 +31,7 @@ class PaddingManager:
         field: StructField = {
             "padding": True,
             "volatile": False,
-            "const": False,
+            "const": True,
             "name": f"{self.base_name}{self.index}",
         }
         self.index += 1

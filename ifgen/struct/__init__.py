@@ -41,6 +41,9 @@ def struct_line(
     prefix = "volatile " if volatile else ""
     prefix += "const " if const else ""
 
+    if const:
+        line += " = {}"
+
     return prefix + f"{line};", value.get("description")  # type: ignore
 
 

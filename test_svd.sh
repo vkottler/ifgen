@@ -1,5 +1,7 @@
 #!/bin/bash
 
+CHIPS=(rp2040 XMC4700)
+
 do_test() {
 	rm -rf build/svd
 	mkdir -p build/svd && pushd build/svd || exit
@@ -15,13 +17,11 @@ do_test() {
 		echo "includes:" >> $ENTRY
 		echo "  - $PKG/$PKG.yaml" >> $ENTRY
 	done
-
 	wait
 
-	for CHIP in rp2040 XMC4700; do
-		$IG -C $CHIP gen &
+	for CHIP in "${CHIPS[@]}"; do
+		$IG -C "$CHIP" gen &
 	done
-
 	wait
 
 	popd >/dev/null || exit
