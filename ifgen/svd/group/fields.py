@@ -79,6 +79,11 @@ def handle_cluster(
 def handle_register(register: Register) -> tuple[int, StructField]:
     """Handle a register entry."""
 
+    # Handle adding a union entry to the main field and handle this register's
+    # bit fields.
+    if "alternateRegister" in register.raw_data:
+        return 0, {}
+
     # Ensure that a correct result will be produced.
     check_not_handled_fields(register.raw_data, ["alternateGroup"])
 
@@ -115,13 +120,12 @@ def struct_fields(
         size = 0
 
     for item in registers:
-        # Figure out how to handle this some other way.
-        if "alternateRegister" not in item.raw_data:
-            inst_size, field = (
-                handle_cluster(item, structs)
-                if isinstance(item, Cluster)
-                else handle_register(item)
-            )
+        inst_size, field = (
+            handle_cluster(item, structs)
+            if isinstance(item, Cluster)
+            else handle_register(item)
+        )
+        if inst_size > 0:
             fields.append(field)
             size += inst_size
 
