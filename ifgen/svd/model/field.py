@@ -21,6 +21,11 @@ class Field(DerivedMixin):
     derived_from: Optional["Field"]
     enum: Optional[EnumeratedValues]
 
+    @property
+    def access(self) -> str:
+        """Get this instance's access property."""
+        return self.raw_data["access"]
+
     @classmethod
     def string_keys(cls) -> Iterable[StringKeyVal]:
         """Get string keys for this instance type."""

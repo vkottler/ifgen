@@ -9,13 +9,13 @@ do_test() {
 	PKG=ifgen
 	IG=../../venv/bin/ig
 
-	for CHIP in rp2040 XMC4700; do
-		mkdir -p $CHIP/$PKG
-		$IG svd -o $CHIP/$PKG package://$PKG/svd/$CHIP.svd &
-		ENTRY=$CHIP/$PKG.yaml
-		echo "---" > $ENTRY
-		echo "includes:" >> $ENTRY
-		echo "  - $PKG/$PKG.yaml" >> $ENTRY
+	for CHIP in "${CHIPS[@]}"; do
+		mkdir -p "$CHIP/$PKG"
+		$IG svd -o "$CHIP/$PKG" "package://$PKG/svd/$CHIP.svd" &
+		ENTRY="$CHIP/$PKG.yaml"
+		echo "---" > "$ENTRY"
+		echo "includes:" >> "$ENTRY"
+		echo "  - $PKG/$PKG.yaml" >> "$ENTRY"
 	done
 	wait
 

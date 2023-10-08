@@ -96,4 +96,11 @@ def register(
 
     inst = Register.create(element, derived_register, fields, peripheral)
     register_map[inst.name] = inst
+
+    # Keep track of alternates.
+    if inst.is_alternate():
+        alt = inst.alternate()
+        assert alt is not None
+        register_map[alt].alternates.append(inst)
+
     return inst

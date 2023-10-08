@@ -5,7 +5,7 @@ structs.
 
 # built-in
 from contextlib import ExitStack
-from typing import Any
+from typing import Any, Optional
 
 # third-party
 from vcorelib.io.file_writer import IndentedFileWriter
@@ -44,6 +44,17 @@ def bit_field_underlying(field: dict[str, Any]) -> str:
     return kind
 
 
+def possible_array_arg(parent: dict[str, Any]) -> str:
+    """Determine if a method needs an array-index argument."""
+
+    array_length: Optional[int] = parent.get("array_length")
+    inner = ""
+    if array_length:
+        inner = "std::size_t index"
+
+    return inner
+
+
 def bit_field_get_method(
     task: GenerateTask,
     parent: dict[str, Any],
@@ -60,7 +71,9 @@ def bit_field_get_method(
 
     is_flag = field["width"] == 1
 
-    method = task.cpp_namespace(f"get_{method_slug}()", header=header)
+    inner = possible_array_arg(parent)
+
+    method = task.cpp_namespace(f"get_{method_slug}({inner})", header=header)
     writer.empty()
 
     with writer.javadoc():
@@ -73,16 +86,22 @@ def bit_field_get_method(
 
     line = f"{kind} " + method
 
+    lhs = parent["name"]
+    if inner:
+        lhs += "[index]"
+
     with ExitStack() as stack:
         if is_flag:
             writer.write(line)
             stack.enter_context(writer.scope())
-            stmt = f"{parent['name']} & (1 << {field['index']})"
+            stmt = f"{lhs} & (1u << {field['index']}u)"
         else:
             writer.write(line)
             stack.enter_context(writer.scope())
-            mask = bit_mask_literal(field["width"])
-            stmt = f"({parent['name']} >> {field['index']}u) & {mask}"
+            stmt = (
+                f"({lhs} >> {field['index']}u) & "
+                f"{bit_mask_literal(field['width'])}"
+            )
 
         if task.env.is_enum(kind):
             stmt = f"{kind}({stmt})"
@@ -115,8 +134,13 @@ def bit_field_set_method(
         if not header:
             return
 
+        inner = possible_array_arg(parent)
+        if inner:
+            inner += ", "
+        inner += f"{kind} value"
+
         method = task.cpp_namespace(
-            f"set_{method_slug}({kind} value)", header=header
+            f"set_{method_slug}({inner})", header=header
         )
         writer.empty()
 
@@ -126,7 +150,11 @@ def bit_field_set_method(
 
         writer.write("inline void " + method)
         with writer.scope():
-            writer.write(f"{parent['type']} curr = {parent['name']};")
+            rhs = parent["name"]
+            if "index" in inner:
+                rhs += "[index]"
+
+            writer.write(f"{parent['type']} curr = {rhs};")
 
             mask = bit_mask_literal(field["width"])
 
@@ -141,7 +169,7 @@ def bit_field_set_method(
                     f"curr |= ({val_str} & {mask}) << {field['index']}u;"
                 )
 
-            writer.write(f"{parent['name']} = curr;")
+            writer.write(f"{rhs} = curr;")
 
 
 def bit_field(
@@ -161,7 +189,7 @@ def bit_field(
     width = field["width"]
 
     # Validate field parameters.
-    assert index + width < type_size, (index, width, type_size, field)
+    assert index + width <= type_size, (index, width, type_size, field)
     assert field["read"] or field["write"], field
 
     name = parent["name"]

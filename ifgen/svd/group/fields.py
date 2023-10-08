@@ -6,6 +6,7 @@ A module for generating configuration data for struct fields.
 from typing import Any, Iterable
 
 # internal
+from ifgen.svd.model.field import Field
 from ifgen.svd.model.peripheral import Cluster, Register, RegisterData
 
 StructMap = dict[str, Any]
@@ -76,7 +77,58 @@ def handle_cluster(
     return size, result
 
 
-def handle_register(register: Register) -> tuple[int, StructField]:
+RegisterMap = dict[str, Register]
+
+
+def bit_field_data(field: Field, output: dict[str, Any]) -> None:
+    """Populate bit-field data."""
+
+    field.handle_description(output)
+
+    # We don't currently handle arrays of bit-fields.
+    assert "dim" not in field.raw_data
+
+    if "bitRange" in field.raw_data:
+        msb_str, lsb_str = field.raw_data["bitRange"].split(":")
+        lsb = int(lsb_str.replace("]", ""))
+        msb = int(msb_str.replace("[", ""))
+    elif "lsb" in field.raw_data:
+        lsb = int(field.raw_data["lsb"])
+        msb = int(field.raw_data["msb"])
+
+    output["index"] = lsb
+
+    width = (msb - lsb) + 1
+    assert width >= 1, (msb, lsb, field.name)
+    output["width"] = width
+
+    output["read"] = "read" in field.access
+    output["write"] = "write" in field.access
+
+    # type (string), handle creating an enum definition for this field.
+
+
+def process_bit_fields(register: Register, output: dict[str, Any]) -> None:
+    """Get bit-field declarations for a given register."""
+
+    if register.fields is None:
+        return
+
+    result: list[dict[str, Any]] = []
+
+    # Process fields.
+    for name, field in register.fields.items():
+        field_data = {"name": name}
+        bit_field_data(field, field_data)
+        result.append(field_data)
+
+    if result:
+        output["fields"] = result
+
+
+def handle_register(
+    register: Register, register_map: RegisterMap
+) -> tuple[int, StructField]:
     """Handle a register entry."""
 
     # Handle adding a union entry to the main field and handle this register's
@@ -106,6 +158,27 @@ def handle_register(register: Register) -> tuple[int, StructField]:
     notes = [access]
 
     register.handle_description(data, prefix=f"({', '.join(notes)}) ")
+
+    # Handle bit fields.
+    process_bit_fields(register, data)
+
+    # Handle alternates.
+    alts = register.alternates
+    if alts:
+        alts_data: list[dict[str, Any]] = []
+
+        for item in alts:
+            alt_data: dict[str, Any] = {"name": item.name}
+            process_bit_fields(register_map[item.name], alt_data)
+
+            # Forward array information (might be necessary at some point).
+            # if "array_length" in data:
+            #     alt_data["array_length"] = data["array_length"]
+
+            alts_data.append(alt_data)
+
+        data["alternates"] = alts_data
+
     return size, data
 
 
@@ -119,11 +192,17 @@ def struct_fields(
     if size is None:
         size = 0
 
+    # Create a string mapping of registers.
+    register_map: RegisterMap = {}
+    for item in registers:
+        if isinstance(item, Register):
+            register_map[item.name] = item
+
     for item in registers:
         inst_size, field = (
             handle_cluster(item, structs)
             if isinstance(item, Cluster)
-            else handle_register(item)
+            else handle_register(item, register_map)
         )
         if inst_size > 0:
             fields.append(field)

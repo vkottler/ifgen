@@ -1,0 +1,15 @@
+---
+includes:
+  - has_bit_fields.yaml
+
+required: [name]
+
+additionalProperties: false
+properties:
+  name:
+    type: string
+    pattern: "^[a-zA-Z0-9-_.:]+$"
+
+  array_length:
+    type: integer
+    minimum: 2
