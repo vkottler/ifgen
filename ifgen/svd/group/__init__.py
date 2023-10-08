@@ -11,7 +11,12 @@ from vcorelib.io import ARBITER
 
 # internal
 from ifgen.svd.group.base import PeripheralGroup, peripheral_groups
-from ifgen.svd.group.fields import DEFAULT_STRUCT, StructMap, struct_fields
+from ifgen.svd.group.fields import (
+    DEFAULT_STRUCT,
+    EnumMap,
+    StructMap,
+    struct_fields,
+)
 from ifgen.svd.model.peripheral import Peripheral
 
 __all__ = ["PeripheralGroup", "peripheral_groups", "handle_group"]
@@ -26,7 +31,9 @@ def struct_instance(peripheral: Peripheral) -> dict[str, Any]:
     }
 
 
-def struct_data(group: PeripheralGroup, structs: StructMap) -> dict[str, Any]:
+def struct_data(
+    group: PeripheralGroup, structs: StructMap, enums: EnumMap
+) -> dict[str, Any]:
     """Get struct data for a peripheral group."""
 
     data: dict[str, Any] = {}
@@ -34,7 +41,7 @@ def struct_data(group: PeripheralGroup, structs: StructMap) -> dict[str, Any]:
     peripheral.handle_description(data)
 
     data["instances"] = [struct_instance(x) for x in group.peripherals]
-    size, data["fields"] = struct_fields(peripheral.registers, structs)
+    size, data["fields"] = struct_fields(peripheral.registers, structs, enums)
 
     # Too difficult due to padding.
     # data["expected_size"] = size
@@ -55,5 +62,10 @@ def handle_group(
     includes.add(output)
 
     structs: StructMap = {}
-    structs[group.root.base_name] = struct_data(group, structs)
-    ARBITER.encode(output, {"structs": structs})
+    enums: EnumMap = {}
+    structs[group.root.base_name] = struct_data(group, structs, enums)
+
+    result = {"structs": structs}
+    if enums:
+        result["enums"] = enums
+    ARBITER.encode(output, result)  # type: ignore

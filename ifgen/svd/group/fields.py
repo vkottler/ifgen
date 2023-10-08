@@ -36,8 +36,11 @@ def check_not_handled_fields(
         ), f"Field '{field}' isn't currently handled: {data}."
 
 
+EnumMap = dict[str, Any]
+
+
 def handle_cluster(
-    cluster: Cluster, structs: StructMap
+    cluster: Cluster, structs: StructMap, enums: EnumMap
 ) -> tuple[int, StructField]:
     """Handle a cluster element."""
 
@@ -46,7 +49,9 @@ def handle_cluster(
 
     # Register a struct for this cluster. Should we use a namespace for this?
     cluster_struct: dict[str, Any] = cluster.handle_description()
-    size, cluster_struct["fields"] = struct_fields(cluster.children, structs)
+    size, cluster_struct["fields"] = struct_fields(
+        cluster.children, structs, enums
+    )
 
     # Too difficult due to padding (may need to comment out).
     cluster_struct["expected_size"] = size
@@ -108,7 +113,9 @@ def bit_field_data(field: Field, output: dict[str, Any]) -> None:
     # type (string), handle creating an enum definition for this field.
 
 
-def process_bit_fields(register: Register, output: dict[str, Any]) -> None:
+def process_bit_fields(
+    register: Register, output: dict[str, Any], enums: EnumMap
+) -> None:
     """Get bit-field declarations for a given register."""
 
     if register.fields is None:
@@ -116,18 +123,22 @@ def process_bit_fields(register: Register, output: dict[str, Any]) -> None:
 
     result: list[dict[str, Any]] = []
 
+    del enums
+
     # Process fields.
     for name, field in register.fields.items():
         field_data = {"name": name}
         bit_field_data(field, field_data)
         result.append(field_data)
 
+        # Handle creating an enumeration.
+
     if result:
         output["fields"] = result
 
 
 def handle_register(
-    register: Register, register_map: RegisterMap
+    register: Register, register_map: RegisterMap, enums: EnumMap
 ) -> tuple[int, StructField]:
     """Handle a register entry."""
 
@@ -160,7 +171,7 @@ def handle_register(
     register.handle_description(data, prefix=f"({', '.join(notes)}) ")
 
     # Handle bit fields.
-    process_bit_fields(register, data)
+    process_bit_fields(register, data, enums)
 
     # Handle alternates.
     alts = register.alternates
@@ -169,7 +180,7 @@ def handle_register(
 
         for item in alts:
             alt_data: dict[str, Any] = {"name": item.name}
-            process_bit_fields(register_map[item.name], alt_data)
+            process_bit_fields(register_map[item.name], alt_data, enums)
 
             # Forward array information (might be necessary at some point).
             # if "array_length" in data:
@@ -183,7 +194,10 @@ def handle_register(
 
 
 def struct_fields(
-    registers: RegisterData, structs: StructMap, size: int = None
+    registers: RegisterData,
+    structs: StructMap,
+    enums: EnumMap,
+    size: int = None,
 ) -> tuple[int, list[StructField]]:
     """Generate data for struct fields."""
 
@@ -200,9 +214,9 @@ def struct_fields(
 
     for item in registers:
         inst_size, field = (
-            handle_cluster(item, structs)
+            handle_cluster(item, structs, enums)
             if isinstance(item, Cluster)
-            else handle_register(item, register_map)
+            else handle_register(item, register_map, enums)
         )
         if inst_size > 0:
             fields.append(field)
