@@ -18,5 +18,7 @@ def create_enum(task: GenerateTask) -> None:
     if not task.instance["use_map"]:
         includes.append("<cstring>")
 
-    with task.boilerplate(includes=includes, json=True) as writer:
+    with task.boilerplate(
+        includes=includes, json=task.instance["json"]
+    ) as writer:
         enum_header(task, writer)
