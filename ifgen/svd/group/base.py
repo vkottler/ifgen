@@ -31,16 +31,25 @@ def peripheral_groups(
 
     result: dict[str, PeripheralGroup] = {}
 
-    for name, peripheral in peripherals.items():
-        if name not in result and not peripheral.derived:
+    for peripheral in peripherals.values():
+        name = peripheral.base_name()
+        if peripheral.derived:
+            name = peripheral.derived_elem.base_name()
+
+        if name not in result:
             # Validate this later.
             result[name] = PeripheralGroup(None, [])  # type: ignore
 
-        if peripheral.derived:
-            result[peripheral.derived_elem.name].derivatives.append(peripheral)
+        group = result[name]
+
+        if group.root is None:
+            group.root = peripheral
+        elif peripheral.derived:
+            result[peripheral.derived_elem.base_name()].derivatives.append(
+                peripheral
+            )
         else:
-            assert result[name].root is None, result[name].root
-            result[name].root = peripheral
+            group.derivatives.append(peripheral)
 
     # Validate groups.
     for name, group in result.items():

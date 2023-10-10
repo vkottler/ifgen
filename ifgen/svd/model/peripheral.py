@@ -15,19 +15,6 @@ from ifgen.svd.model.field import FieldMap
 from ifgen.svd.model.interrupt import Interrupt
 from ifgen.svd.string import StringKeyVal
 
-
-def peripheral_name(name: str, inst: bool = True) -> str:
-    """Get the name of a peripheral."""
-
-    name = name.lower()
-
-    if not inst:
-        if name[-1].isdigit():
-            name = name[:-1]
-
-    return name
-
-
 RegisterData = list[Union["Register", "Cluster"]]
 
 
@@ -152,10 +139,23 @@ class Peripheral(DerivedMixin):
         """Get the possible 'access' field default."""
         return self.derived_elem.raw_data.get("access")
 
-    @property
-    def base_name(self) -> str:
+    def group_name(self, default: str = None) -> Optional[str]:
+        """Get a possible group name for this peripheral."""
+
+        return self.raw_data.get("groupName", default)
+
+    def base_name(self, lower: bool = True, strip_zero: bool = True) -> str:
         """Get the base peripheral name."""
-        return peripheral_name(self.name, inst=False)
+
+        result = self.group_name(default=self.name)
+        assert result is not None
+
+        result = result.lower() if lower else result
+
+        if result.endswith("0") and strip_zero:
+            result = result[:-1]
+
+        return result
 
     def handle_address_block(self, address_block: ElementTree.Element) -> None:
         """Handle an 'address_block' element."""

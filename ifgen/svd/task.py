@@ -58,16 +58,16 @@ class SvdProcessingTask:
         # Organize peripherals into groups based on ones derived from others
         # and process them.
         for group in peripheral_groups(self.model.peripherals).values():
-            output_dir = path.joinpath(group.root.base_name)
+            output_dir = path.joinpath(group.root.base_name())
             output_dir.mkdir(exist_ok=True)
             handle_group(output_dir, group, includes)
 
         ARBITER.encode(
             path.joinpath("ifgen.yaml"),
             {
-                "includes": [
+                "includes": sorted(  # type: ignore
                     str(rel(x.resolve(), base=path)) for x in includes
-                ],
+                ),
                 "namespace": [meta["device"]["name"]],
             },
         )
