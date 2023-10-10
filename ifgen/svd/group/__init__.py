@@ -42,7 +42,7 @@ def struct_data(
 
     data["instances"] = [struct_instance(x) for x in group.peripherals]
     size, data["fields"] = struct_fields(
-        peripheral.registers, structs, enums, peripheral.name
+        peripheral.registers, structs, enums, peripheral.base_name(lower=False)
     )
 
     # Too difficult due to padding.
@@ -65,5 +65,5 @@ def handle_group(
 
     structs: StructMap = {}
     enums: EnumMap = {}
-    structs[group.root.base_name] = struct_data(group, structs, enums)
+    structs[group.root.base_name()] = struct_data(group, structs, enums)
     ARBITER.encode(output, {"structs": structs, "enums": enums})

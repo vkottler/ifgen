@@ -58,7 +58,7 @@ class SvdProcessingTask:
         # Organize peripherals into groups based on ones derived from others
         # and process them.
         for group in peripheral_groups(self.model.peripherals).values():
-            output_dir = path.joinpath(group.root.base_name)
+            output_dir = path.joinpath(group.root.base_name())
             output_dir.mkdir(exist_ok=True)
             handle_group(output_dir, group, includes)
 

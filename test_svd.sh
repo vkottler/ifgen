@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 CHIPS=(rp2040 XMC4700)
 
 do_test() {
