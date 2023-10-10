@@ -65,9 +65,9 @@ class SvdProcessingTask:
         ARBITER.encode(
             path.joinpath("ifgen.yaml"),
             {
-                "includes": [
+                "includes": sorted(  # type: ignore
                     str(rel(x.resolve(), base=path)) for x in includes
-                ],
+                ),
                 "namespace": [meta["device"]["name"]],
             },
         )

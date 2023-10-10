@@ -144,12 +144,18 @@ class Peripheral(DerivedMixin):
 
         return self.raw_data.get("groupName", default)
 
-    def base_name(self, lower: bool = True) -> str:
+    def base_name(self, lower: bool = True, strip_zero: bool = True) -> str:
         """Get the base peripheral name."""
 
         result = self.group_name(default=self.name)
         assert result is not None
-        return result.lower() if lower else result
+
+        result = result.lower() if lower else result
+
+        if result.endswith("0") and strip_zero:
+            result = result[:-1]
+
+        return result
 
     def handle_address_block(self, address_block: ElementTree.Element) -> None:
         """Handle an 'address_block' element."""
