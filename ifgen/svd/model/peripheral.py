@@ -139,22 +139,11 @@ class Peripheral(DerivedMixin):
         """Get the possible 'access' field default."""
         return self.derived_elem.raw_data.get("access")
 
-    def group_name(self, default: str = None) -> Optional[str]:
-        """Get a possible group name for this peripheral."""
-
-        return self.raw_data.get("groupName", default)
-
-    def base_name(self, lower: bool = True, strip_zero: bool = True) -> str:
+    def base_name(self, lower: bool = True) -> str:
         """Get the base peripheral name."""
 
-        result = self.group_name(default=self.name)
-        assert result is not None
-
+        result = self.name
         result = result.lower() if lower else result
-
-        if result.endswith("0") and strip_zero:
-            result = result[:-1]
-
         return result
 
     def handle_address_block(self, address_block: ElementTree.Element) -> None:

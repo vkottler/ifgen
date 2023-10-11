@@ -44,12 +44,10 @@ def peripheral_groups(
 
         if group.root is None:
             group.root = peripheral
-        elif peripheral.derived:
+        else:
             result[peripheral.derived_elem.base_name()].derivatives.append(
                 peripheral
             )
-        else:
-            group.derivatives.append(peripheral)
 
     # Validate groups.
     for name, group in result.items():
