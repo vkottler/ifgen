@@ -65,7 +65,7 @@ class GenerateTask(NamedTuple):
         """
         Determine if this instances should include a stream implementations.
         """
-        return self.instance.get("stream", True)
+        return self.instance.get("stream", True)  # type: ignore
 
     @property
     def source_path(self) -> Path:
