@@ -21,6 +21,10 @@ properties:
     type: boolean
     default: true
 
+  identifier:
+    type: boolean
+    default: true
+
   instances:
     type: array
     items:

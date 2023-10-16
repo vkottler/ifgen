@@ -17,6 +17,7 @@ DEFAULT_STRUCT = {
     "codec": False,
     "methods": False,
     "unit_test": False,
+    "identifier": False,
 }
 
 
@@ -148,6 +149,7 @@ ENUM_DEFAULTS: dict[str, Any] = {
     "unit_test": False,
     "json": False,
     "use_map": False,
+    "identifier": False,
 }
 
 

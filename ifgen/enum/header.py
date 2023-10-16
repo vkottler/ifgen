@@ -51,7 +51,9 @@ def enum_header(task: GenerateTask, writer: IndentedFileWriter) -> None:
 
     runtime = task.enum()
 
-    with writer.padding():
+    writer.empty()
+
+    if task.instance["identifier"]:
         writer.write(
             (
                 "static constexpr "
@@ -59,6 +61,7 @@ def enum_header(task: GenerateTask, writer: IndentedFileWriter) -> None:
                 f"{task.name}_id = {runtime.id};"
             )
         )
+        writer.empty()
 
     enum_to_string_function(
         task, writer, task.instance["use_map"], definition=True
