@@ -12,8 +12,14 @@ from vcorelib.io.file_writer import IndentedFileWriter
 # internal
 from ifgen.generation.interface import GenerateTask
 from ifgen.struct.methods.fields.common import BitField
-from ifgen.struct.methods.fields.getter import bit_field_get_method
-from ifgen.struct.methods.fields.setter import bit_field_set_method
+from ifgen.struct.methods.fields.getter import (
+    bit_field_get_all_method,
+    bit_field_get_method,
+)
+from ifgen.struct.methods.fields.setter import (
+    bit_field_set_all_method,
+    bit_field_set_method,
+)
 
 STANDARD_INTS = [
     ("uint8_t", 8),
@@ -87,19 +93,27 @@ def bit_field(
 
 
 def handle_atomic_fields_methods(
+    task: GenerateTask,
+    writer: IndentedFileWriter,
+    header: bool,
+    field: dict[str, Any],
     read_fields: list[BitField],
     write_fields: list[BitField],
     alias: str = None,
 ) -> None:
     """Handle additional bit-field methods."""
 
-    print(alias)
-
     if len(read_fields) > 1:
-        print(read_fields)
+        writer.empty()
+        bit_field_get_all_method(
+            task, writer, header, field, read_fields, alias=alias
+        )
 
     if len(write_fields) > 1:
-        print(write_fields)
+        writer.empty()
+        bit_field_set_all_method(
+            task, writer, header, field, write_fields, alias=alias
+        )
 
 
 def bit_fields(
@@ -115,7 +129,9 @@ def bit_fields(
             bit_field(
                 task, field, bfield, writer, header, read_fields, write_fields
             )
-        handle_atomic_fields_methods(read_fields, write_fields)
+        handle_atomic_fields_methods(
+            task, writer, header, field, read_fields, write_fields
+        )
 
         for alternate in field.get("alternates", []):
             read_fields = []
@@ -133,5 +149,11 @@ def bit_fields(
                     alias=alternate["name"],
                 )
             handle_atomic_fields_methods(
-                read_fields, write_fields, alias=alternate["name"]
+                task,
+                writer,
+                header,
+                field,
+                read_fields,
+                write_fields,
+                alias=alternate["name"],
             )

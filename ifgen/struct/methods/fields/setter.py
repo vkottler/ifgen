@@ -18,6 +18,27 @@ from ifgen.struct.methods.fields.common import (
 )
 
 
+def bit_field_set_all_method(
+    task: GenerateTask,
+    writer: IndentedFileWriter,
+    header: bool,
+    field: dict[str, Any],
+    fields: list[BitField],
+    alias: str = None,
+) -> None:
+    """Generate a 'set' method for multiple bit-field."""
+
+    if not header:
+        return
+
+    name = field["name"] if not alias else alias
+    writer.c_comment(f"set_{name}")
+
+    print(task)
+
+    print(fields)
+
+
 def bit_field_set_method(
     task: GenerateTask,
     parent: dict[str, Any],
