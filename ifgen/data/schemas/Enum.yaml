@@ -26,6 +26,10 @@ properties:
     type: boolean
     default: true
 
+  identifier:
+    type: boolean
+    default: true
+
   underlying:
     type: string
     default: uint8_t

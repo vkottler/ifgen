@@ -189,14 +189,15 @@ def create_struct(task: GenerateTask) -> None:
             with writer.trailing_comment_lines(
                 style=CommentStyle.C_DOXYGEN
             ) as lines:
-                lines.append(
-                    (
-                        "static constexpr "
-                        f"{task.env.config.data['struct_id_underlying']} "
-                        f"id = {task.protocol().id};",
-                        f"{task.name}'s identifier.",
+                if task.instance["identifier"]:
+                    lines.append(
+                        (
+                            "static constexpr "
+                            f"{task.env.config.data['struct_id_underlying']} "
+                            f"id = {task.protocol().id};",
+                            f"{task.name}'s identifier.",
+                        )
                     )
-                )
 
                 size = task.env.size(task.name)
                 enforce_expected_size(size, task.instance, task.name)
