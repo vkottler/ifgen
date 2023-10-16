@@ -246,5 +246,13 @@ class GenerateTask(NamedTuple):
 
             yield writer
 
+    def has_instances(self) -> bool:
+        """Determine whether or not this instance has concrete instances."""
+        return bool(self.instance.get("instances", []))
+
+    def method_suffix(self) -> str:
+        """Get a possible suffix for a method."""
+        return "" if not self.has_instances() else " volatile"
+
 
 InstanceGenerator = Callable[[GenerateTask], None]

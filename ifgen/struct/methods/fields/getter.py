@@ -48,7 +48,7 @@ def bit_field_get_all_method(
 
     inner += ", ".join(args)
 
-    writer.write(f"inline void get_{name}({inner})")
+    writer.write(f"inline void get_{name}({inner}){task.method_suffix()}")
     with writer.scope():
         rhs = field["name"] if not alias else alias
         if "index" in inner:
@@ -103,7 +103,9 @@ def bit_field_get_method(
     inner = possible_array_arg(parent)
 
     method_slug = bit_field_method_slug(parent, field["name"], alias=alias)
-    method = task.cpp_namespace(f"get_{method_slug}({inner})", header=header)
+    method = task.cpp_namespace(
+        f"get_{method_slug}({inner}){task.method_suffix()}", header=header
+    )
     writer.empty()
 
     with writer.javadoc():

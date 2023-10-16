@@ -25,7 +25,9 @@ def set_bit_method(
     if not header:
         return
 
-    method = task.cpp_namespace(f"set_{method_slug}()", header=header)
+    method = task.cpp_namespace(
+        f"set_{method_slug}(){task.method_suffix()}", header=header
+    )
     writer.empty()
 
     with writer.javadoc():
@@ -51,7 +53,9 @@ def clear_bit_method(
     if not header:
         return
 
-    method = task.cpp_namespace(f"clear_{method_slug}()", header=header)
+    method = task.cpp_namespace(
+        f"clear_{method_slug}(){task.method_suffix()}", header=header
+    )
     writer.empty()
 
     with writer.javadoc():
@@ -80,7 +84,9 @@ def bit_field_toggle_method(
     if not header:
         return
 
-    method = task.cpp_namespace(f"toggle_{method_slug}()", header=header)
+    method = task.cpp_namespace(
+        f"toggle_{method_slug}(){task.method_suffix()}", header=header
+    )
     writer.empty()
 
     with writer.javadoc():

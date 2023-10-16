@@ -48,7 +48,7 @@ def bit_field_set_all_method(
         args.append(f"{bit_field_underlying(bit_field)} {bit_field['name']}")
 
     inner += ", ".join(args)
-    writer.write(f"inline void set_{name}({inner})")
+    writer.write(f"inline void set_{name}({inner}){task.method_suffix()}")
     with writer.scope():
         rhs = field["name"] if not alias else alias
         if "index" in inner:
@@ -113,7 +113,7 @@ def bit_field_set_method(
         inner += f"{kind} value"
 
         method = task.cpp_namespace(
-            f"set_{method_slug}({inner})", header=header
+            f"set_{method_slug}({inner}){task.method_suffix()}", header=header
         )
         writer.empty()
 
