@@ -12,6 +12,16 @@ from vcorelib.io.file_writer import IndentedFileWriter
 from ifgen.generation.interface import GenerateTask
 
 
+def handle_description(
+    writer: IndentedFileWriter, field: dict[str, Any]
+) -> None:
+    """Handle writing an instance's description."""
+
+    if field.get("description"):
+        writer.empty()
+        writer.write(field["description"])
+
+
 def set_bit_method(
     task: GenerateTask,
     name: str,
@@ -32,6 +42,7 @@ def set_bit_method(
 
     with writer.javadoc():
         writer.write(f"Set {name}'s {field['name']} bit.")
+        handle_description(writer, field)
 
     writer.write("inline void " + method)
 
@@ -60,6 +71,7 @@ def clear_bit_method(
 
     with writer.javadoc():
         writer.write(f"Clear {name}'s {field['name']} bit.")
+        handle_description(writer, field)
 
     writer.write("inline void " + method)
 
@@ -91,6 +103,7 @@ def bit_field_toggle_method(
 
     with writer.javadoc():
         writer.write(f"Toggle {name}'s {field['name']} bit.")
+        handle_description(writer, field)
 
     writer.write("inline void " + method)
 

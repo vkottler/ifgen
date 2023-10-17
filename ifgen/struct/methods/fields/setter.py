@@ -10,7 +10,10 @@ from vcorelib.io.file_writer import IndentedFileWriter
 
 # internal
 from ifgen.generation.interface import GenerateTask
-from ifgen.struct.methods.bit import bit_field_toggle_method
+from ifgen.struct.methods.bit import (
+    bit_field_toggle_method,
+    handle_description,
+)
 from ifgen.struct.methods.fields.common import (
     BitField,
     bit_field_method_slug,
@@ -41,6 +44,7 @@ def bit_field_set_all_method(
 
     with writer.javadoc():
         writer.write(f"Set all of {name}'s bit fields.")
+        handle_description(writer, field)
 
     # Add field args.
     args = []
@@ -120,6 +124,7 @@ def bit_field_set_method(
         if header:
             with writer.javadoc():
                 writer.write(f"Set {parent['name']}'s {field['name']} field.")
+                handle_description(writer, field)
 
         writer.write("inline void " + method)
         with writer.scope():
