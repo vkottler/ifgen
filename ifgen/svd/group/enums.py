@@ -3,6 +3,7 @@ A module for handling SVD bit-field enumerations.
 """
 
 # built-in
+from os.path import commonprefix
 from typing import Any
 
 # internal
@@ -127,8 +128,27 @@ def translate_enums(enum: EnumeratedValues) -> EnumValues:
         else:
             enum_data["value"] = int(value_str)
 
-        result[
-            handle_enum_name(name, value.raw_data.get("description"))
-        ] = enum_data
+        final_name = handle_enum_name(name, value.raw_data.get("description"))
+        assert final_name
+
+        # Truncate.
+        final_name = (
+            final_name if len(final_name) < 51 else final_name[:45] + "_cont"
+        )
+        assert len(final_name) < 51
+
+        while final_name in result:
+            final_name += "_"
+
+        assert final_name not in result, (name, final_name)
+        result[final_name] = enum_data
+
+    # Remove common prefix (if present) from enums.
+    length = len(commonprefix(list(result)))
+    if length > 1:
+        result = {
+            key[length:] if length < len(key) else key: value
+            for key, value in result.items()
+        }
 
     return result
