@@ -15,6 +15,7 @@ from vcorelib.paths import find_file
 # internal
 from ifgen import PKG_NAME
 from ifgen.svd import register_processors
+from ifgen.svd.group import base, enums
 from ifgen.svd.task import SvdProcessingTask
 
 
@@ -30,6 +31,12 @@ def svd_cmd(args: _Namespace) -> int:
         include_cwd=True,
     )
     assert path is not None, args.svd_file
+
+    enable_pruning = path.with_suffix("").name in {"XMC4700"}
+
+    # Only enable certain pruning strategies for certain processors.
+    enums.PRUNE_ENUMS = enable_pruning
+    base.PRUNE_STRUCTS = enable_pruning
 
     SvdProcessingTask.svd(path).generate_configs(args.output)
 

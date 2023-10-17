@@ -24,6 +24,9 @@ class PeripheralGroup:
         yield from self.derivatives
 
 
+PRUNE_STRUCTS = False
+
+
 def get_derived(
     peripheral: Peripheral, peripherals: list[Peripheral]
 ) -> Optional[Peripheral]:
@@ -35,7 +38,7 @@ def get_derived(
         result = peripheral.derived_elem
 
     # Check if this peripheral is equivalent to some other peripheral.
-    else:
+    elif PRUNE_STRUCTS:
         for other in peripherals:
             # Always return None if you get far enough to see yourself in the
             # list. That way this peripheral becomes the effective 'root'.
