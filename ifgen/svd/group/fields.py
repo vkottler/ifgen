@@ -6,7 +6,7 @@ A module for generating configuration data for struct fields.
 from typing import Any, Iterable
 
 # internal
-from ifgen.svd.model.enum import EnumeratedValues
+from ifgen.svd.group.enums import ENUM_DEFAULTS, get_enum_name, translate_enums
 from ifgen.svd.model.peripheral import Cluster, Register, RegisterData
 
 StructMap = dict[str, Any]
@@ -85,102 +85,6 @@ def handle_cluster(
 
 RegisterMap = dict[str, Register]
 
-IGNORE_WORDS = {
-    "the",
-    "as",
-    "a",
-    "is",
-    "will",
-    "but",
-    "are",
-    "yet",
-    "that",
-    "to",
-    "and",
-    "in",
-    "of",
-}
-
-
-def is_name_part(value: str) -> bool:
-    """Determine if a word should be part of an enumeration value name."""
-    return bool(value) and value not in IGNORE_WORDS
-
-
-def as_alnum(word: str) -> str:
-    """Get a word's alpha-numeric contents only."""
-
-    result = ""
-    for char in word:
-        if char.isalnum():
-            result += char
-
-    return result
-
-
-def handle_enum_name(name: str, description: str = None) -> str:
-    """Attempt to generate more useful enumeration names."""
-
-    if name.startswith("value") and description:
-        new_name = description.replace("-", "_")
-
-        alnum_parts = [as_alnum(x.strip().lower()) for x in new_name.split()]
-
-        # Prune some words if the description is very long.
-        if len(alnum_parts) > 1:
-            alnum_parts = list(filter(is_name_part, alnum_parts))
-
-        assert alnum_parts, (name, description)
-
-        new_name = "_".join(alnum_parts)
-
-        assert new_name, (name, description)
-        name = new_name
-
-    return name
-
-
-def translate_enums(enum: EnumeratedValues) -> dict[str, Any]:
-    """Generate an enumeration definition."""
-
-    result: dict[str, Any] = {}
-    enum.handle_description(result)
-
-    for name, value in enum.derived_elem.enum.items():
-        enum_data: dict[str, Any] = {}
-        value.handle_description(enum_data)
-
-        value_str: str = value.raw_data["value"]
-
-        prefix = ""
-        for possible_prefix in ("#", "0b", "0x"):
-            if value_str.startswith(possible_prefix):
-                prefix = possible_prefix
-                break
-
-        if prefix in ("#", "0b"):
-            enum_data["value"] = int(
-                value_str[len(prefix) :].replace("X", "1"), 2
-            )
-        elif prefix == "0x":
-            enum_data["value"] = int(value_str[len(prefix) :], 16)
-        else:
-            enum_data["value"] = int(value_str)
-
-        result[
-            handle_enum_name(name, value.raw_data.get("description"))
-        ] = enum_data
-
-    return result
-
-
-ENUM_DEFAULTS: dict[str, Any] = {
-    "unit_test": False,
-    "json": False,
-    "use_map": False,
-    "identifier": False,
-}
-
 
 def process_bit_fields(
     register: Register,
@@ -203,20 +107,24 @@ def process_bit_fields(
 
         # Handle creating an enumeration.
         if field.enum is not None:
-            enum_name = f"{peripheral}_{register.name}_{name}".replace(
-                "[%s]", ""
-            )
-            field_data["type"] = enum_name
-
             # Register enumeration.
-            new_enum: dict[str, Any] = {"enum": translate_enums(field.enum)}
+            raw = translate_enums(field.enum)
+            new_enum: dict[str, Any] = {"enum": raw}
             new_enum.update(ENUM_DEFAULTS)
 
             # Increase size of underlying if necessary.
             if field_data["width"] > 8:
                 new_enum["underlying"] = "uint16_t"
 
-            enums[enum_name] = new_enum
+            # Check if enum is unique.
+            enum_name = get_enum_name(
+                f"{peripheral}_{register.name}_{name}".replace("[%s]", ""),
+                peripheral,
+                raw,
+            )
+            field_data["type"] = enum_name
+            if enum_name not in enums:
+                enums[enum_name] = new_enum
 
     if result:
         output["fields"] = result
