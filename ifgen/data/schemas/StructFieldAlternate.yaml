@@ -7,9 +7,11 @@ includes:
 required: [name]
 
 properties:
-  name:
+  name: &pattern_string
     type: string
     pattern: "^[a-zA-Z0-9-_.:]+$"
+
+  type: *pattern_string
 
   array_length:
     type: integer
