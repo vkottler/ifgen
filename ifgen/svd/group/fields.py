@@ -7,7 +7,6 @@ from typing import Any, Iterable
 
 # internal
 from ifgen.svd.model.enum import EnumeratedValues
-from ifgen.svd.model.field import Field
 from ifgen.svd.model.peripheral import Cluster, Register, RegisterData
 
 StructMap = dict[str, Any]
@@ -86,31 +85,59 @@ def handle_cluster(
 
 RegisterMap = dict[str, Register]
 
+IGNORE_WORDS = {
+    "the",
+    "as",
+    "a",
+    "is",
+    "will",
+    "but",
+    "are",
+    "yet",
+    "that",
+    "to",
+    "and",
+    "in",
+    "of",
+}
 
-def bit_field_data(field: Field, output: dict[str, Any]) -> None:
-    """Populate bit-field data."""
 
-    field.handle_description(output)
+def is_name_part(value: str) -> bool:
+    """Determine if a word should be part of an enumeration value name."""
+    return bool(value) and value not in IGNORE_WORDS
 
-    # We don't currently handle arrays of bit-fields.
-    assert "dim" not in field.raw_data
 
-    if "bitRange" in field.raw_data:
-        msb_str, lsb_str = field.raw_data["bitRange"].split(":")
-        lsb = int(lsb_str.replace("]", ""))
-        msb = int(msb_str.replace("[", ""))
-    elif "lsb" in field.raw_data:
-        lsb = int(field.raw_data["lsb"])
-        msb = int(field.raw_data["msb"])
+def as_alnum(word: str) -> str:
+    """Get a word's alpha-numeric contents only."""
 
-    output["index"] = lsb
+    result = ""
+    for char in word:
+        if char.isalnum():
+            result += char
 
-    width = (msb - lsb) + 1
-    assert width >= 1, (msb, lsb, field.name)
-    output["width"] = width
+    return result
 
-    output["read"] = "read" in field.access
-    output["write"] = "write" in field.access
+
+def handle_enum_name(name: str, description: str = None) -> str:
+    """Attempt to generate more useful enumeration names."""
+
+    if name.startswith("value") and description:
+        new_name = description.replace("-", "_")
+
+        alnum_parts = [as_alnum(x.strip().lower()) for x in new_name.split()]
+
+        # Prune some words if the description is very long.
+        if len(alnum_parts) > 1:
+            alnum_parts = list(filter(is_name_part, alnum_parts))
+
+        assert alnum_parts, (name, description)
+
+        new_name = "_".join(alnum_parts)
+
+        assert new_name, (name, description)
+        name = new_name
+
+    return name
 
 
 def translate_enums(enum: EnumeratedValues) -> dict[str, Any]:
@@ -140,7 +167,9 @@ def translate_enums(enum: EnumeratedValues) -> dict[str, Any]:
         else:
             enum_data["value"] = int(value_str)
 
-        result[name] = enum_data
+        result[
+            handle_enum_name(name, value.raw_data.get("description"))
+        ] = enum_data
 
     return result
 
@@ -169,7 +198,7 @@ def process_bit_fields(
     # Process fields.
     for name, field in register.fields.items():
         field_data: dict[str, Any] = {"name": name}
-        bit_field_data(field, field_data)
+        field_data.update(field.ifgen_data)
         result.append(field_data)
 
         # Handle creating an enumeration.

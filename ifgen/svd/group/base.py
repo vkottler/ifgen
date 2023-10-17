@@ -4,7 +4,7 @@ A module implementing base interfaces for processing a group of peripherals.
 
 # built-in
 from dataclasses import dataclass
-from typing import Iterator
+from typing import Iterator, Optional
 
 # internal
 from ifgen.svd.model.peripheral import Peripheral
@@ -24,6 +24,32 @@ class PeripheralGroup:
         yield from self.derivatives
 
 
+def get_derived(
+    peripheral: Peripheral, peripherals: list[Peripheral]
+) -> Optional[Peripheral]:
+    """Determine if this peripheral is derived from any other peripheral."""
+
+    result = None
+
+    if peripheral.derived:
+        result = peripheral.derived_elem
+
+    # Check if this peripheral is equivalent to some other peripheral.
+    else:
+        for other in peripherals:
+            # Always return None if you get far enough to see yourself in the
+            # list. That way this peripheral becomes the effective 'root'.
+            if other is peripheral:
+                break
+
+            if not other.is_alternate() and not other.derived:
+                if other == peripheral:
+                    result = other
+                    break
+
+    return result
+
+
 def peripheral_groups(
     peripherals: dict[str, Peripheral]
 ) -> dict[str, PeripheralGroup]:
@@ -31,10 +57,13 @@ def peripheral_groups(
 
     result: dict[str, PeripheralGroup] = {}
 
-    for peripheral in peripherals.values():
+    peripherals_list = list(peripherals[x] for x in sorted(peripherals))
+    for peripheral in peripherals_list:
         name = peripheral.base_name()
-        if peripheral.derived:
-            name = peripheral.derived_elem.base_name()
+
+        derived = get_derived(peripheral, peripherals_list)
+        if derived is not None:
+            name = derived.base_name()
 
         if name not in result:
             # Validate this later.
@@ -43,11 +72,10 @@ def peripheral_groups(
         group = result[name]
 
         if group.root is None:
-            group.root = peripheral
+            group.root = derived if derived is not None else peripheral
         else:
-            result[peripheral.derived_elem.base_name()].derivatives.append(
-                peripheral
-            )
+            assert derived is not None
+            result[derived.base_name()].derivatives.append(peripheral)
 
     # Validate groups.
     for name, group in result.items():

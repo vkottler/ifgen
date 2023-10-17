@@ -26,6 +26,13 @@ class Cluster(DerivedMixin):
     children: RegisterData
     peripheral: "Peripheral"
 
+    def __eq__(self, other) -> bool:
+        """Determine if two clusers are equivalent."""
+
+        return isinstance(other, Cluster) and all(
+            x == y for x, y in zip(self.children, other.children)
+        )
+
     @classmethod
     def string_keys(cls) -> Iterable[StringKeyVal]:
         """Get string keys for this instance type."""
@@ -43,6 +50,20 @@ class Cluster(DerivedMixin):
         )
 
 
+def fields_equal(left: Optional[FieldMap], right: Optional[FieldMap]) -> bool:
+    """Determine if two field maps are equivalent."""
+
+    result = left is None and right is None
+
+    if left is not None and right is not None and len(left) == len(right):
+        for lkey, lvalue in left.items():
+            result = lkey in right and lvalue == right[lkey]
+            if not result:
+                break
+
+    return result
+
+
 @dataclass
 class Register(DerivedMixin):
     """A container for register information."""
@@ -50,6 +71,13 @@ class Register(DerivedMixin):
     derived_from: Optional["Register"]
     fields: Optional[FieldMap]
     peripheral: "Peripheral"
+
+    def __eq__(self, other) -> bool:
+        """Determine if two registers are equivalent."""
+
+        return isinstance(other, Register) and fields_equal(
+            self.fields, other.fields
+        )
 
     @property
     def bits(self) -> int:
@@ -126,6 +154,13 @@ class Peripheral(DerivedMixin):
     address_blocks: List[AddressBlock]
 
     registers: RegisterData
+
+    def __eq__(self, other) -> bool:
+        """Determine if two peripherals are equivalent."""
+
+        return isinstance(other, Peripheral) and all(
+            x == y for x, y in zip(self.registers, other.registers)
+        )
 
     @property
     def bits(self) -> Optional[int]:
