@@ -6,8 +6,7 @@ A module for generating configuration data for struct fields.
 from typing import Any, Iterable
 
 # internal
-from ifgen.svd.model.enum import EnumeratedValues
-from ifgen.svd.model.field import Field
+from ifgen.svd.group.enums import ENUM_DEFAULTS, get_enum_name, translate_enums
 from ifgen.svd.model.peripheral import Cluster, Register, RegisterData
 
 StructMap = dict[str, Any]
@@ -87,72 +86,6 @@ def handle_cluster(
 RegisterMap = dict[str, Register]
 
 
-def bit_field_data(field: Field, output: dict[str, Any]) -> None:
-    """Populate bit-field data."""
-
-    field.handle_description(output)
-
-    # We don't currently handle arrays of bit-fields.
-    assert "dim" not in field.raw_data
-
-    if "bitRange" in field.raw_data:
-        msb_str, lsb_str = field.raw_data["bitRange"].split(":")
-        lsb = int(lsb_str.replace("]", ""))
-        msb = int(msb_str.replace("[", ""))
-    elif "lsb" in field.raw_data:
-        lsb = int(field.raw_data["lsb"])
-        msb = int(field.raw_data["msb"])
-
-    output["index"] = lsb
-
-    width = (msb - lsb) + 1
-    assert width >= 1, (msb, lsb, field.name)
-    output["width"] = width
-
-    output["read"] = "read" in field.access
-    output["write"] = "write" in field.access
-
-
-def translate_enums(enum: EnumeratedValues) -> dict[str, Any]:
-    """Generate an enumeration definition."""
-
-    result: dict[str, Any] = {}
-    enum.handle_description(result)
-
-    for name, value in enum.derived_elem.enum.items():
-        enum_data: dict[str, Any] = {}
-        value.handle_description(enum_data)
-
-        value_str: str = value.raw_data["value"]
-
-        prefix = ""
-        for possible_prefix in ("#", "0b", "0x"):
-            if value_str.startswith(possible_prefix):
-                prefix = possible_prefix
-                break
-
-        if prefix in ("#", "0b"):
-            enum_data["value"] = int(
-                value_str[len(prefix) :].replace("X", "1"), 2
-            )
-        elif prefix == "0x":
-            enum_data["value"] = int(value_str[len(prefix) :], 16)
-        else:
-            enum_data["value"] = int(value_str)
-
-        result[name] = enum_data
-
-    return result
-
-
-ENUM_DEFAULTS: dict[str, Any] = {
-    "unit_test": False,
-    "json": False,
-    "use_map": False,
-    "identifier": False,
-}
-
-
 def process_bit_fields(
     register: Register,
     output: dict[str, Any],
@@ -169,25 +102,29 @@ def process_bit_fields(
     # Process fields.
     for name, field in register.fields.items():
         field_data: dict[str, Any] = {"name": name}
-        bit_field_data(field, field_data)
+        field_data.update(field.ifgen_data)
         result.append(field_data)
 
         # Handle creating an enumeration.
         if field.enum is not None:
-            enum_name = f"{peripheral}_{register.name}_{name}".replace(
-                "[%s]", ""
-            )
-            field_data["type"] = enum_name
-
             # Register enumeration.
-            new_enum: dict[str, Any] = {"enum": translate_enums(field.enum)}
+            raw = translate_enums(field.enum)
+            new_enum: dict[str, Any] = {"enum": raw}
             new_enum.update(ENUM_DEFAULTS)
 
             # Increase size of underlying if necessary.
             if field_data["width"] > 8:
                 new_enum["underlying"] = "uint16_t"
 
-            enums[enum_name] = new_enum
+            # Check if enum is unique.
+            enum_name = get_enum_name(
+                f"{peripheral}_{register.name}_{name}".replace("[%s]", ""),
+                peripheral,
+                raw,
+            )
+            field_data["type"] = enum_name
+            if enum_name not in enums:
+                enums[enum_name] = new_enum
 
     if result:
         output["fields"] = result
