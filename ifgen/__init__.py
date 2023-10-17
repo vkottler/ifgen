@@ -1,7 +1,7 @@
 # =====================================
 # generator=datazen
 # version=3.1.4
-# hash=6f05f5ec8ef6e670482d6a0966b7641f
+# hash=bb724d61f71c628f9ff12163e59bf987
 # =====================================
 
 """
@@ -10,4 +10,4 @@ Useful defaults and other package metadata.
 
 DESCRIPTION = "An interface generator for distributed computing."
 PKG_NAME = "ifgen"
-VERSION = "3.1.5"
+VERSION = "3.1.6"
