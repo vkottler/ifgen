@@ -10,6 +10,7 @@ from vcorelib.io.file_writer import IndentedFileWriter
 
 # internal
 from ifgen.generation.interface import GenerateTask
+from ifgen.struct.methods.bit import handle_description
 from ifgen.struct.methods.fields.common import (
     BitField,
     bit_field_method_slug,
@@ -40,6 +41,7 @@ def bit_field_get_all_method(
 
     with writer.javadoc():
         writer.write(f"Get all of {name}'s bit fields.")
+        handle_description(writer, field)
 
     # Add field args.
     args = []
@@ -115,6 +117,7 @@ def bit_field_get_method(
                 f"{'field' if field['width'] > 1 else 'bit'}."
             )
         )
+        handle_description(writer, field)
 
     line = f"inline {bit_field_underlying(field)} " + method
 
