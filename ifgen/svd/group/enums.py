@@ -79,13 +79,18 @@ def as_alnum(word: str) -> str:
     return result
 
 
+SKIP = {"-"}
+
+
 def handle_enum_name(name: str, description: str = None) -> str:
     """Attempt to generate more useful enumeration names."""
 
     if name.startswith("value") and description:
-        new_name = description.replace("-", "_")
-
-        alnum_parts = [as_alnum(x.strip().lower()) for x in new_name.split()]
+        alnum_parts = [
+            as_alnum(x.strip().lower().replace("-", "_"))
+            for x in description.split()
+            if x not in SKIP
+        ]
 
         # Prune some words if the description is very long.
         if len(alnum_parts) > 1:
@@ -99,6 +104,34 @@ def handle_enum_name(name: str, description: str = None) -> str:
         name = new_name
 
     return name
+
+
+def remove_common_prefixes(data: dict[str, Any]) -> dict[str, Any]:
+    """Attempt to remove common prefixes in enumeration names."""
+
+    result = data
+
+    length = len(commonprefix(list(result)))
+    if length > 1:
+        result = {
+            key[length:] if length < len(key) else key: value
+            for key, value in result.items()
+        }
+
+    return result
+
+
+def handle_duplicate(existing: dict[str, Any], key: str, value: Any) -> None:
+    """Handle key de-duplication for enumerations."""
+
+    assert key
+    if key[0].isnumeric():
+        key = "_" + key
+
+    while key in existing:
+        key += "_x"
+
+    existing[key] = value
 
 
 def translate_enums(enum: EnumeratedValues) -> EnumValues:
@@ -128,27 +161,17 @@ def translate_enums(enum: EnumeratedValues) -> EnumValues:
         else:
             enum_data["value"] = int(value_str)
 
-        final_name = handle_enum_name(name, value.raw_data.get("description"))
-        assert final_name
-
-        # Truncate.
-        final_name = (
-            final_name if len(final_name) < 51 else final_name[:45] + "_cont"
+        handle_duplicate(
+            result,
+            handle_enum_name(name, value.raw_data.get("description")),
+            enum_data,
         )
-        assert len(final_name) < 51
 
-        while final_name in result:
-            final_name += "_"
+    # Truncate names.
+    new_result: dict[str, Any] = {}
+    for key, value in remove_common_prefixes(result).items():
+        handle_duplicate(
+            new_result, key if len(key) < 51 else key[:45] + "_cont", value
+        )
 
-        assert final_name not in result, (name, final_name)
-        result[final_name] = enum_data
-
-    # Remove common prefix (if present) from enums.
-    length = len(commonprefix(list(result)))
-    if length > 1:
-        result = {
-            key[length:] if length < len(key) else key: value
-            for key, value in result.items()
-        }
-
-    return result
+    return new_result
