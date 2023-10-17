@@ -17,10 +17,14 @@ ENUM_DEFAULTS: dict[str, Any] = {
 }
 
 BY_HASH: dict[str, dict[int, str]] = {}
+PRUNE_ENUMS = False
 
 
 def get_enum_name(name: str, peripheral: str, raw_mapping: EnumValues) -> str:
     """Get the name of an enumeration."""
+
+    if not PRUNE_ENUMS:
+        return name
 
     hashed = hash(
         ",".join(
