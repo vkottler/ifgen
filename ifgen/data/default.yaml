@@ -1,5 +1,9 @@
 ---
+struct: {}
 structs: {}
+
+enum: {}
+enums: {}
 
 ifgen:
   common: {}

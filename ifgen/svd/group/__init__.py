@@ -32,7 +32,10 @@ def struct_instance(peripheral: Peripheral) -> dict[str, Any]:
 
 
 def struct_data(
-    group: PeripheralGroup, structs: StructMap, enums: EnumMap
+    group: PeripheralGroup,
+    structs: StructMap,
+    enums: EnumMap,
+    min_enum_members: int,
 ) -> dict[str, Any]:
     """Get struct data for a peripheral group."""
 
@@ -42,7 +45,11 @@ def struct_data(
 
     data["instances"] = [struct_instance(x) for x in group.peripherals]
     size, data["fields"] = struct_fields(
-        peripheral.registers, structs, enums, peripheral.base_name(lower=False)
+        peripheral.registers,
+        structs,
+        enums,
+        peripheral.base_name(lower=False),
+        min_enum_members,
     )
 
     # Too difficult due to padding.
@@ -57,6 +64,7 @@ def handle_group(
     output_dir: Path,
     group: PeripheralGroup,
     includes: set[Path],
+    min_enum_members: int,
 ) -> None:
     """Handle a peripheral group."""
 
@@ -65,5 +73,7 @@ def handle_group(
 
     structs: StructMap = {}
     enums: EnumMap = {}
-    structs[group.root.base_name()] = struct_data(group, structs, enums)
+    structs[group.root.base_name()] = struct_data(
+        group, structs, enums, min_enum_members
+    )
     ARBITER.encode(output, {"structs": structs, "enums": enums})
