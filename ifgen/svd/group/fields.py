@@ -95,7 +95,7 @@ def process_bit_fields(
     output: dict[str, Any],
     enums: EnumMap,
     peripheral: str,
-    min_enum_members: int,
+    min_enum_width: int,
 ) -> None:
     """Get bit-field declarations for a given register."""
 
@@ -115,7 +115,7 @@ def process_bit_fields(
             # Register enumeration.
             raw = translate_enums(field.enum)
 
-            if len(raw) >= min_enum_members:
+            if field_data["width"] >= min_enum_width:
                 new_enum: dict[str, Any] = {"enum": raw}
                 new_enum.update(ENUM_DEFAULTS)
 
@@ -142,7 +142,7 @@ def handle_register(
     register_map: RegisterMap,
     enums: EnumMap,
     peripheral: str,
-    min_enum_members: int,
+    min_enum_width: int,
 ) -> tuple[int, StructField]:
     """Handle a register entry."""
 
@@ -175,7 +175,7 @@ def handle_register(
     register.handle_description(data, prefix=f"({', '.join(notes)}) ")
 
     # Handle bit fields.
-    process_bit_fields(register, data, enums, peripheral, min_enum_members)
+    process_bit_fields(register, data, enums, peripheral, min_enum_width)
 
     # Handle alternates.
     alts = register.alternates
@@ -193,7 +193,7 @@ def handle_register(
                 alt_data,
                 enums,
                 peripheral,
-                min_enum_members,
+                min_enum_width,
             )
 
             # Forward array information (might be necessary at some point).
@@ -212,7 +212,7 @@ def struct_fields(
     structs: StructMap,
     enums: EnumMap,
     peripheral: str,
-    min_enum_members: int,
+    min_enum_width: int,
     size: int = None,
 ) -> tuple[int, list[StructField]]:
     """Generate data for struct fields."""
@@ -230,10 +230,10 @@ def struct_fields(
 
     for item in registers:
         inst_size, field = (
-            handle_cluster(item, structs, enums, peripheral, min_enum_members)
+            handle_cluster(item, structs, enums, peripheral, min_enum_width)
             if isinstance(item, Cluster)
             else handle_register(
-                item, register_map, enums, peripheral, min_enum_members
+                item, register_map, enums, peripheral, min_enum_width
             )
         )
         if inst_size > 0:

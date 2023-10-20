@@ -30,17 +30,17 @@ class SvdProcessingTask:
     """A container for SVD-processing state."""
 
     model: SvdModel
-    min_enum_members: int
+    min_enum_width: int
 
     def process(self, elem: ElementTree.Element) -> None:
         """Process a single element."""
         TAG_PROCESSORS[elem.tag](elem, self, getLogger(elem.tag))
 
     @staticmethod
-    def svd(path: Path, min_enum_members: int) -> "SvdProcessingTask":
+    def svd(path: Path, min_enum_width: int) -> "SvdProcessingTask":
         """Process a single SVD file."""
 
-        task = SvdProcessingTask(SvdModel({}), min_enum_members)
+        task = SvdProcessingTask(SvdModel({}), min_enum_width)
         task.process(ElementTree.parse(path).getroot())
         return task
 
@@ -61,7 +61,7 @@ class SvdProcessingTask:
         for group in peripheral_groups(self.model.peripherals).values():
             output_dir = path.joinpath(group.root.base_name())
             output_dir.mkdir(exist_ok=True)
-            handle_group(output_dir, group, includes, self.min_enum_members)
+            handle_group(output_dir, group, includes, self.min_enum_width)
 
         ARBITER.encode(
             path.joinpath("ifgen.yaml"),
