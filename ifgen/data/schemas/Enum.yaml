@@ -3,7 +3,6 @@ includes:
   - has_description.yaml
   - has_namespace.yaml
   - has_json_indent.yaml
-  - has_unit_test.yaml
 
 required: [enum]
 
@@ -22,13 +21,13 @@ properties:
           description:
             type: string
 
+  # Provide defaults from a higher-level configuration.
   use_map:
     type: boolean
-    default: true
-
   identifier:
     type: boolean
-    default: true
+  unit_test:
+    type: boolean
 
   underlying:
     type: string

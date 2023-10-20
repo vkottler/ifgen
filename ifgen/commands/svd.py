@@ -38,9 +38,14 @@ def svd_cmd(args: _Namespace) -> int:
     enums.PRUNE_ENUMS = enable_pruning
     base.PRUNE_STRUCTS = enable_pruning
 
-    SvdProcessingTask.svd(path).generate_configs(args.output)
+    SvdProcessingTask.svd(path, args.min_enum_width).generate_configs(
+        args.output
+    )
 
     return 0
+
+
+DEFAULT_MIN_ENUM_WIDTH = 2
 
 
 def add_svd_cmd(parser: _ArgumentParser) -> _CommandFunction:
@@ -52,6 +57,17 @@ def add_svd_cmd(parser: _ArgumentParser) -> _CommandFunction:
         type=Path,
         default=f"{PKG_NAME}-out",
         help="output directory for configuration files",
+    )
+
+    parser.add_argument(
+        "-m",
+        "--min-enum-width",
+        type=int,
+        default=DEFAULT_MIN_ENUM_WIDTH,
+        help=(
+            "minimum number of enumeration elements to warrant "
+            "generating an enumeration definition (default: %(default)s)"
+        ),
     )
 
     parser.add_argument(

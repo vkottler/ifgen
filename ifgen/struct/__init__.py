@@ -190,10 +190,13 @@ def create_struct(task: GenerateTask) -> None:
                 style=CommentStyle.C_DOXYGEN
             ) as lines:
                 if task.instance["identifier"]:
+                    underlying = task.env.config.data["struct"][
+                        "id_underlying"
+                    ]
                     lines.append(
                         (
                             "static constexpr "
-                            f"{task.env.config.data['struct_id_underlying']} "
+                            f"{underlying} "
                             f"id = {task.protocol().id};",
                             f"{task.name}'s identifier.",
                         )

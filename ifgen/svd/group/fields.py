@@ -41,7 +41,11 @@ EnumMap = dict[str, Any]
 
 
 def handle_cluster(
-    cluster: Cluster, structs: StructMap, enums: EnumMap, peripheral: str
+    cluster: Cluster,
+    structs: StructMap,
+    enums: EnumMap,
+    peripheral: str,
+    min_enum_members: int,
 ) -> tuple[int, StructField]:
     """Handle a cluster element."""
 
@@ -51,7 +55,7 @@ def handle_cluster(
     # Register a struct for this cluster. Should we use a namespace for this?
     cluster_struct: dict[str, Any] = cluster.handle_description()
     size, cluster_struct["fields"] = struct_fields(
-        cluster.children, structs, enums, peripheral
+        cluster.children, structs, enums, peripheral, min_enum_members
     )
 
     # Too difficult due to padding (may need to comment out).
@@ -91,6 +95,7 @@ def process_bit_fields(
     output: dict[str, Any],
     enums: EnumMap,
     peripheral: str,
+    min_enum_width: int,
 ) -> None:
     """Get bit-field declarations for a given register."""
 
@@ -109,22 +114,24 @@ def process_bit_fields(
         if field.enum is not None:
             # Register enumeration.
             raw = translate_enums(field.enum)
-            new_enum: dict[str, Any] = {"enum": raw}
-            new_enum.update(ENUM_DEFAULTS)
 
-            # Increase size of underlying if necessary.
-            if field_data["width"] > 8:
-                new_enum["underlying"] = "uint16_t"
+            if field_data["width"] >= min_enum_width:
+                new_enum: dict[str, Any] = {"enum": raw}
+                new_enum.update(ENUM_DEFAULTS)
 
-            # Check if enum is unique.
-            enum_name = get_enum_name(
-                f"{peripheral}_{register.name}_{name}".replace("[%s]", ""),
-                peripheral,
-                raw,
-            )
-            field_data["type"] = enum_name
-            if enum_name not in enums:
-                enums[enum_name] = new_enum
+                # Increase size of underlying if necessary.
+                if field_data["width"] > 8:
+                    new_enum["underlying"] = "uint16_t"
+
+                # Check if enum is unique.
+                enum_name = get_enum_name(
+                    f"{peripheral}_{register.name}_{name}".replace("[%s]", ""),
+                    peripheral,
+                    raw,
+                )
+                field_data["type"] = enum_name
+                if enum_name not in enums:
+                    enums[enum_name] = new_enum
 
     if result:
         output["fields"] = result
@@ -135,6 +142,7 @@ def handle_register(
     register_map: RegisterMap,
     enums: EnumMap,
     peripheral: str,
+    min_enum_width: int,
 ) -> tuple[int, StructField]:
     """Handle a register entry."""
 
@@ -167,7 +175,7 @@ def handle_register(
     register.handle_description(data, prefix=f"({', '.join(notes)}) ")
 
     # Handle bit fields.
-    process_bit_fields(register, data, enums, peripheral)
+    process_bit_fields(register, data, enums, peripheral, min_enum_width)
 
     # Handle alternates.
     alts = register.alternates
@@ -181,7 +189,11 @@ def handle_register(
             item.handle_description(alt_data, prefix=f"({item.access}) ")
 
             process_bit_fields(
-                register_map[item.name], alt_data, enums, peripheral
+                register_map[item.name],
+                alt_data,
+                enums,
+                peripheral,
+                min_enum_width,
             )
 
             # Forward array information (might be necessary at some point).
@@ -200,6 +212,7 @@ def struct_fields(
     structs: StructMap,
     enums: EnumMap,
     peripheral: str,
+    min_enum_width: int,
     size: int = None,
 ) -> tuple[int, list[StructField]]:
     """Generate data for struct fields."""
@@ -217,9 +230,11 @@ def struct_fields(
 
     for item in registers:
         inst_size, field = (
-            handle_cluster(item, structs, enums, peripheral)
+            handle_cluster(item, structs, enums, peripheral, min_enum_width)
             if isinstance(item, Cluster)
-            else handle_register(item, register_map, enums, peripheral)
+            else handle_register(
+                item, register_map, enums, peripheral, min_enum_width
+            )
         )
         if inst_size > 0:
             fields.append(field)

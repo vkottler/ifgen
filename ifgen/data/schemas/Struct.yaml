@@ -4,26 +4,21 @@ includes:
   - has_namespace.yaml
   - has_json_indent.yaml
   - has_expected_size.yaml
-  - has_unit_test.yaml
 
 required: [fields]
 
 properties:
+  # Provide defaults from a higher-level configuration.
   codec:
     type: boolean
-    default: true
-
   stream:
     type: boolean
-    default: true
-
   methods:
     type: boolean
-    default: true
-
   identifier:
     type: boolean
-    default: true
+  unit_test:
+    type: boolean
 
   instances:
     type: array

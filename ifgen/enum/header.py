@@ -57,7 +57,7 @@ def enum_header(task: GenerateTask, writer: IndentedFileWriter) -> None:
         writer.write(
             (
                 "static constexpr "
-                f"{task.env.config.data['enum_id_underlying']} "
+                f"{task.env.config.data['enum']['id_underlying']} "
                 f"{task.name}_id = {runtime.id};"
             )
         )
