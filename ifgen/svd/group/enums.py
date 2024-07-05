@@ -144,7 +144,7 @@ def translate_enums(enum: EnumeratedValues) -> EnumValues:
         enum_data: dict[str, Any] = {}
         value.handle_description(enum_data)
 
-        value_str: str = value.raw_data["value"]
+        value_str: str = value.raw_data["value"].lower()
 
         prefix = ""
         for possible_prefix in ("#", "0b", "0x"):
@@ -154,7 +154,7 @@ def translate_enums(enum: EnumeratedValues) -> EnumValues:
 
         if prefix in ("#", "0b"):
             enum_data["value"] = int(
-                value_str[len(prefix) :].replace("X", "1"), 2
+                value_str[len(prefix) :].replace("x", "1"), 2
             )
         elif prefix == "0x":
             enum_data["value"] = int(value_str[len(prefix) :], 16)

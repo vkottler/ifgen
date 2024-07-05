@@ -91,8 +91,11 @@ class Field(DerivedMixin):
         elif "lsb" in self.raw_data:
             lsb = int(self.raw_data["lsb"])
             msb = int(self.raw_data["msb"])
+        elif "bitOffset" in self.raw_data:
+            lsb = int(self.raw_data["bitOffset"])
+            msb = lsb + (int(self.raw_data["bitWidth"]) - 1)
 
-        assert lsb != -1 and msb != -1
+        assert lsb != -1 and msb != -1, self.raw_data
 
         output["index"] = lsb
 

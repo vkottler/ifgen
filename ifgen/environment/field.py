@@ -31,7 +31,7 @@ def process_field(
         difference = expected - size
 
         assert difference >= 0, (
-            f"({struct_name}.{field_name}) current={size} "
+            f"{difference} ({struct_name}.{field_name}) current={size} "
             f"!= expected={expected}"
         )
 

@@ -92,6 +92,11 @@ class Register(DerivedMixin):
         return self.bits // 8
 
     @property
+    def alternate_group(self) -> Optional[str]:
+        """Get this register's possible alternate group."""
+        return self.raw_data.get("alternateGroup")
+
+    @property
     def access(self) -> str:
         """Get the access setting for this register."""
 
@@ -143,6 +148,22 @@ class Register(DerivedMixin):
         )
 
 
+def register_groups(registers: RegisterData) -> dict[str, list[Register]]:
+    """Get groups of registers."""
+
+    result: dict[str, list[Register]] = {}
+
+    for item in registers:
+        if isinstance(item, Register):
+            alt = item.alternate_group
+            if alt:
+                if alt not in result:
+                    result[alt] = []
+                result[alt].append(item)
+
+    return result
+
+
 @dataclass
 class Peripheral(DerivedMixin):
     """A container for peripheral information."""
@@ -154,6 +175,10 @@ class Peripheral(DerivedMixin):
     address_blocks: List[AddressBlock]
 
     registers: RegisterData
+
+    def register_groups(self) -> dict[str, list[Register]]:
+        """Get register groups."""
+        return register_groups(self.registers)
 
     def __eq__(self, other) -> bool:
         """Determine if two peripherals are equivalent."""

@@ -3,11 +3,16 @@ A module for generating configuration data for struct fields.
 """
 
 # built-in
-from typing import Any, Iterable
+from typing import Any, Iterable, Optional
 
 # internal
 from ifgen.svd.group.enums import ENUM_DEFAULTS, get_enum_name, translate_enums
-from ifgen.svd.model.peripheral import Cluster, Register, RegisterData
+from ifgen.svd.model.peripheral import (
+    Cluster,
+    Register,
+    RegisterData,
+    register_groups,
+)
 
 StructMap = dict[str, Any]
 StructField = dict[str, Any]
@@ -58,12 +63,13 @@ def handle_cluster(
         cluster.children, structs, enums, peripheral, min_enum_members
     )
 
-    # Too difficult due to padding (may need to comment out).
-    cluster_struct["expected_size"] = size
+    # Too difficult due to padding (may need to comment out). Padding within
+    # a cluster isn't currently handled.
+    # cluster_struct["expected_size"] = size
 
     cluster_struct.update(DEFAULT_STRUCT)
 
-    raw_name = cluster.name.replace("[%s]", "")
+    raw_name = sanitize_name(cluster.name)
 
     cluster_name = cluster.raw_data.get(
         "headerStructName", f"{raw_name}_instance"
@@ -71,14 +77,16 @@ def handle_cluster(
     structs[cluster_name] = cluster_struct
 
     # This needs to be an array element somehow. Use a namespace?
+    # dimIncrement not handled.
     array_dim = int(cluster.raw_data.get("dim", 1))
+
     size *= array_dim
     result: StructField = {
         "name": raw_name,
         "type": cluster_name,
         # Too difficult due to padding (may need to comment out).
-        "expected_size": size,
-        "expected_offset": parse_offset(cluster.raw_data),
+        # "expected_size": size,
+        # "expected_offset": parse_offset(cluster.raw_data),
     }
     if array_dim > 1:
         result["array_length"] = array_dim
@@ -125,7 +133,7 @@ def process_bit_fields(
 
                 # Check if enum is unique.
                 enum_name = get_enum_name(
-                    f"{peripheral}_{register.name}_{name}".replace("[%s]", ""),
+                    sanitize_name(f"{peripheral}_{register.name}_{name}"),
                     peripheral,
                     raw,
                 )
@@ -135,6 +143,12 @@ def process_bit_fields(
 
     if result:
         output["fields"] = result
+
+
+def sanitize_name(name: str) -> str:
+    """Remove special characters from a name."""
+
+    return name.replace("[%s]", "").replace("%s", "")
 
 
 def handle_register(
@@ -151,14 +165,15 @@ def handle_register(
     if "alternateRegister" in register.raw_data:
         return 0, {}
 
-    # Ensure that a correct result will be produced.
-    check_not_handled_fields(register.raw_data, ["alternateGroup"])
+    # Currently provided in metadata output.
+    # check_not_handled_fields(register.raw_data, ["alternateGroup"])
 
+    # dimIncrement not handled.
     array_dim = int(register.raw_data.get("dim", 1))
 
     size = register.size * array_dim
     data = {
-        "name": register.name.replace("[%s]", ""),
+        "name": sanitize_name(register.name),
         "type": register.c_type,
         "expected_size": size,
         "expected_offset": parse_offset(register.raw_data),
@@ -207,6 +222,68 @@ def handle_register(
     return size, data
 
 
+def handle_register_group(
+    name: str,
+    registers: list[Register],
+    register_map: RegisterMap,
+    enums: EnumMap,
+    peripheral: str,
+    min_enum_width: int,
+) -> tuple[int, StructField]:
+    """Handle creating a struct field for a group of registers."""
+
+    # Handle melding register data at some point (aggregate more bit fields).
+    del name
+
+    return handle_register(
+        registers[0], register_map, enums, peripheral, min_enum_width
+    )
+
+
+def handle_item(
+    item: Register | Cluster,
+    structs: StructMap,
+    enums: EnumMap,
+    peripheral: str,
+    min_enum_width: int,
+    groups_handled: set[str],
+    register_map: RegisterMap,
+    groups: dict[str, list[Register]],
+    by_name: dict[str, str],
+) -> tuple[int, Optional[StructField]]:
+    """Handle creating a struct field from a register or cluster."""
+
+    inst_size = 0
+    field = None
+
+    if isinstance(item, Cluster):
+        inst_size, field = handle_cluster(
+            item, structs, enums, peripheral, min_enum_width
+        )
+    else:
+        # Handle register groups.
+        if item.name in by_name:
+            group = by_name[item.name]
+            if group not in groups_handled:
+                inst_size, field = handle_register_group(
+                    group,
+                    groups[group],
+                    register_map,
+                    enums,
+                    peripheral,
+                    min_enum_width,
+                )
+                groups_handled.add(group)
+
+        # Handle normal registers.
+        else:
+            inst_size, field = handle_register(
+                item, register_map, enums, peripheral, min_enum_width
+            )
+
+    return inst_size, field
+
+
 def struct_fields(
     registers: RegisterData,
     structs: StructMap,
@@ -228,15 +305,27 @@ def struct_fields(
         if isinstance(item, Register):
             register_map[item.name] = item
 
+    groups = register_groups(registers)
+    by_name = {}
+    for group, regs in groups.items():
+        for reg in regs:
+            by_name[reg.name] = group
+    groups_handled: set[str] = set()
+
     for item in registers:
-        inst_size, field = (
-            handle_cluster(item, structs, enums, peripheral, min_enum_width)
-            if isinstance(item, Cluster)
-            else handle_register(
-                item, register_map, enums, peripheral, min_enum_width
-            )
+        inst_size, field = handle_item(
+            item,
+            structs,
+            enums,
+            peripheral,
+            min_enum_width,
+            groups_handled,
+            register_map,
+            groups,
+            by_name,
         )
-        if inst_size > 0:
+
+        if inst_size > 0 and field is not None:
             fields.append(field)
             size += inst_size
 

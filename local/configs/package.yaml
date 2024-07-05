@@ -22,7 +22,7 @@ dev_requirements:
   - pytest-cov
   - setuptools-wrapper
   - types-setuptools
-  - yambs
+  - yambs>=3.0.4
 
 commands:
   - name: gen

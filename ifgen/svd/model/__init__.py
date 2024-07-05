@@ -21,6 +21,16 @@ class SvdModel:
     device: Optional[Device] = None
     cpu: Optional[Cpu] = None
 
+    @property
+    def device_name(self) -> str:
+        """Get the SVD device name."""
+        assert self.device is not None
+        return self.device.raw_data["name"]
+
+    def namespace(self) -> list[str]:
+        """Get a namespace for this SVD device."""
+        return [x.upper() for x in self.device_name.split("_")]
+
     def metadata(self) -> dict[str, Any]:
         """Get device and CPU metadata."""
 
@@ -32,12 +42,22 @@ class SvdModel:
             result["cpu"] = self.cpu.raw_data
 
         for name, peripheral in self.peripherals.items():
-            result[name] = {
+            data = {
                 "interrupts": [x.raw_data for x in peripheral.interrupts],
                 "address_blocks": [
                     x.raw_data for x in peripheral.address_blocks
                 ],
             }
+
+            # Add alternate group metadata.
+            groups = peripheral.register_groups()
+            if groups:
+                data["register_groups"] = {  # type: ignore
+                    key: [x.name for x in value]
+                    for key, value in groups.items()
+                }
+
+            result[name] = data
 
         return result
 

@@ -12,4 +12,4 @@ sphinx-book-theme
 pytest-cov
 setuptools-wrapper
 types-setuptools
-yambs
+yambs>=3.0.4
