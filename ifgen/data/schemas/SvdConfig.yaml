@@ -1,0 +1,18 @@
+---
+type: object
+additionalProperties: false
+required: []
+
+properties:
+  enable_pruning:
+    type: array
+    default: [XMC4700]
+    items:
+      type: string
+
+  devices:
+    type: object
+    additionalProperties: false
+    patternProperties:
+      "^[a-zA-Z0-9-_.]+$":
+        $ref: package://ifgen/schemas/SvdInstanceConfig.yaml

@@ -14,6 +14,7 @@ from vcorelib.paths import find_file
 
 # internal
 from ifgen import PKG_NAME
+from ifgen.config.svd import SvdConfig
 from ifgen.svd import register_processors
 from ifgen.svd.group import base, enums
 from ifgen.svd.task import SvdProcessingTask
@@ -23,23 +24,26 @@ def svd_cmd(args: _Namespace) -> int:
     """Execute the svd command."""
 
     register_processors()
+    logger = getLogger(__name__)
 
     path = find_file(
-        args.svd_file,
-        package=PKG_NAME,
-        logger=getLogger(__name__),
-        include_cwd=True,
+        args.svd_file, package=PKG_NAME, logger=logger, include_cwd=True
     )
     assert path is not None, args.svd_file
 
-    enable_pruning = path.with_suffix("").name in {"XMC4700"}
+    config = SvdConfig.decode(
+        find_file(args.config, logger=logger, include_cwd=True)
+    )
 
     # Only enable certain pruning strategies for certain processors.
+    enable_pruning = path.with_suffix("").name in config.data.setdefault(
+        "enable_pruning", []
+    )
     enums.PRUNE_ENUMS = enable_pruning
     base.PRUNE_STRUCTS = enable_pruning
 
     SvdProcessingTask.svd(path, args.min_enum_width).generate_configs(
-        args.output
+        args.output, config
     )
 
     return 0
@@ -56,7 +60,17 @@ def add_svd_cmd(parser: _ArgumentParser) -> _CommandFunction:
         "--output",
         type=Path,
         default=f"{PKG_NAME}-out",
-        help="output directory for configuration files",
+        help=(
+            "output directory for configuration "
+            "files (default '%(default)s')"
+        ),
+    )
+
+    parser.add_argument(
+        "-c",
+        "--config",
+        default=f"package://{PKG_NAME}/svd.yaml",
+        help="configuration rules to use (default: '%(default)s')",
     )
 
     parser.add_argument(

@@ -1,0 +1,18 @@
+---
+type: object
+additionalProperties: false
+required: []
+
+properties:
+  ignore_peripherals:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      required: [name, reason]
+
+      properties:
+        name:
+          type: string
+        reason:
+          type: string

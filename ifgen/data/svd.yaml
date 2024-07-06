@@ -1,0 +1,15 @@
+---
+
+# Note: ignored peripherals still get generated YAML outputs, they're just
+# not included in the generated top-level ifgen.yaml.
+
+devices:
+  mimxrt1176_cm4: &rt1176
+    ignore_peripherals:
+      - name: caam
+        reason: Register map not in reference manual / (#64).
+      - name: dcic1
+        reason: (#64) dimIncrement not supported.
+      - name: rdc
+        reason: (#64) dimIncrement not supported.
+  mimxrt1176_cm7: *rt1176

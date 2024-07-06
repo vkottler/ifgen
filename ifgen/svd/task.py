@@ -6,7 +6,7 @@ A module implementing an SVD-processing task interface.
 from dataclasses import dataclass
 from logging import getLogger
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Iterable, Iterator
 from xml.etree import ElementTree
 
 # third-party
@@ -15,6 +15,7 @@ from vcorelib.logging import LoggerType
 from vcorelib.paths import rel
 
 # internal
+from ifgen.config.svd import SvdConfig
 from ifgen.svd.group import handle_group, peripheral_groups
 from ifgen.svd.model import SvdModel
 
@@ -23,6 +24,33 @@ TagProcessor = Callable[
 ]
 TagProcessorMap = dict[str, TagProcessor]
 TAG_PROCESSORS: TagProcessorMap = {}
+
+
+def filter_includes(
+    config: SvdConfig,
+    model: SvdModel,
+    paths: Iterable[Path],
+    filtered: dict[str, str],
+) -> Iterator[str]:
+    """Filter includes based on configuration."""
+
+    config_data = config.data.setdefault("devices", {}).setdefault(
+        model.device_name.lower(), {"ignore_peripherals": []}
+    )
+
+    for path in paths:
+        item = str(path)
+        reason = None
+
+        # Determine a possible reason to filter this include.
+        for ignore in config_data["ignore_peripherals"]:
+            if path.parts[0] == ignore["name"]:
+                reason = ignore["reason"]
+
+        if reason is not None:
+            filtered[item] = reason
+        else:
+            yield item
 
 
 @dataclass
@@ -44,15 +72,10 @@ class SvdProcessingTask:
         task.process(ElementTree.parse(path).getroot())
         return task
 
-    def generate_configs(self, path: Path) -> None:
+    def generate_configs(self, path: Path, config: SvdConfig) -> None:
         """Generate output configuration files."""
 
         path.mkdir(exist_ok=True, parents=True)
-
-        meta = self.model.metadata()
-
-        # Write metadata that doesn't currently get used for generation.
-        ARBITER.encode(path.joinpath("metadata.json"), meta)
 
         includes: set[Path] = set()
 
@@ -63,13 +86,25 @@ class SvdProcessingTask:
             output_dir.mkdir(exist_ok=True)
             handle_group(output_dir, group, includes, self.min_enum_width)
 
+        # Write metadata that doesn't currently get used for generation.
+        meta = self.model.metadata()
+
+        # Indicate includes that were filtered out in metadata.
+        filtered: dict[str, str] = {}
+        meta["filtered_includes"] = filtered
+
         ARBITER.encode(
             path.joinpath("ifgen.yaml"),
             {
                 "includes": sorted(  # type: ignore
-                    str(rel(x.resolve(), base=path)) for x in includes
+                    filter_includes(
+                        config,
+                        self.model,
+                        (rel(x.resolve(), base=path) for x in includes),
+                        filtered,
+                    )
                 ),
-                "namespace": [meta["device"]["name"]],
+                "namespace": self.model.namespace(),  # type: ignore
                 "struct": {
                     "stream": False,
                     "codec": False,
@@ -80,3 +115,4 @@ class SvdProcessingTask:
                 "enum": {"use_map": False, "identifier": False},
             },
         )
+        ARBITER.encode(path.joinpath("metadata.json"), meta)
