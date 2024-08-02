@@ -6,7 +6,7 @@ A module implementing a generation-environment interface.
 from enum import StrEnum
 from pathlib import Path
 from shutil import rmtree
-from typing import Any
+from typing import Any, NamedTuple, Optional
 
 # third-party
 from runtimepy.codec.protocol import Protocol
@@ -31,6 +31,25 @@ class Generator(StrEnum):
     IFGEN = PKG_NAME
 
 
+class Language(StrEnum):
+    """An enumeration declaring output generation variants."""
+
+    CPP = "CPP"
+    PYTHON = "Python"
+
+    @property
+    def slug(self) -> str:
+        """Get a slug string."""
+        return self.name.lower()
+
+    @property
+    def cfg_dir_name(self) -> str:
+        """
+        Get the configuratino key for this language's output configuration.
+        """
+        return f"{self.slug}_dir"
+
+
 def runtime_enum_data(data: dict[str, Any]) -> dict[str, int]:
     """Get runtime enumeration data."""
 
@@ -50,6 +69,14 @@ def runtime_enum_data(data: dict[str, Any]) -> dict[str, int]:
     return result
 
 
+class Directories(NamedTuple):
+    """A collection of directories relevant to code generation outputs."""
+
+    source: Path
+    output: Path
+    test_dir: Path
+
+
 class IfgenEnvironment(LoggerMixin):
     """A class for managing stateful information while generating outputs."""
 
@@ -60,21 +87,19 @@ class IfgenEnvironment(LoggerMixin):
         self.root_path = root
         self.config = config
 
-        self.source = combine_if_not_absolute(
-            self.root_path, normalize(*self.config.data["source_dir"])
-        )
-        self.output = combine_if_not_absolute(
-            self.source, normalize(*self.config.data["output_dir"])
-        )
-        self.test_dir = combine_if_not_absolute(
-            self.source, normalize(*self.config.data["test_dir"])
-        )
+        # Load per-language directories.
+        self.directories: dict[Language, Directories] = {}
+        for language in Language:
+            result = self.get_dirs(language)
+            if result is not None:
+                self.directories[language] = result
 
         self.generated: set[Path] = set()
 
         # Create output directories.
+        assert Language.CPP in self.directories, self.directories
         for subdir in Generator:
-            for path in [self.output, self.test_dir]:
+            for path in [self.cpp_output, self.cpp_test_dir]:
                 dest = path.joinpath(subdir)
                 rmtree(dest, ignore_errors=True)
                 dest.mkdir(parents=True, exist_ok=True)
@@ -83,6 +108,26 @@ class IfgenEnvironment(LoggerMixin):
         self.padding = PaddingManager()
         self._register_enums()
         self._register_structs()
+
+    def get_dirs(self, langauge: Language) -> Optional[Directories]:
+        """Get source, output and test directories."""
+
+        result = None
+
+        cfg_dir = langauge.cfg_dir_name
+        if cfg_dir in self.config.data:
+            source = combine_if_not_absolute(
+                self.root_path, normalize(*self.config.data[cfg_dir])
+            )
+            output = combine_if_not_absolute(
+                source, normalize(*self.config.data["output_dir"])
+            )
+            test_dir = combine_if_not_absolute(
+                source, normalize(*self.config.data["test_dir"])
+            )
+            result = Directories(source, output, test_dir)
+
+        return result
 
     def _register_enums(self) -> None:
         """Register configuration enums."""
@@ -140,34 +185,65 @@ class IfgenEnvironment(LoggerMixin):
         self,
         name: str,
         generator: Generator,
+        language: Language,
         from_output: bool = False,
         track: bool = True,
+        alt_dir: Optional[Path] = None,
     ) -> Path:
         """Make part of a task's path."""
+
+        # Actually handle this.
+        del language
+        del alt_dir
 
         result = Path(str(generator), f"{name}.h")
 
         if from_output:
-            result = self.output.joinpath(result)
+            result = self.cpp_output.joinpath(result)
 
         if track:
             self.generated.add(result)
 
         return result
 
+    def make_test_path(
+        self,
+        name: str,
+        generator: Generator,
+        language: Language,
+        alt_dir: Optional[Path] = None,
+    ) -> Path:
+        """Make a path to an interface's unit-test suite."""
+
+        # Actually handle this.
+        del language
+        del alt_dir
+
+        result = self.cpp_test_dir.joinpath(str(generator), f"test_{name}.cc")
+        self.generated.add(result)
+        return result
+
     def rel_include(self, name: str, generator: Generator) -> Path:
         """Get an include path to a generated output."""
 
-        return rel(self.output, base=self.source).joinpath(
-            self.make_path(name, generator, track=False)
+        return rel(self.cpp_output, base=self.cpp_source).joinpath(
+            self.make_path(name, generator, Language.CPP, track=False)
         )
 
-    def make_test_path(self, name: str, generator: Generator) -> Path:
-        """Make a path to an interface's unit-test suite."""
+    @property
+    def cpp_source(self) -> Path:
+        """Legacy interface."""
+        return self.directories[Language.CPP].source
 
-        result = self.test_dir.joinpath(str(generator), f"test_{name}.cc")
-        self.generated.add(result)
-        return result
+    @property
+    def cpp_output(self) -> Path:
+        """Legacy interface."""
+        return self.directories[Language.CPP].output
+
+    @property
+    def cpp_test_dir(self) -> Path:
+        """Legacy interface."""
+        return self.directories[Language.CPP].test_dir
 
     def get_protocol(self, name: str, exact: bool = False) -> Protocol:
         """Get the protocol instance for a given struct."""
