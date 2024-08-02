@@ -25,7 +25,7 @@ from vcorelib.namespace import CPP_DELIM
 
 # internal
 from ifgen import PKG_NAME, VERSION
-from ifgen.environment import Generator, IfgenEnvironment
+from ifgen.environment import Generator, IfgenEnvironment, Language
 
 InstanceConfig = Dict[str, Any]
 IfgenConfig = Dict[str, Any]
@@ -44,6 +44,7 @@ class GenerateTask(NamedTuple):
 
     name: str
     generator: Generator
+    language: Language
 
     path: Path
     test_path: Path
@@ -119,7 +120,9 @@ class GenerateTask(NamedTuple):
             result = (
                 Path(
                     "..",
-                    self.env.make_path(lookup.final, lookup.generator),
+                    self.env.make_path(
+                        lookup.final, lookup.generator, self.language
+                    ),
                 )
                 if lookup.generator != self.generator
                 else Path(f"{lookup.final}.h")
