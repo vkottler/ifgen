@@ -38,6 +38,16 @@ class Language(StrEnum):
     PYTHON = "Python"
 
     @property
+    def source_suffix(self) -> str:
+        """Get a source-file suffix for this language."""
+        return "cc" if self is Language.CPP else "py"
+
+    @property
+    def header_suffix(self) -> str:
+        """Get a header-file suffix for this language."""
+        return "h" if self is Language.CPP else "py"
+
+    @property
     def slug(self) -> str:
         """Get a slug string."""
         return self.name.lower()
@@ -97,12 +107,12 @@ class IfgenEnvironment(LoggerMixin):
         self.generated: set[Path] = set()
 
         # Create output directories.
-        assert Language.CPP in self.directories, self.directories
-        for subdir in Generator:
-            for path in [self.cpp_output, self.cpp_test_dir]:
-                dest = path.joinpath(subdir)
-                rmtree(dest, ignore_errors=True)
-                dest.mkdir(parents=True, exist_ok=True)
+        for language, dirs in self.directories.items():
+            for subdir in Generator:
+                for path in [dirs.output, dirs.test_dir]:
+                    dest = path.joinpath(subdir)
+                    rmtree(dest, ignore_errors=True)
+                    dest.mkdir(parents=True, exist_ok=True)
 
         self.types = TypeSystem(*self.config.data["namespace"])
         self.padding = PaddingManager()
@@ -193,13 +203,12 @@ class IfgenEnvironment(LoggerMixin):
         """Make part of a task's path."""
 
         # Actually handle this.
-        del language
         del alt_dir
 
-        result = Path(str(generator), f"{name}.h")
+        result = Path(str(generator), f"{name}.{language.header_suffix}")
 
         if from_output:
-            result = self.cpp_output.joinpath(result)
+            result = self.directories[language].output.joinpath(result)
 
         if track:
             self.generated.add(result)
@@ -216,34 +225,23 @@ class IfgenEnvironment(LoggerMixin):
         """Make a path to an interface's unit-test suite."""
 
         # Actually handle this.
-        del language
         del alt_dir
 
-        result = self.cpp_test_dir.joinpath(str(generator), f"test_{name}.cc")
+        result = self.directories[language].test_dir.joinpath(
+            str(generator), f"test_{name}.{language.source_suffix}"
+        )
         self.generated.add(result)
         return result
 
-    def rel_include(self, name: str, generator: Generator) -> Path:
+    def rel_include(
+        self, name: str, generator: Generator, language: Language
+    ) -> Path:
         """Get an include path to a generated output."""
 
-        return rel(self.cpp_output, base=self.cpp_source).joinpath(
-            self.make_path(name, generator, Language.CPP, track=False)
-        )
-
-    @property
-    def cpp_source(self) -> Path:
-        """Legacy interface."""
-        return self.directories[Language.CPP].source
-
-    @property
-    def cpp_output(self) -> Path:
-        """Legacy interface."""
-        return self.directories[Language.CPP].output
-
-    @property
-    def cpp_test_dir(self) -> Path:
-        """Legacy interface."""
-        return self.directories[Language.CPP].test_dir
+        return rel(
+            self.directories[language].output,
+            base=self.directories[language].source,
+        ).joinpath(self.make_path(name, generator, language, track=False))
 
     def get_protocol(self, name: str, exact: bool = False) -> Protocol:
         """Get the protocol instance for a given struct."""

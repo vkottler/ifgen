@@ -71,7 +71,7 @@ class GenerateTask(NamedTuple):
     @property
     def source_path(self) -> Path:
         """Get a source file for this task."""
-        return self.path.with_suffix(".cc")
+        return self.path.with_suffix(f".{self.language.source_suffix}")
 
     @property
     def config(self) -> IfgenConfig:
@@ -125,7 +125,7 @@ class GenerateTask(NamedTuple):
                     ),
                 )
                 if lookup.generator != self.generator
-                else Path(f"{lookup.final}.h")
+                else Path(f"{lookup.final}.{self.language.header_suffix}")
             )
 
         return result
@@ -152,12 +152,12 @@ class GenerateTask(NamedTuple):
 
             self.javadoc_header(writer)
 
+            include = self.env.rel_include(
+                self.name, self.generator, self.language
+            )
             self.write_includes(
                 writer,
-                includes=[
-                    f'"{self.env.rel_include(self.name, self.generator)}"'
-                ]
-                + list(includes),
+                includes=[f'"{include}"'] + list(includes),
             )
 
             self.handle_namespace(stack, writer)
