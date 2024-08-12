@@ -62,6 +62,11 @@ class GenerateTask(NamedTuple):
         return data if not prefix else prefix + data
 
     @property
+    def is_python(self) -> bool:
+        """Determine if this task's language is set to Python."""
+        return self.language is Language.PYTHON
+
+    @property
     def stream_implementation(self) -> bool:
         """
         Determine if this instances should include a stream implementations.
