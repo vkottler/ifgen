@@ -82,9 +82,16 @@ def runtime_enum_data(data: dict[str, Any]) -> dict[str, int]:
 class Directories(NamedTuple):
     """A collection of directories relevant to code generation outputs."""
 
+    config_parts: list[str]
     source: Path
     output: Path
     test_dir: Path
+
+    def prune_empty(self) -> None:
+        """Attempt to eliminate any empty output directories."""
+
+        for path in (self.source, self.output, self.test_dir):
+            print(path)
 
 
 class IfgenEnvironment(LoggerMixin):
@@ -119,6 +126,12 @@ class IfgenEnvironment(LoggerMixin):
         self._register_enums()
         self._register_structs()
 
+    def prune_empty(self) -> None:
+        """Attempt to eliminate any empty output directories."""
+
+        for dirs in self.directories.values():
+            dirs.prune_empty()
+
     def get_dirs(self, langauge: Language) -> Optional[Directories]:
         """Get source, output and test directories."""
 
@@ -126,16 +139,15 @@ class IfgenEnvironment(LoggerMixin):
 
         cfg_dir = langauge.cfg_dir_name
         if cfg_dir in self.config.data:
-            source = combine_if_not_absolute(
-                self.root_path, normalize(*self.config.data[cfg_dir])
-            )
+            dirs = self.config.data[cfg_dir]
+            source = combine_if_not_absolute(self.root_path, normalize(*dirs))
             output = combine_if_not_absolute(
                 source, normalize(*self.config.data["output_dir"])
             )
             test_dir = combine_if_not_absolute(
                 source, normalize(*self.config.data["test_dir"])
             )
-            result = Directories(source, output, test_dir)
+            result = Directories(dirs, source, output, test_dir)
 
         return result
 
@@ -198,12 +210,8 @@ class IfgenEnvironment(LoggerMixin):
         language: Language,
         from_output: bool = False,
         track: bool = True,
-        alt_dir: Optional[Path] = None,
     ) -> Path:
         """Make part of a task's path."""
-
-        # Actually handle this.
-        del alt_dir
 
         result = Path(str(generator), f"{name}.{language.header_suffix}")
 
@@ -216,16 +224,9 @@ class IfgenEnvironment(LoggerMixin):
         return result
 
     def make_test_path(
-        self,
-        name: str,
-        generator: Generator,
-        language: Language,
-        alt_dir: Optional[Path] = None,
+        self, name: str, generator: Generator, language: Language
     ) -> Path:
         """Make a path to an interface's unit-test suite."""
-
-        # Actually handle this.
-        del alt_dir
 
         result = self.directories[language].test_dir.joinpath(
             str(generator), f"test_{name}.{language.source_suffix}"

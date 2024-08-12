@@ -44,13 +44,6 @@ def generate(root: Path, config: Config) -> None:
 
     with ThreadPool() as pool:
         for language in languages:
-
-            # Load a possible output-directory configuration.
-            alt_dir = None
-            cfg_name = language.cfg_dir_name
-            if config.data.get(cfg_name):
-                alt_dir = root.joinpath(*config.data[cfg_name])
-
             for generator, methods in GENERATORS.items():
                 for method in methods:
                     pool.map(
@@ -64,12 +57,9 @@ def generate(root: Path, config: Config) -> None:
                                     name,
                                     generator,
                                     language,
-                                    alt_dir=alt_dir,
                                     from_output=True,
                                 ),
-                                env.make_test_path(
-                                    name, generator, language, alt_dir=alt_dir
-                                ),
+                                env.make_test_path(name, generator, language),
                                 data,
                                 env,
                             )
@@ -78,3 +68,5 @@ def generate(root: Path, config: Config) -> None:
                             ).items()
                         ),
                     )
+
+    env.prune_empty()

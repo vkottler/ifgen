@@ -179,9 +179,6 @@ def enforce_expected_size(
 def create_struct(task: GenerateTask) -> None:
     """Create a header file based on a struct definition."""
 
-    if task.is_python:
-        return
-
     with task.boilerplate(
         includes=struct_includes(task), json=task.instance.get("json", False)
     ) as writer:

@@ -13,6 +13,9 @@ from ifgen.generation.interface import GenerateTask
 def enum_source(task: GenerateTask, writer: IndentedFileWriter) -> None:
     """Create a source file for an enumeration."""
 
+    if task.is_python:
+        return
+
     enum_to_string_function(task, writer, task.instance["use_map"])
     writer.empty()
     string_to_enum_function(task, writer, task.instance["use_map"])
