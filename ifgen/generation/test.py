@@ -92,7 +92,6 @@ def unit_test_boilerplate(
                 + includes,
                 is_test=True,
                 use_namespace=False,
-                description=False,
             )
         )
 
