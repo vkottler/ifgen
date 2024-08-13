@@ -13,7 +13,7 @@ from runtimepy.codec.protocol import Protocol
 from runtimepy.codec.system import TypeSystem
 from runtimepy.enum import RuntimeEnum
 from vcorelib.logging import LoggerMixin
-from vcorelib.paths import normalize, rel
+from vcorelib.paths import normalize, prune_empty_directories, rel
 
 # internal
 from ifgen import PKG_NAME
@@ -91,7 +91,7 @@ class Directories(NamedTuple):
         """Attempt to eliminate any empty output directories."""
 
         for path in (self.source, self.output, self.test_dir):
-            print(path)
+            prune_empty_directories(path)
 
 
 class IfgenEnvironment(LoggerMixin):
