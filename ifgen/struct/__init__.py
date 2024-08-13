@@ -180,7 +180,9 @@ def create_struct(task: GenerateTask) -> None:
     """Create a header file based on a struct definition."""
 
     with task.boilerplate(
-        includes=struct_includes(task), json=task.instance.get("json", False)
+        includes=struct_includes(task),
+        json=task.instance.get("json", False),
+        parent_depth=2,
     ) as writer:
         attributes = ["gnu::packed"]
         writer.write(f"struct [[{', '.join(attributes)}]] {task.name}")

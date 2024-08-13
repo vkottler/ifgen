@@ -21,6 +21,6 @@ def create_enum(task: GenerateTask) -> None:
             includes.append("<cstring>")
 
     with task.boilerplate(
-        includes=includes, json=task.instance["json"]
+        includes=includes, json=task.instance["json"], parent_depth=2
     ) as writer:
         enum_header(task, writer)

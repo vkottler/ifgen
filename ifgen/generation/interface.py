@@ -25,6 +25,7 @@ from vcorelib.namespace import CPP_DELIM
 # internal
 from ifgen import PKG_NAME, VERSION
 from ifgen.environment import Generator, IfgenEnvironment, Language
+from ifgen.paths import audit_init_file
 
 InstanceConfig = Dict[str, Any]
 IfgenConfig = Dict[str, Any]
@@ -225,7 +226,7 @@ class GenerateTask(NamedTuple):
     def resolve_description(
         self, description: Optional[str] = None
     ) -> Optional[str]:
-        """TODO."""
+        """Attempt to resolve a config-driven description."""
 
         if description is None:
             if "description" in self.instance and self.instance["description"]:
@@ -241,17 +242,21 @@ class GenerateTask(NamedTuple):
         use_namespace: bool = True,
         description: Optional[str] = None,
         json: bool = False,
+        parent_depth: int = 0,
     ) -> Iterator[IndentedFileWriter]:
         """
         Create standard generation boilerplate and yield the file writer to
         use for writing the remaining content.
         """
 
+        path = self.path if not is_test else self.test_path
+
+        if self.is_python:
+            audit_init_file(path, parent_depth=parent_depth)
+
         with ExitStack() as stack:
             writer = stack.enter_context(
-                IndentedFileWriter.from_path(
-                    self.path if not is_test else self.test_path, per_indent=4
-                )
+                IndentedFileWriter.from_path(path, per_indent=4)
             )
 
             # Write file header.
