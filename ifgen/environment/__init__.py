@@ -13,6 +13,7 @@ from runtimepy.codec.protocol import Protocol
 from runtimepy.codec.system import TypeSystem
 from runtimepy.enum import RuntimeEnum
 from vcorelib.logging import LoggerMixin
+from vcorelib.names import to_snake
 from vcorelib.paths import normalize, prune_empty_directories, rel
 
 # internal
@@ -50,12 +51,12 @@ class Language(StrEnum):
     @property
     def slug(self) -> str:
         """Get a slug string."""
-        return self.name.lower()
+        return to_snake(self.name)
 
     @property
     def cfg_dir_name(self) -> str:
         """
-        Get the configuratino key for this language's output configuration.
+        Get the configuration key for this language's output configuration.
         """
         return f"{self.slug}_dir"
 
@@ -212,6 +213,9 @@ class IfgenEnvironment(LoggerMixin):
         track: bool = True,
     ) -> Path:
         """Make part of a task's path."""
+
+        if language is Language.PYTHON:
+            name = to_snake(name)
 
         result = Path(str(generator), f"{name}.{language.header_suffix}")
 

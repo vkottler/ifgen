@@ -218,6 +218,9 @@ class GenerateTask(NamedTuple):
     ) -> None:
         """Write sorted includes to a file."""
 
+        if self.is_python:
+            return
+
         with writer.padding():
             for include in sorted(includes if includes else []):
                 if include:
