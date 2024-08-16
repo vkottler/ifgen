@@ -18,14 +18,11 @@ def python_enum_header(task: GenerateTask, writer: IndentedFileWriter) -> None:
         writer, third_party={"runtimepy.enum.registry": ["RuntimeIntEnum"]}
     )
 
-    writer.empty()
-    writer.empty()
-
     with python_class(
         writer,
         task.name,
         task.resolve_description() or "No description.",
         parents=["RuntimeIntEnum"],
+        final_empty=0,
     ):
-        # Add members.
-        writer.write("# todo")
+        writer.write("# register members")

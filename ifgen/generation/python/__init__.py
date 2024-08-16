@@ -26,12 +26,16 @@ def write_imports(
 
 
 def python_imports(
-    writer: IndentedFileWriter, third_party: PythonImports = None
+    writer: IndentedFileWriter,
+    third_party: PythonImports = None,
+    final_empty: int = 2,
 ) -> None:
     """Write Python-module imports."""
 
     if third_party:
         write_imports(writer, "third-party", third_party)
+
+    writer.empty(count=final_empty)
 
 
 @contextmanager
@@ -40,6 +44,7 @@ def python_class(
     name: str,
     docstring: str,
     parents: list[str] = None,
+    final_empty: int = 2,
 ) -> Iterator[None]:
     """Write class definition contents."""
 
@@ -53,3 +58,26 @@ def python_class(
         writer.write(f'"""{docstring}"""')
         writer.empty()
         yield
+
+    writer.empty(count=final_empty)
+
+
+@contextmanager
+def python_function(
+    writer: IndentedFileWriter,
+    name: str,
+    docstring: str,
+    params: str = "",
+    return_type: str = "None",
+    final_empty: int = 2,
+) -> Iterator[None]:
+    """Write a Python function."""
+
+    writer.write(f"def {name}({params}) -> {return_type}:")
+
+    with writer.indented():
+        writer.write(f'"""{docstring}"""')
+        writer.empty()
+        yield
+
+    writer.empty(count=final_empty)
