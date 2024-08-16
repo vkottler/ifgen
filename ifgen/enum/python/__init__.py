@@ -22,7 +22,10 @@ def python_enum_header(task: GenerateTask, writer: IndentedFileWriter) -> None:
     writer.empty()
 
     with python_class(
-        writer, task.name, docstring="TODO.", parents=["RuntimeIntEnum"]
+        writer,
+        task.name,
+        task.resolve_description() or "No description.",
+        parents=["RuntimeIntEnum"],
     ):
         # Add members.
         writer.write("# todo")

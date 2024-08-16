@@ -3,6 +3,7 @@ A module for generating shared headers and sources.
 """
 
 # internal
+from ifgen.common.python import create_python_common
 from ifgen.generation.interface import GenerateTask
 from ifgen.generation.test import unit_test_boilerplate
 
@@ -11,6 +12,7 @@ def create_common_test(task: GenerateTask) -> None:
     """Create a unit test for the enum string-conversion methods."""
 
     if task.is_python:
+        create_python_common(task)
         return
 
     with unit_test_boilerplate(task, declare_namespace=True) as writer:
