@@ -4,7 +4,7 @@ A module implementing code-generation interfaces for Python.
 
 # built-in
 from contextlib import contextmanager
-from typing import Iterator
+from typing import Iterable, Iterator
 
 # third-party
 from vcorelib.io import IndentedFileWriter
@@ -27,11 +27,14 @@ def write_imports(
 
 def python_imports(
     writer: IndentedFileWriter,
+    built_in: PythonImports = None,
     third_party: PythonImports = None,
     final_empty: int = 2,
 ) -> None:
     """Write Python-module imports."""
 
+    if built_in:
+        write_imports(writer, "built-in", built_in)
     if third_party:
         write_imports(writer, "third-party", third_party)
 
@@ -70,9 +73,13 @@ def python_function(
     params: str = "",
     return_type: str = "None",
     final_empty: int = 2,
+    decorators: Iterable[str] = None,
 ) -> Iterator[None]:
     """Write a Python function."""
 
+    if decorators:
+        for decorator in decorators:
+            writer.write("@" + decorator)
     writer.write(f"def {name}({params}) -> {return_type}:")
 
     with writer.indented():

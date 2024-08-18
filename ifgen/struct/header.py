@@ -17,6 +17,7 @@ from vcorelib.io.file_writer import (
 from ifgen.generation.interface import GenerateTask
 from ifgen.struct.methods import struct_methods
 from ifgen.struct.methods.fields import bit_fields
+from ifgen.struct.python import python_struct_header
 from ifgen.struct.stream import struct_stream_methods
 
 FieldConfig = Dict[str, Union[int, str]]
@@ -188,17 +189,6 @@ def cpp_struct_header(task: GenerateTask, writer: IndentedFileWriter) -> None:
 
     for instance in task.instance.get("instances", []):
         struct_instance(task, writer, instance)
-
-
-def python_struct_header(
-    task: GenerateTask, writer: IndentedFileWriter
-) -> None:
-    """Create a Python module for a struct."""
-
-    writer.empty()
-
-    del task
-    writer.write("# todo")
 
 
 def struct_header(task: GenerateTask, writer: IndentedFileWriter) -> None:
