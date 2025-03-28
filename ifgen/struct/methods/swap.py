@@ -141,7 +141,7 @@ def encode_primitive_swap(
         rhs += f"{name})"
     else:
         lhs = f"*reinterpret_cast<{integral} *>(&buf[idx])"
-        rhs += f"reinterpret_cast<const {integral} &>({name}))"
+        rhs += f"std::bit_cast<{integral}>({name}))"
 
     assignment(writer, lhs, rhs)
 
@@ -163,11 +163,14 @@ def decode_primitive_swap(
         rhs = f"std::byteswap(*{reinterp}" f"(&buf[idx]))"
         assignment(writer, lhs, rhs)
     else:
+        # assignment(
+        #     writer, "auto val", f"std::byteswap(*{reinterp}(&buf[idx]))"
+        # )
         assignment(
-            writer, "auto val", f"std::byteswap(*{reinterp}(&buf[idx]))"
-        )
-        assignment(
-            writer, lhs, f"*reinterpret_cast<const {underlying} *>(&val)"
+            writer,
+            lhs,
+            f"std::bit_cast<{underlying}>("
+            f"std::byteswap(*{reinterp}(&buf[idx])))",
         )
 
 

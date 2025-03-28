@@ -54,7 +54,7 @@ def get_derived(
 
 
 def peripheral_groups(
-    peripherals: dict[str, Peripheral]
+    peripherals: dict[str, Peripheral],
 ) -> dict[str, PeripheralGroup]:
     """Organize peripherals into groups."""
 
