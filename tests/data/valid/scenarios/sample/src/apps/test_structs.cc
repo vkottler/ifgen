@@ -3,6 +3,10 @@
  * \brief Some basic struct unit tests.
  */
 
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
+
 #include "generated/structs/Test1.h"
 #include "generated/structs/Test2.h"
 #include "generated/structs/Test3.h"

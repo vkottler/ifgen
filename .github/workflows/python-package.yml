@@ -43,7 +43,7 @@ jobs:
       - uses: seanmiddleditch/gha-setup-ninja@master
         with: {version: 1.11.1}
         if: matrix.system == 'ubuntu-latest'
-      - run: sudo apt-get install gcc-12 g++-12 clang-15 clang-format-15
+      - run: sudo apt-get install gcc-13 g++-13 clang-18 clang-format-18
         if: matrix.system == 'ubuntu-latest'
       - run: pip${{matrix.python-version}} install yambs
       # End project-specific setup.
