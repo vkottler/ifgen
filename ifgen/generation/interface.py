@@ -224,8 +224,13 @@ class GenerateTask(NamedTuple):
             # Write file header.
             self.javadoc_header(writer, json=json)
 
+            writer.empty()
             if not is_test:
                 writer.write("#pragma once")
+            else:
+                writer.write("#ifdef NDEBUG")
+                writer.write("#undef NDEBUG")
+                writer.write("#endif")
 
             self.write_includes(writer, includes=includes)
 
