@@ -2,7 +2,7 @@
     =====================================
     generator=datazen
     version=3.2.3
-    hash=0152ee74864ecf80489da929aaff1806
+    hash=2b76ec585e556a29db3eb6fe8e3174fa
     =====================================
 -->
 
@@ -24,8 +24,8 @@ Consider [sponsoring development](https://github.com/sponsors/libre-embedded).
 
 This package is tested with the following Python minor versions:
 
-* [`python3.12`](https://docs.python.org/3.12/)
 * [`python3.13`](https://docs.python.org/3.13/)
+* [`python3.14`](https://docs.python.org/3.14/)
 
 ## Platform Support
 
@@ -40,7 +40,7 @@ This package is tested on the following platforms:
 # Command-line Options
 
 ```
-$ ./venv3.13/bin/ig -h
+$ ./venv3.14/bin/ig -h
 
 usage: ig [-h] [--version] [-v] [-q] [--curses] [--no-uvloop] [-C DIR]
           {gen,svd,noop} ...
