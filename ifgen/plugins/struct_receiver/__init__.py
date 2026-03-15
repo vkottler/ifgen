@@ -198,15 +198,17 @@ def cpp_struct_receiver(task: GenerateTask) -> None:
                     with writer.indented():
                         writer.write(f"if (len >= decltype({snake})::size)")
                         with writer.scope():
-                            writer.write(f"if ({snake}_handler)")
-                            with writer.scope():
-                                writer.write(f"{snake}.decode<endianness>(")
-                                with writer.indented():
-                                    writer.write(
-                                        f"reinterpret_cast<const decltype"
-                                        f"({snake}) *>(data)->raw_ro());"
-                                    )
-                                writer.write(f"{snake}_handler({snake});")
+                            writer.write(f"{snake}.decode<endianness>(")
+                            with writer.indented():
+                                writer.write(
+                                    f"reinterpret_cast<const decltype"
+                                    f"({snake}) *>(data)->raw_ro());"
+                                )
+
+                            with writer.padding():
+                                writer.write(f"if ({snake}_handler)")
+                                with writer.scope():
+                                    writer.write(f"{snake}_handler({snake});")
 
                             writer.write(f"data += decltype({snake})::size;")
                             writer.write(f"len -= decltype({snake})::size;")
