@@ -78,6 +78,8 @@ def python_enum_header(task: GenerateTask, writer: IndentedFileWriter) -> None:
             if value and "description" in value:
                 python_docstring(writer, value["description"])
 
+        writer.empty()
+
         # Override underlying primitive if necessary.
         underlying = strip_t_suffix(task.instance["underlying"])
         if underlying != DEFAULT_ENUM_PRIMITIVE:
