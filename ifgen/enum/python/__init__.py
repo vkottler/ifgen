@@ -113,10 +113,12 @@ def python_enum_header(task: GenerateTask, writer: IndentedFileWriter) -> None:
                 "default",
                 "Get a possible default value for this enumeration.",
                 params="cls: type[T]",
-                return_type="Optional[T]",
+                return_type="T",
                 final_empty=0,
                 decorators=["classmethod"],
             ):
                 writer.write(
-                    f"return cls.normalize(\"{task.instance['default']}\")"
+                    f"result = cls.normalize(\"{task.instance['default']}\")"
                 )
+                writer.write("assert result is not None")
+                writer.write("return result")
