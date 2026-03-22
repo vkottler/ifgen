@@ -104,6 +104,9 @@ def python_struct_field(
         if "array_length" in field:
             writer.write(f"array_length={field['array_length']},")
 
+        if "default" in field:
+            writer.write(f"default={field['default']},")
+
     writer.write(")")
 
 

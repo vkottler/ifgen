@@ -18,6 +18,9 @@ properties:
     type: integer
     minimum: 2
 
+  default:
+    type: [string, number, boolean, "null"]
+
   padding:
     type: boolean
     default: false

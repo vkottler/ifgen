@@ -110,24 +110,22 @@ def struct_fields(task: GenerateTask, writer: IndentedFileWriter) -> None:
                         possible_union["type"] = field["type"]
 
                     # Handle enum defaults.
-                    default = None
+                    default = field.get("default")
                     if task.env.is_enum(possible_union["type"]):
                         enum = task.env.get_enum(possible_union["type"])
                         if enum.default:
-                            default = f"{possible_union['type']}_default"
-                            if "array_length" in field:
-                                default = (
-                                    "{"
-                                    + ", ".join(
-                                        [
-                                            default
-                                            for _ in range(
-                                                field["array_length"]
-                                            )
-                                        ]
-                                    )
-                                    + "}"
-                                )
+                            default = (
+                                default or f"{possible_union['type']}_default"
+                            )
+
+                    if "array_length" in field and default:
+                        default = (
+                            "{"
+                            + ", ".join(
+                                [default for _ in range(field["array_length"])]
+                            )
+                            + "}"
+                        )
 
                     line, comment = struct_line(
                         possible_union["name"],
