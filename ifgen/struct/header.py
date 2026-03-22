@@ -60,7 +60,7 @@ def struct_line(
     if packed and array_length is not None:
         line += f"[{name}_length]"
 
-    if default:
+    if default is not None:
         line += f" = {default}"
     elif const:
         line += " = {}"
@@ -113,12 +113,10 @@ def struct_fields(task: GenerateTask, writer: IndentedFileWriter) -> None:
                     default = field.get("default")
                     if task.env.is_enum(possible_union["type"]):
                         enum = task.env.get_enum(possible_union["type"])
-                        if enum.default:
-                            default = (
-                                default or f"{possible_union['type']}_default"
-                            )
+                        if enum.default and default is None:
+                            default = f"{possible_union['type']}_default"
 
-                    if "array_length" in field and default:
+                    if "array_length" in field and default is not None:
                         default = (
                             "{"
                             + ", ".join(
