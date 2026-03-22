@@ -7,6 +7,7 @@ from contextlib import ExitStack
 from typing import Any
 
 # third-party
+from runtimepy.ui.controls import Default
 from vcorelib.io.file_writer import (
     CommentStyle,
     IndentedFileWriter,
@@ -44,7 +45,7 @@ def struct_line(
     const: bool,
     packed: bool,
     array_length: int = None,
-    default: str = None,
+    default: Default = None,
 ) -> LineWithComment:
     """Build a string for a struct-field line."""
 
@@ -61,6 +62,8 @@ def struct_line(
         line += f"[{name}_length]"
 
     if default is not None:
+        if default is True or default is False:
+            default = str(default).lower()
         line += f" = {default}"
     elif const:
         line += " = {}"
