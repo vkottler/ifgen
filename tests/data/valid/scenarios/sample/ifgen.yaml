@@ -31,6 +31,9 @@ structs:
         type: uint8_t
         expected_offset: 0
         default: 5
+        config:
+          min_val: 1
+          max_val: 25
 
       - name: field2
         type: Enum1

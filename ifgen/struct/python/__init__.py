@@ -3,6 +3,7 @@ A module implementing Python struct-generation interfaces.
 """
 
 # built-in
+from json import dumps
 from typing import Any
 
 # third-party
@@ -106,6 +107,9 @@ def python_struct_field(
 
         if field.get("description"):
             writer.write(f"description=\"{field['description']}\",")
+
+        if field.get("config"):
+            writer.write(f"config={dumps(field['config'])},")
 
     writer.write(")")
 
