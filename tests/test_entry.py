@@ -25,4 +25,4 @@ def test_entry_basic():
 def test_package_entry():
     """Test the command-line entry through the 'python -m' invocation."""
 
-    check_output([executable, "-m", "ifgen", "-h"])
+    check_output([executable, "-m", "coverage", "run", "-m", "ifgen", "-h"])
