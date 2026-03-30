@@ -24,12 +24,16 @@ structs:
     namespace: [C]
     description: "Sample struct 1."
     json_indent: 4
-    expected_size: 11
+    expected_size: 12
     fields:
       - name: field1
         description: A field.
         type: uint8_t
         expected_offset: 0
+        default: 5
+        config:
+          min_val: 1
+          max_val: 25
 
       - name: field2
         type: Enum1
@@ -38,6 +42,11 @@ structs:
       - name: field3
         type: double
         expected_offset: 3
+        default: 2.0
+
+      - name: field4
+        type: bool
+        default: true
 
   Test2:
     json: true
@@ -45,13 +54,16 @@ structs:
     fields:
       - name: field1
         type: int8_t
+        default: -1
 
       - name: field2
         description: A field.
         type: int16_t
+        default: -2
 
       - name: field3
         type: float
+        default: -3
 
   Test3:
     json: true
@@ -108,20 +120,20 @@ structs:
 
   TestArrays:
     json: false
-    expected_size: 169
+    expected_size: 178
     fields:
       - name: array1
-        expected_size: 55
+        expected_size: 60
         type: C::Test1
         array_length: 5
 
       - name: array2
-        expected_size: 33
+        expected_size: 36
         type: C::Test1
         array_length: 3
 
       - name: field1
-        expected_size: 11
+        expected_size: 12
         type: C::Test1
 
       - name: array3

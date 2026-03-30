@@ -3,6 +3,7 @@ A module implementing Python struct-generation interfaces.
 """
 
 # built-in
+from json import dumps
 from typing import Any
 
 # third-party
@@ -87,10 +88,7 @@ def python_struct_field(
     kind = strip_t_suffix(field["type"])
 
     with writer.indented():
-        line = f"\"{field['name']}\","
-        if field.get("description"):
-            line += f"  # {field['description']}"
-        writer.write(line)
+        writer.write(f"\"{field['name']}\",")
 
         if kind in types.primitives:
             writer.write(f'kind="{kind}",')
@@ -103,6 +101,15 @@ def python_struct_field(
 
         if "array_length" in field:
             writer.write(f"array_length={field['array_length']},")
+
+        if "default" in field:
+            writer.write(f"default={field['default']},")
+
+        if field.get("description"):
+            writer.write(f"description=\"{field['description']}\",")
+
+        if field.get("config"):
+            writer.write(f"config={dumps(field['config'])},")
 
     writer.write(")")
 

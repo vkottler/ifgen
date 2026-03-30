@@ -55,4 +55,5 @@ def process_field(
         type_string(field["type"]),
         array_length=field.get("array_length"),
         exact=False,
+        default=field.get("array_length"),
     )

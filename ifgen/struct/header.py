@@ -7,6 +7,7 @@ from contextlib import ExitStack
 from typing import Any
 
 # third-party
+from runtimepy.ui.controls import Default
 from vcorelib.io.file_writer import (
     CommentStyle,
     IndentedFileWriter,
@@ -44,7 +45,7 @@ def struct_line(
     const: bool,
     packed: bool,
     array_length: int = None,
-    default: str = None,
+    default: Default | str = None,
 ) -> LineWithComment:
     """Build a string for a struct-field line."""
 
@@ -60,7 +61,9 @@ def struct_line(
     if packed and array_length is not None:
         line += f"[{name}_length]"
 
-    if default:
+    if default is not None:
+        if default is True or default is False:
+            default = str(default).lower()
         line += f" = {default}"
     elif const:
         line += " = {}"
@@ -110,24 +113,20 @@ def struct_fields(task: GenerateTask, writer: IndentedFileWriter) -> None:
                         possible_union["type"] = field["type"]
 
                     # Handle enum defaults.
-                    default = None
+                    default = field.get("default")
                     if task.env.is_enum(possible_union["type"]):
                         enum = task.env.get_enum(possible_union["type"])
-                        if enum.default:
+                        if enum.default and default is None:
                             default = f"{possible_union['type']}_default"
-                            if "array_length" in field:
-                                default = (
-                                    "{"
-                                    + ", ".join(
-                                        [
-                                            default
-                                            for _ in range(
-                                                field["array_length"]
-                                            )
-                                        ]
-                                    )
-                                    + "}"
-                                )
+
+                    if "array_length" in field and default is not None:
+                        default = (
+                            "{"
+                            + ", ".join(
+                                [default for _ in range(field["array_length"])]
+                            )
+                            + "}"
+                        )
 
                     line, comment = struct_line(
                         possible_union["name"],

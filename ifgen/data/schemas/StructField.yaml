@@ -18,6 +18,20 @@ properties:
     type: integer
     minimum: 2
 
+  default:
+    type: [string, number, boolean, "null"]
+
+  config:
+    type: object
+    additionalProperties: false
+    properties:
+      min_val:
+        type: number
+      max_val:
+        type: number
+      step:
+        type: number
+
   padding:
     type: boolean
     default: false
