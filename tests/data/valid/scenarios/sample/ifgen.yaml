@@ -24,7 +24,7 @@ structs:
     namespace: [C]
     description: "Sample struct 1."
     json_indent: 4
-    expected_size: 11
+    expected_size: 12
     fields:
       - name: field1
         description: A field.
@@ -43,6 +43,10 @@ structs:
         type: double
         expected_offset: 3
         default: 2.0
+
+      - name: field4
+        type: bool
+        default: true
 
   Test2:
     json: true
@@ -116,20 +120,20 @@ structs:
 
   TestArrays:
     json: false
-    expected_size: 169
+    expected_size: 178
     fields:
       - name: array1
-        expected_size: 55
+        expected_size: 60
         type: C::Test1
         array_length: 5
 
       - name: array2
-        expected_size: 33
+        expected_size: 36
         type: C::Test1
         array_length: 3
 
       - name: field1
-        expected_size: 11
+        expected_size: 12
         type: C::Test1
 
       - name: array3
