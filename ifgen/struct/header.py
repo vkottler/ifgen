@@ -45,7 +45,7 @@ def struct_line(
     const: bool,
     packed: bool,
     array_length: int = None,
-    default: Default = None,
+    default: Default | str = None,
 ) -> LineWithComment:
     """Build a string for a struct-field line."""
 
