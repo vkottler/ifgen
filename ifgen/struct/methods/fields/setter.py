@@ -107,14 +107,19 @@ def bit_field_set_method(
         alias=alias,
     )
     kind = bit_field_underlying(field)
+    inner = possible_array_arg(parent)
 
     # Generate a toggle method for bit fields.
     if field["width"] == 1:
         bit_field_toggle_method(
-            task, parent["name"], field, writer, method_slug
+            task,
+            parent["name"] if not inner else f"{parent['name']}[index]",
+            field,
+            writer,
+            method_slug,
+            inner=inner,
         )
     else:
-        inner = possible_array_arg(parent)
         if inner:
             inner += ", "
         inner += f"{kind} value"

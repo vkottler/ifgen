@@ -28,10 +28,13 @@ def set_bit_method(
     field: dict[str, Any],
     writer: IndentedFileWriter,
     method_slug: str,
+    inner: str = "",
 ) -> None:
     """Generate a 'set' method for a bit-field."""
 
-    method = task.cpp_namespace(f"set_{method_slug}(){task.method_suffix()}")
+    method = task.cpp_namespace(
+        f"set_{method_slug}({inner}){task.method_suffix()}"
+    )
     writer.empty()
 
     with writer.javadoc():
@@ -52,10 +55,13 @@ def clear_bit_method(
     field: dict[str, Any],
     writer: IndentedFileWriter,
     method_slug: str,
+    inner: str = "",
 ) -> None:
     """Generate a 'clear' method for a bit-field."""
 
-    method = task.cpp_namespace(f"clear_{method_slug}(){task.method_suffix()}")
+    method = task.cpp_namespace(
+        f"clear_{method_slug}({inner}){task.method_suffix()}"
+    )
     writer.empty()
 
     with writer.javadoc():
@@ -76,14 +82,15 @@ def bit_field_toggle_method(
     field: dict[str, Any],
     writer: IndentedFileWriter,
     method_slug: str,
+    inner: str = "",
 ) -> None:
     """Generate a 'toggle' method for a bit-field."""
 
-    set_bit_method(task, name, field, writer, method_slug)
-    clear_bit_method(task, name, field, writer, method_slug)
+    set_bit_method(task, name, field, writer, method_slug, inner=inner)
+    clear_bit_method(task, name, field, writer, method_slug, inner=inner)
 
     method = task.cpp_namespace(
-        f"toggle_{method_slug}(){task.method_suffix()}"
+        f"toggle_{method_slug}({inner}){task.method_suffix()}"
     )
     writer.empty()
 
