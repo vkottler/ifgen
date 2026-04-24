@@ -7,9 +7,7 @@ from importlib import import_module
 from logging import getLogger
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
-import re
 import sys
-from typing import Iterator
 
 # third-party
 from vcorelib.names import import_str_and_item
@@ -20,11 +18,7 @@ from ifgen.config import Config
 from ifgen.enum import create_enum, create_enum_source, create_enum_test
 from ifgen.enums import Generator, Language
 from ifgen.environment import IfgenEnvironment
-from ifgen.generation.interface import (
-    GenerateTask,
-    InstanceConfig,
-    InstanceGenerator,
-)
+from ifgen.generation.interface import GenerateTask, InstanceGenerator
 from ifgen.plugins import internal_plugin_entry
 from ifgen.struct import (
     create_struct,
@@ -66,33 +60,6 @@ def resolve_generators(env: IfgenEnvironment) -> CodeGenerators:
     return generators
 
 
-def check_patterns(method: str, name: str, *patterns: str) -> bool:
-    """
-    Determine if a regular expression method matches any pattern against name.
-    """
-
-    matched = False
-
-    for pattern in patterns:
-        if getattr(re, method)(pattern, name) is not None:
-            matched = True
-            break
-
-    return matched
-
-
-def generator_tasks(
-    generator: Generator, config: Config
-) -> Iterator[tuple[str, InstanceConfig]]:
-    """Handle configured exclusions."""
-
-    for name, data in config.data.get(generator.value, {}).items():
-        for method, patterns in config.names.items():
-            if check_patterns(method, name, *patterns):
-                yield name, data
-                break
-
-
 def generate(root: Path, config: Config) -> None:
     """Generate struct files."""
 
@@ -123,9 +90,7 @@ def generate(root: Path, config: Config) -> None:
                                 data,
                                 env,
                             )
-                            for name, data in generator_tasks(
-                                generator, config
-                            )
+                            for name, data in config.generator_tasks(generator)
                         ),
                     )
 
