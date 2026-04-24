@@ -28,6 +28,11 @@ class Config(IfgenDictCodec, _BasicDictCodec):
 
         common = ["identifier", "unit_test"]
 
+        # Load name-matching data.
+        self.names: dict[str, list[str]] = data.get(  # type: ignore
+            "names", {"search": [".*"]}
+        )
+
         # Forward enum settings.
         enum_forwards = common + ["use_map"]
         enum: dict[str, Any]
