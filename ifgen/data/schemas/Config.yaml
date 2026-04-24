@@ -7,32 +7,32 @@ additionalProperties: false
 required: []
 
 properties:
+  names:
+    type: object
+    additionalProperties: false
+    required: []
+    properties:
+      search: &string_array
+        type: array
+        items:
+          type: string
+      match: *string_array
+      fullmatch: *string_array
+
   output_dir:
-    type: array
+    <<: *string_array
     default: [generated]
-    items:
-      type: string
 
   test_dir:
-    type: array
+    <<: *string_array
     default: [apps, generated]
-    items:
-      type: string
 
   cpp_dir:
-    type: array
+    <<: *string_array
     default: [src]
-    items:
-      type: string
-  python_dir:
-    type: array
-    items:
-      type: string
+  python_dir: *string_array
 
-  plugins:
-    type: array
-    items:
-      type: string
+  plugins: *string_array
   custom:
     type: object
 

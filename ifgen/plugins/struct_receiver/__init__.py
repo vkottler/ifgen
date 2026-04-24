@@ -27,6 +27,7 @@ def get_receiver_struct_names(task: GenerateTask) -> list[str]:
         for x in data.get("structs", {})
         if data["structs"][x]["codec"]
         and data["structs"][x].get("allocate", True)
+        and task.env.config.check_name(x)
     )
 
 

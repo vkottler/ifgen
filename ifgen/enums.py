@@ -20,6 +20,11 @@ class Generator(StrEnum):
     IFGEN = PKG_NAME
     CUSTOM = "custom"
 
+    def always(self) -> bool:
+        """Determine if generation should always occur."""
+
+        return self is Generator.IFGEN or self is Generator.CUSTOM
+
 
 class Language(StrEnum):
     """An enumeration declaring output generation variants."""

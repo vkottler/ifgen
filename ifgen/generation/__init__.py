@@ -90,9 +90,7 @@ def generate(root: Path, config: Config) -> None:
                                 data,
                                 env,
                             )
-                            for name, data in config.data.get(
-                                generator.value, {}
-                            ).items()
+                            for name, data in config.generator_tasks(generator)
                         ),
                     )
 

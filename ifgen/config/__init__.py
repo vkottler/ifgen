@@ -3,10 +3,11 @@ A module implementing a configuration interface for the package.
 """
 
 # built-in
-from typing import Any
+import re
+from typing import Iterator
 
 # third-party
-from vcorelib.dict import merge
+from vcorelib.dict import merge, GenericStrDict
 from vcorelib.dict.codec import BasicDictCodec as _BasicDictCodec
 from vcorelib.io import ARBITER as _ARBITER
 from vcorelib.io import DEFAULT_INCLUDES_KEY
@@ -16,6 +17,22 @@ from vcorelib.paths import Pathlike, find_file
 # internal
 from ifgen import PKG_NAME
 from ifgen.schemas import IfgenDictCodec
+from ifgen.enums import Generator
+
+
+def check_patterns(method: str, name: str, *patterns: str) -> bool:
+    """
+    Determine if a regular expression method matches any pattern against name.
+    """
+
+    matched = False
+
+    for pattern in patterns:
+        if getattr(re, method)(pattern, name) is not None:
+            matched = True
+            break
+
+    return matched
 
 
 class Config(IfgenDictCodec, _BasicDictCodec):
@@ -28,9 +45,15 @@ class Config(IfgenDictCodec, _BasicDictCodec):
 
         common = ["identifier", "unit_test"]
 
+        # Load name-matching data.
+        self.names: dict[str, list[str]] = data.get(  # type: ignore
+            "names", {}
+        )
+        self.names.setdefault("search", [".*"])
+
         # Forward enum settings.
         enum_forwards = common + ["use_map"]
-        enum: dict[str, Any]
+        enum: GenericStrDict
         for enum in data.get("enums", {}).values():  # type: ignore
             for forward in enum_forwards:
                 enum.setdefault(
@@ -46,13 +69,34 @@ class Config(IfgenDictCodec, _BasicDictCodec):
             "default_endianness",
             "packed",
         ]
-        struct: dict[str, Any]
+        struct: GenericStrDict
         for struct in data.get("structs", {}).values():  # type: ignore
             for forward in struct_forwards:
                 struct.setdefault(
                     forward,
                     data["struct"][forward],  # type: ignore
                 )
+
+    def check_name(self, name: str) -> bool:
+        """Determine if a provided name is included via search patterns."""
+
+        result = False
+
+        for method, patterns in self.names.items():
+            if check_patterns(method, name, *patterns):
+                result = True
+                break
+
+        return result
+
+    def generator_tasks(
+        self, generator: Generator
+    ) -> Iterator[tuple[str, GenericStrDict]]:
+        """Handle configured exclusions."""
+
+        for name, data in self.data.get(generator.value, {}).items():
+            if generator.always() or self.check_name(name):
+                yield name, data
 
 
 def load(path: Pathlike) -> Config:
