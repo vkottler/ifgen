@@ -95,6 +95,8 @@ structs:
 
       - name: field5
         type: uint16_t
+        fields:
+          - {name: lower_byte, index: 0, width: 8, read: false}
 
   # Test scenarios where features are turned off.
   Test4:
