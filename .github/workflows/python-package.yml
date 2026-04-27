@@ -52,7 +52,7 @@ jobs:
 
       - run: mk python-sa-types
 
-      - run: mk docs version=4.8.0
+      - run: mk docs version=4.8.1
         if: |
           matrix.python-version == '3.14'
           && matrix.system == 'ubuntu-latest'
@@ -84,7 +84,7 @@ jobs:
 
       - run: |
           mk python-release owner=libre-embedded \
-                            repo=ifgen version=4.8.0
+                            repo=ifgen version=4.8.1
         if: |
           matrix.python-version == '3.14'
           && matrix.system == 'ubuntu-latest'

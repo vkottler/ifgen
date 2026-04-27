@@ -139,10 +139,13 @@ def bit_field_set_method(
             if "index" in inner:
                 rhs += "[index]"
 
-            writer.write(f"{parent['type']} curr = {rhs};")
+            if field["read"]:
+                writer.write(f"{parent['type']} curr = {rhs};")
 
-            with writer.padding():
-                for line in bit_field_set_lines(task, field):
-                    writer.write(line)
+                with writer.padding():
+                    for line in bit_field_set_lines(task, field):
+                        writer.write(line)
 
-            writer.write(f"{rhs} = curr;")
+                writer.write(f"{rhs} = curr;")
+            else:
+                writer.write(f"{rhs} = value;")
