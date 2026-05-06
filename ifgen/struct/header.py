@@ -223,18 +223,20 @@ def cpp_struct_header(task: GenerateTask, writer: IndentedFileWriter) -> None:
         struct_stream_methods(task, writer)
 
     # Instances.
-    for instance in task.instance.get("instances", []):
+    instances = task.instance.get("instances", [])
+    for instance in instances:
         struct_instance(task, writer, instance)
-    for idx, instance in enumerate(task.instance.get("instances", [])):
-        writer.empty()
-        writer.write("template <uint8_t instance>")
-        writer.write(
-            f"inline volatile {task.name} *{task.name}_instance(void)"
-        )
-        with writer.indented():
-            writer.write(f"requires(instance == {idx})")
-        with writer.scope():
-            writer.write(f"return {instance['name']};")
+    if len(instances) > 1:
+        for idx, instance in enumerate(instances):
+            writer.empty()
+            writer.write("template <uint8_t instance>")
+            writer.write(
+                f"inline volatile {task.name} *{task.name}_instance(void)"
+            )
+            with writer.indented():
+                writer.write(f"requires(instance == {idx})")
+            with writer.scope():
+                writer.write(f"return {instance['name']};")
 
 
 def struct_header(task: GenerateTask, writer: IndentedFileWriter) -> None:
