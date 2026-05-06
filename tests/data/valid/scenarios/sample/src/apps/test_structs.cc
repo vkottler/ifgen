@@ -126,6 +126,11 @@ void test7_toggle_bits()
 {
     using namespace A::B;
 
+    assert(Test7_instance<0>());
+    assert(Test7_instance<1>());
+    assert(Test7_instance<2>());
+    assert(Test7_instance<3>());
+
     Test7 data;
     data.field1 = 0;
 
